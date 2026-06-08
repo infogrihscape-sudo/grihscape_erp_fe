@@ -250,7 +250,7 @@ export const PortfolioApp: React.FC = () => {
               <Sparkles size={11} /> Architecture &amp; Interior Design
             </div>
             <h1 className="text-5xl lg:text-[68px] font-black leading-[1.05] tracking-tight mb-5">
-              We Construct<br />
+              We Build<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-200">Your Dream</span>{' '}
               Home.
             </h1>
