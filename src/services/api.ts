@@ -1,7 +1,7 @@
 import axios from 'axios';
 import NProgress from 'nprogress';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 
 // ── NProgress configuration ──────────────────────────────────────────────────
 NProgress.configure({
@@ -211,8 +211,9 @@ export const clientApi = {
   addService: (clientId: string, data: any) => api.post(`/clients/${clientId}/add-service`, data),
 };
 
-// Backend base URL (without /api) for building static file links
-export const BACKEND_BASE = 'http://localhost:5000';
+// Backend base URL (without /api) for building static file links.
+// Empty string in production — nginx proxies /uploads/ to the backend.
+export const BACKEND_BASE = import.meta.env.VITE_BACKEND_BASE ?? '';
 
 export const contractApi = {
   getContracts: () => api.get('/contracts'),
