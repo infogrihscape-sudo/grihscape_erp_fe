@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
 import { authApi, setAccessToken } from '../services/api.js';
+import { GEO_CONFIG, getDistanceMeters } from '../config/geo.js';
 
 export interface User {
   id: string;
@@ -30,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const geoWatchIdRef = useRef<number | null>(null);
 
   // Attempt silent refresh on mount
   useEffect(() => {
@@ -43,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const meResponse = await authApi.getMe();
         setUser(meResponse.data.user);
         setIsAuthenticated(true);
+        startGeoWatch(logout);
       } catch (error) {
         // Silent catch: User is not logged in / no refresh token exists
         setAccessToken(null);
@@ -68,6 +71,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // ── Geo-fence watch ──────────────────────────────────────────────────────────
+  const stopGeoWatch = () => {
+    if (geoWatchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(geoWatchIdRef.current);
+      geoWatchIdRef.current = null;
+    }
+  };
+
+  const startGeoWatch = (doLogout: () => Promise<void>) => {
+    if (!GEO_CONFIG.enabled || !navigator.geolocation) return;
+    stopGeoWatch();
+    geoWatchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const dist = getDistanceMeters(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          GEO_CONFIG.officeLat,
+          GEO_CONFIG.officeLng,
+        );
+        if (dist > GEO_CONFIG.radiusMeters) {
+          doLogout();
+        }
+      },
+      () => { /* ignore errors — network GPS glitches shouldn't force logout */ },
+      { enableHighAccuracy: true, maximumAge: 15_000, timeout: 20_000 },
+    );
+  };
+
   const sendOtp = async (phone: string) => {
     try {
       const response = await authApi.sendOtp(phone);
@@ -81,11 +112,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await authApi.verifyOtp(phone, otp, latitude, longitude);
       const { accessToken: token, user: userData } = response.data;
-      
+
       setAccessToken(token);
       setUser(userData);
       setIsAuthenticated(true);
-      
+      startGeoWatch(logout);
+
       return { success: true, message: 'Logged in successfully.' };
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to verify OTP.');
@@ -93,25 +125,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    const getPosition = (): Promise<GeolocationPosition | null> => {
-      return new Promise((resolve) => {
-        if (!navigator.geolocation) {
-          resolve(null);
-        } else {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => resolve(pos),
-            () => resolve(null),
-            { timeout: 5000, maximumAge: 60000 }
-          );
-        }
+    stopGeoWatch();
+
+    const getPosition = (): Promise<GeolocationPosition | null> =>
+      new Promise((resolve) => {
+        if (!navigator.geolocation) return resolve(null);
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve(pos),
+          () => resolve(null),
+          { timeout: 5000, maximumAge: 60000 },
+        );
       });
-    };
 
     try {
       const position = await getPosition();
       await authApi.logout(position?.coords.latitude, position?.coords.longitude);
-    } catch (error) {
-      console.error('Logout request failed', error);
+    } catch {
+      // swallow — logout must always clear local state
     } finally {
       setAccessToken(null);
       setUser(null);

@@ -14,7 +14,12 @@ NProgress.configure({
 // Track pending requests so the bar stays visible until ALL are done
 let pendingRequests = 0;
 
+const dispatchLoadingEvent = (active: boolean) => {
+  window.dispatchEvent(new CustomEvent('api-loading', { detail: { active } }));
+};
+
 const startProgress = () => {
+  if (pendingRequests === 0) dispatchLoadingEvent(true);
   pendingRequests++;
   NProgress.start();
 };
@@ -23,6 +28,7 @@ const stopProgress = () => {
   pendingRequests = Math.max(0, pendingRequests - 1);
   if (pendingRequests === 0) {
     NProgress.done();
+    dispatchLoadingEvent(false);
   }
 };
 
@@ -170,7 +176,7 @@ export const prospectApi = {
   updateServiceBudget: (serviceKey: string, budgetRanges: string[]) =>
     api.put('/service-budgets', { serviceKey, budgetRanges }),
   getFollowUps: (id: string) => api.get(`/prospects/${id}/followups`),
-  logFollowUp: (id: string, data: { stage: string; notes: string; attachmentUrl?: string | null; attachmentName?: string | null; contractFileUrl?: string | null }) =>
+  logFollowUp: (id: string, data: { stage?: string; notes: string; attachmentUrl?: string | null; attachmentName?: string | null; contractFileUrl?: string | null; logOnly?: boolean }) =>
     api.post(`/prospects/${id}/followups`, data),
   requestSiteDetails: (id: string, data: { subject: string; body: string }) =>
     api.post(`/prospects/${id}/request-site-details`, data),
@@ -182,6 +188,10 @@ export const prospectApi = {
     api.post(`/prospects/${id}/send-proposal`, data),
   updateWorkflowStage: (id: string, data: { stage: string; notes?: string }) =>
     api.put(`/prospects/${id}/workflow-stage`, data),
+  recordInitialPayment: (id: string, data: { amount?: string; unit?: string; notes: string; attachmentUrl?: string | null; attachmentName?: string | null }) =>
+    api.post(`/prospects/${id}/initial-payment`, data),
+  verifyByAccounts: (id: string, data?: { notes?: string; revisedAmount?: number | null; revisedUnit?: string }) =>
+    api.post(`/prospects/${id}/accounts-verify`, data || {}),
 };
 
 export const leadApi = {
@@ -189,6 +199,16 @@ export const leadApi = {
   createLead: (data: any) => api.post('/leads', data),
   bulkUploadLeads: (leads: any[]) => api.post('/leads/bulk', { leads }),
   validateLeads: (phones: string[]) => api.post('/leads/validate', { phones }),
+};
+
+// Client master-data APIs
+export const clientApi = {
+  // Look up a master client by phone — returns client + their existing services
+  lookupByPhone: (phone: string) => api.get('/clients/lookup', { params: { phone } }),
+  // Get all service engagements for a client
+  getProspects: (clientId: string) => api.get(`/clients/${clientId}/prospects`),
+  // Add a new service engagement to an existing client
+  addService: (clientId: string, data: any) => api.post(`/clients/${clientId}/add-service`, data),
 };
 
 // Backend base URL (without /api) for building static file links
@@ -203,6 +223,7 @@ export const contractApi = {
     api.post('/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+        'x-file-type': 'contract',
       },
     }),
   // Attach draft PDF URL to a contract record
@@ -214,5 +235,25 @@ export const contractApi = {
   approve: (id: string) => api.post(`/contracts/${id}/approve`),
   sendContract: (id: string, data: { clientEmail: string; clientName: string }) =>
     api.post(`/contracts/${id}/send`, data),
+};
+
+export const tenderApi = {
+  getTenders: (params?: { status?: string; search?: string; startDate?: string; endDate?: string; department?: string; showDeleted?: boolean }) => 
+    api.get('/tenders', { params }),
+  getTenderById: (id: string) => api.get(`/tenders/${id}`),
+  createTender: (data: any) => api.post('/tenders', data),
+  updateTender: (id: string, data: any) => api.put(`/tenders/${id}`, data),
+  deleteTender: (id: string) => api.delete(`/tenders/${id}`),
+  submitTender: (id: string) => api.post(`/tenders/${id}/submit`),
+  approveTender: (id: string) => api.post(`/tenders/${id}/approve`),
+  rejectTender: (id: string) => api.post(`/tenders/${id}/reject`),
+  restoreTender: (id: string) => api.patch(`/tenders/${id}/restore`),
+  uploadFile: (formData: FormData) =>
+    api.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'x-file-type': 'tender',
+      },
+    }),
 };
 

@@ -156,8 +156,8 @@ export const PROJECT_PHASES = [
   { level: 16, letter: 'P', shortName: 'Painting',        label: 'Phase P: Painting & Final Finishing' },
   { level: 17, letter: 'Q', shortName: 'Ext. Facade',     label: 'Phase Q: External Facade' },
   { level: 18, letter: 'R', shortName: 'Landscaping',     label: 'Phase R: Landscaping & External Dev.' },
-  { level: 19, letter: 'S', shortName: 'Snag List',       label: 'Phase S: Snag List & Rectification' },
-  { level: 20, letter: 'T', shortName: 'Handover',        label: 'Phase T: Handover & Project Close' },
+  { level: 19, letter: 'S', shortName: 'Handover',        label: 'Phase S: Handover & Project Close' },
+  // { level: 19, letter: 'S', shortName: 'Handover',       label: 'Phase S: Snag List & Rectification' },
 ];
 
 export const COMMUNICATION_MODES = [
@@ -305,65 +305,64 @@ function ProjectStageField({ value, onChange }: { value: string; onChange: (v: s
   const selectedPhase = activeIndex !== -1 ? PROJECT_PHASES[activeIndex] : null;
 
   return (
-    <div className="flex flex-col gap-2 col-span-1 sm:col-span-2 bg-stone-50/50 p-3 sm:p-4 rounded-xl border border-[rgba(184,144,71,0.15)] select-none">
-      <div className="flex flex-wrap justify-between items-center gap-2">
+    <div className="w-full select-none">
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
         <label className={labelBase}>What is the current stage of your project?</label>
         <span className="text-[10px] font-bold text-[#9e7735] bg-[rgba(184,144,71,0.08)] px-1.5 py-0.5 rounded border border-[rgba(184,144,71,0.22)]">
           {fillPct}% complete
         </span>
       </div>
-
-      {selectedPhase && (
-        <div className="flex items-center gap-2 bg-[rgba(184,144,71,0.08)] border border-[rgba(184,144,71,0.25)] rounded-lg px-3 py-2">
-          <span className="w-6 h-6 rounded-full bg-[#b89047] text-white text-[11px] font-bold flex items-center justify-center shrink-0">
+      {selectedPhase ? (
+        <div className="flex items-center gap-2 bg-[rgba(184,144,71,0.08)] border border-[rgba(184,144,71,0.25)] rounded-lg px-3 py-1.5 mb-3">
+          <span className="w-5 h-5 rounded-full bg-[#b89047] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
             {selectedPhase.letter}
           </span>
           <span className="text-[12px] font-semibold text-stone-700">{selectedPhase.label}</span>
         </div>
+      ) : (
+        <p className="text-[11px] text-stone-400 italic mb-3">Click a stage below to select the current project stage</p>
       )}
-
-      <div className="w-full h-1.5 bg-stone-200 rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-300"
-          style={{ width: `${fillPct}%`, background: 'linear-gradient(to right, #b89047, #9e7735)' }}
-        />
-      </div>
-
-      <div className="grid grid-cols-5 sm:grid-cols-5 gap-1">
-        {PROJECT_PHASES.map((phase, idx) => {
-          const isSelected = value === phase.label;
-          const isPast = activeIndex !== -1 && idx < activeIndex;
-          return (
-            <button
-              key={phase.letter}
-              type="button"
-              title={phase.label}
-              onClick={() => onChange(phase.label)}
-              className={`flex flex-col items-center justify-start gap-0.5 p-1 sm:p-1.5 rounded-md border transition-all duration-150 cursor-pointer focus:outline-none ${
-                isSelected
-                  ? 'bg-[#b89047] border-[#b89047] text-white shadow-sm shadow-[rgba(184,144,71,0.35)]'
-                  : isPast
-                    ? 'bg-[rgba(184,144,71,0.12)] border-[rgba(184,144,71,0.3)] text-[#9e7735]'
-                    : 'bg-white border-stone-200 text-stone-400 hover:border-[rgba(184,144,71,0.4)] hover:bg-[rgba(184,144,71,0.05)] hover:text-stone-600'
-              }`}
-            >
-              <span className="text-[10px] sm:text-[11px] font-bold leading-none">{phase.letter}</span>
-              <span className={`text-[7px] sm:text-[7.5px] leading-tight text-center line-clamp-1 hidden sm:block ${isSelected ? 'text-white/90' : ''}`}>
-                {phase.shortName}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="flex items-center gap-2 w-full">
-        <span className="text-[10px] text-stone-400 shrink-0">Search:</span>
-        <SearchableSelect
-          options={PROJECT_PHASES.map(p => ({ value: p.label, label: p.label }))}
-          value={value || ''}
-          onChange={onChange}
-          className="flex-1"
-        />
+      <div className="overflow-x-auto p-2">
+        <div className="relative min-w-[520px]">
+          <div className="flex items-start relative z-10">
+            {PROJECT_PHASES.map((phase, idx) => {
+              const isSelected = value === phase.label;
+              const isPast = activeIndex !== -1 && idx < activeIndex;
+              return (
+                <button
+                  key={phase.letter}
+                  type="button"
+                  title={phase.label}
+                  onClick={() => onChange(phase.label)}
+                  className="flex-1 flex flex-col items-center gap-0.5 border-0 bg-transparent cursor-pointer focus:outline-none p-0 pb-1"
+                >
+                  <span className={`w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8.5px] font-bold leading-none transition-all duration-150 ${
+                    isSelected
+                      ? 'bg-[#b89047] text-white shadow ring-2 ring-[rgba(184,144,71,0.3)] scale-[1.3]'
+                      : isPast
+                        ? 'bg-[#b89047] text-white'
+                        : 'bg-white border-2 border-stone-300 text-stone-500 hover:border-[#b89047] hover:text-[#9e7735]'
+                  }`}>
+                    {phase.letter}
+                  </span>
+                  <span className={`text-[6.5px] leading-tight text-center font-medium ${
+                    isSelected ? 'text-[#b89047] font-bold' : isPast ? 'text-[#9e7735]/70' : 'text-stone-400'
+                  }`}>
+                    {phase.shortName}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="absolute z-0" style={{ top: '9px', left: 'calc(100% / 40)', right: 'calc(100% / 40)', height: '2px' }}>
+            <div className="w-full h-full bg-stone-200 rounded-full">
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{ width: `${fillPct}%`, background: 'linear-gradient(to right, #b89047, #9e7735)' }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -567,6 +566,8 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
   // ── Validation ─────────────────────────────────────────────────────────────
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
+
+    // ── Contact (always required) ──────────────────────────────────────────
     if (!clientName.trim()) errors.clientName = 'Client name is required.';
     else if (clientName.trim().length < 2) errors.clientName = 'Client name must be at least 2 characters.';
     else if (clientName.trim().length > 20) errors.clientName = 'Client name cannot exceed 20 characters.';
@@ -578,20 +579,25 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.email = 'Enter a valid email address.';
 
     if (pincode.trim() && !/^[1-9]\d{5}$/.test(pincode.trim())) errors.pincode = 'Enter a valid 6-digit pincode.';
+
     if (!locality.trim()) errors.locality = 'Project locality is required.';
 
+    // ── Service & source ────────────────────────────────────────────────────
     if (!serviceType || selectedServices.length === 0) errors.serviceType = 'Select at least one service.';
 
-    if (sourceType === 'OTHER' && !sourceCustom.trim()) errors.sourceCustom = 'Please specify the lead source.';
+    if (!sourceType) errors.sourceType = 'Lead source is required.';
+    else if (sourceType === 'OTHER' && !sourceCustom.trim()) errors.sourceCustom = 'Please specify the lead source.';
 
+    // ── Master dates ────────────────────────────────────────────────────────
     const today = new Date(); today.setHours(0, 0, 0, 0);
-
     if (expectedCompletion) {
       const d = parseLocalDate(expectedCompletion);
       if (d && d < today) errors.expectedCompletion = 'Completion date cannot be in the past.';
     }
 
+    // ── Service-specific required fields ────────────────────────────────────
     if (selectedServices.includes('ARCHITECTURAL_CONSULTATION')) {
+      if (!plotAreaValue || !String(plotAreaValue).trim()) errors.plotAreaValue = 'Plot area is required.';
       if (plotAreaUnit === 'OTHER' && !plotAreaCustomUnit.trim()) errors.plotAreaCustomUnit = 'Specify the custom area unit.';
       if (archFloors === 'OTHER' && !archFloorsCustom.trim()) errors.archFloorsCustom = 'Specify the number of floors.';
       if (archConstructionStart) {
@@ -601,12 +607,34 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
     }
 
     if (selectedServices.includes('INTERIOR_DESIGN')) {
+      if (!interiorAreaValue || !String(interiorAreaValue).trim()) errors.interiorAreaValue = 'Interior area is required.';
       if (interiorAreaUnit === 'OTHER' && !interiorAreaCustomUnit.trim()) errors.interiorAreaCustomUnit = 'Specify the custom area unit.';
     }
 
     if (selectedServices.includes('PMC')) {
+      if (!mgmtAreaValue || !String(mgmtAreaValue).trim()) errors.mgmtAreaValue = 'Management area is required.';
       if (mgmtAreaUnit === 'OTHER' && !mgmtAreaCustomUnit.trim()) errors.mgmtAreaCustomUnit = 'Specify the custom area unit.';
+      if (!constructionTimeline) errors.constructionTimeline = 'Construction timeline is required.';
       if (contractorHired === 'Yes' && !contractorName.trim()) errors.contractorName = 'Contractor name is required.';
+    }
+
+    if (selectedServices.includes('TURNKEY_CONSTRUCTION')) {
+      if (!turnkeyAreaValue || !String(turnkeyAreaValue).trim()) errors.turnkeyAreaValue = 'Built-up area is required.';
+    }
+
+    if (selectedServices.includes('INTERIOR_EXECUTION')) {
+      if (!execAreaValue || !String(execAreaValue).trim()) errors.execAreaValue = 'Execution area is required.';
+    }
+
+    if (selectedServices.includes('RENOVATION')) {
+      if (!renovationAreaValue || !String(renovationAreaValue).trim()) errors.renovationAreaValue = 'Renovation area is required.';
+      if (!renovationPropertyType) errors.renovationPropertyType = 'Property type is required.';
+    }
+
+    if (selectedServices.includes('END_TO_END')) {
+      if (!etoPropertyType) errors.etoPropertyType = 'Property type is required.';
+      if (!etoAreaValue || !String(etoAreaValue).trim()) errors.etoAreaValue = 'Project area is required.';
+      if (!etoProjectStart) errors.etoProjectStart = 'Project start timeline is required.';
     }
 
     setFormErrors(errors);
@@ -713,8 +741,9 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
             <AreaInput
               label="What is the plot size? *"
               value={plotAreaValue} unit={plotAreaUnit} customUnit={plotAreaCustomUnit}
-              onValueChange={setPlotAreaValue} onUnitChange={setPlotAreaUnit} onCustomUnitChange={setPlotAreaCustomUnit}
-              error={formErrors.plotAreaCustomUnit}
+              onValueChange={v => { setPlotAreaValue(v); if (v) setFormErrors(p => ({ ...p, plotAreaValue: '' })); }}
+              onUnitChange={setPlotAreaUnit} onCustomUnitChange={setPlotAreaCustomUnit}
+              error={formErrors.plotAreaValue || formErrors.plotAreaCustomUnit}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -748,11 +777,12 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
           </div>
           <div className="sm:col-span-2">
             <AreaInput
-              label="What is the estimated area for interior designing?"
+              label="What is the estimated area for interior designing? *"
               value={interiorAreaValue} unit={interiorAreaUnit} customUnit={interiorAreaCustomUnit}
-              onValueChange={setInteriorAreaValue} onUnitChange={setInteriorAreaUnit} onCustomUnitChange={setInteriorAreaCustomUnit}
+              onValueChange={v => { setInteriorAreaValue(v); if (v) setFormErrors(p => ({ ...p, interiorAreaValue: '' })); }}
+              onUnitChange={setInteriorAreaUnit} onCustomUnitChange={setInteriorAreaCustomUnit}
               onUsePlotArea={hasArchService ? applyPlotAreaToInterior : undefined}
-              error={formErrors.interiorAreaCustomUnit}
+              error={formErrors.interiorAreaValue || formErrors.interiorAreaCustomUnit}
             />
           </div>
           <RadioField label="Do you already have the design?" value={intHasDesign} onChange={setIntHasDesign} />
@@ -768,11 +798,12 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
           <RadioField label="Have you ever worked with a PMC company before?" value={pmcWorkedBefore} onChange={setPmcWorkedBefore} />
           <div className="sm:col-span-2">
             <AreaInput
-              label="What is the estimated area for management?"
+              label="What is the estimated area for management? *"
               value={mgmtAreaValue} unit={mgmtAreaUnit} customUnit={mgmtAreaCustomUnit}
-              onValueChange={setMgmtAreaValue} onUnitChange={setMgmtAreaUnit} onCustomUnitChange={setMgmtAreaCustomUnit}
+              onValueChange={v => { setMgmtAreaValue(v); if (v) setFormErrors(p => ({ ...p, mgmtAreaValue: '' })); }}
+              onUnitChange={setMgmtAreaUnit} onCustomUnitChange={setMgmtAreaCustomUnit}
               onUsePlotArea={hasArchService ? applyPlotAreaToMgmt : undefined}
-              error={formErrors.mgmtAreaCustomUnit}
+              error={formErrors.mgmtAreaValue || formErrors.mgmtAreaCustomUnit}
             />
           </div>
           <RadioField label="Please provide details of the hired architect (Do you have one)?" value={pmcHasArchitect} onChange={setPmcHasArchitect} />
@@ -807,8 +838,9 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
             <label className={labelBase}>Construction timeline</label>
             <SearchableSelect
               options={[{ value: '', label: '— Select Timeline —' }, ...CONSTRUCTION_TIMELINES]}
-              value={constructionTimeline} onChange={setConstructionTimeline}
+              value={constructionTimeline} onChange={v => { setConstructionTimeline(v); if (v) setFormErrors(p => ({ ...p, constructionTimeline: '' })); }}
             />
+            {formErrors.constructionTimeline && <span className="text-[11px] font-semibold text-red-500">{formErrors.constructionTimeline}</span>}
           </div>
           <RadioField label="Have you been provided with any specific BOQ / Budget for construction?" value={pmcHasBoq} onChange={setPmcHasBoq} />
           {pmcHasBoq === 'Yes' && (
@@ -826,10 +858,12 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
           </div>
           <div className="sm:col-span-2">
             <AreaInput
-              label="What is the total area to be constructed?"
+              label="What is the total area to be constructed? *"
               value={turnkeyAreaValue} unit={turnkeyAreaUnit} customUnit={turnkeyAreaCustomUnit}
-              onValueChange={setTurnkeyAreaValue} onUnitChange={setTurnkeyAreaUnit} onCustomUnitChange={setTurnkeyAreaCustomUnit}
+              onValueChange={v => { setTurnkeyAreaValue(v); if (v) setFormErrors(p => ({ ...p, turnkeyAreaValue: '' })); }}
+              onUnitChange={setTurnkeyAreaUnit} onCustomUnitChange={setTurnkeyAreaCustomUnit}
               onUsePlotArea={hasArchService ? applyPlotAreaToTurnkey : undefined}
+              error={formErrors.turnkeyAreaValue}
             />
           </div>
           <RadioField label="Do you have construction drawings for the project?" value={turnkeyHasDrawings} onChange={setTurnkeyHasDrawings} />
@@ -879,10 +913,12 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
           </div>
           <div className="sm:col-span-2">
             <AreaInput
-              label="What is the estimated area for interior execution?"
+              label="What is the estimated area for interior execution? *"
               value={execAreaValue} unit={execAreaUnit} customUnit={execAreaCustomUnit}
-              onValueChange={setExecAreaValue} onUnitChange={setExecAreaUnit} onCustomUnitChange={setExecAreaCustomUnit}
+              onValueChange={v => { setExecAreaValue(v); if (v) setFormErrors(p => ({ ...p, execAreaValue: '' })); }}
+              onUnitChange={setExecAreaUnit} onCustomUnitChange={setExecAreaCustomUnit}
               onUsePlotArea={hasArchService ? applyPlotAreaToExec : undefined}
+              error={formErrors.execAreaValue}
             />
           </div>
           <RadioField label="Do you have a prepared design for the space?" value={execHasDesign} onChange={setExecHasDesign} />
@@ -899,7 +935,7 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
             <h4 className="text-[12px] font-bold text-[#9e7735] mb-2 uppercase tracking-wide border-b border-stone-100 pb-1">Renovation</h4>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className={labelBase}>What is the kind of property?</label>
+            <label className={labelBase}>What is the kind of property? *</label>
             <SearchableSelect
               options={[
                 { value: 'Individual Villa', label: 'Individual Villa' },
@@ -909,15 +945,18 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
                 { value: 'Retail / Showroom Space', label: 'Retail / Showroom Space' },
                 { value: 'High Rise Apartment', label: 'High Rise Apartment' },
               ]}
-              value={renovationPropertyType} onChange={setRenovationPropertyType}
+              value={renovationPropertyType} onChange={v => { setRenovationPropertyType(v); if (v) setFormErrors(p => ({ ...p, renovationPropertyType: '' })); }}
             />
+            {formErrors.renovationPropertyType && <span className="text-[11px] font-semibold text-red-500">{formErrors.renovationPropertyType}</span>}
           </div>
           <div className="sm:col-span-2">
             <AreaInput
-              label="What is the estimated area for renovation?"
+              label="What is the estimated area for renovation? *"
               value={renovationAreaValue} unit={renovationAreaUnit} customUnit={renovationAreaCustomUnit}
-              onValueChange={setRenovationAreaValue} onUnitChange={setRenovationAreaUnit} onCustomUnitChange={setRenovationAreaCustomUnit}
+              onValueChange={v => { setRenovationAreaValue(v); if (v) setFormErrors(p => ({ ...p, renovationAreaValue: '' })); }}
+              onUnitChange={setRenovationAreaUnit} onCustomUnitChange={setRenovationAreaCustomUnit}
               onUsePlotArea={hasArchService ? applyPlotAreaToRenovation : undefined}
+              error={formErrors.renovationAreaValue}
             />
           </div>
           <RadioField label="Will you be residing at the property during renovation?" value={renovationWillReside} onChange={setRenovationWillReside} />
@@ -931,7 +970,7 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className={labelBase}>What is the type of property?</label>
+            <label className={labelBase}>What is the type of property? *</label>
             <SearchableSelect
               options={[
                 { value: 'Residential Villa', label: 'Residential Villa' },
@@ -943,12 +982,13 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
                 { value: 'Institutional', label: 'Institutional' },
                 { value: 'Other', label: 'Other' },
               ]}
-              value={etoPropertyType} onChange={setEtoPropertyType}
+              value={etoPropertyType} onChange={v => { setEtoPropertyType(v); if (v) setFormErrors(p => ({ ...p, etoPropertyType: '' })); }}
             />
+            {formErrors.etoPropertyType && <span className="text-[11px] font-semibold text-red-500">{formErrors.etoPropertyType}</span>}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className={labelBase}>When are you planning to start the project?</label>
+            <label className={labelBase}>When are you planning to start the project? *</label>
             <SearchableSelect
               options={[
                 { value: 'Immediately', label: 'Immediately' },
@@ -957,15 +997,18 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
                 { value: '3–6 Months', label: '3–6 Months' },
                 { value: '6+ Months', label: '6+ Months' },
               ]}
-              value={etoProjectStart} onChange={setEtoProjectStart}
+              value={etoProjectStart} onChange={v => { setEtoProjectStart(v); if (v) setFormErrors(p => ({ ...p, etoProjectStart: '' })); }}
             />
+            {formErrors.etoProjectStart && <span className="text-[11px] font-semibold text-red-500">{formErrors.etoProjectStart}</span>}
           </div>
 
           <div className="sm:col-span-2">
             <AreaInput
-              label="What is the approximate area of the project?"
+              label="What is the approximate area of the project? *"
               value={etoAreaValue} unit={etoAreaUnit} customUnit={etoAreaCustomUnit}
-              onValueChange={setEtoAreaValue} onUnitChange={setEtoAreaUnit} onCustomUnitChange={setEtoAreaCustomUnit}
+              onValueChange={v => { setEtoAreaValue(v); if (v) setFormErrors(p => ({ ...p, etoAreaValue: '' })); }}
+              onUnitChange={setEtoAreaUnit} onCustomUnitChange={setEtoAreaCustomUnit}
+              error={formErrors.etoAreaValue}
             />
           </div>
 
@@ -990,7 +1033,20 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="flex-1 flex flex-col min-h-0 overflow-hidden"
+      onKeyDown={e => {
+        if (e.key === 'Enter') {
+          const tag = (e.target as HTMLElement).tagName;
+          if (tag !== 'TEXTAREA' && tag !== 'BUTTON' && tag !== 'SELECT') e.preventDefault();
+        }
+      }}
+    >
+      <div className="shrink-0 border-b border-stone-100 px-3 sm:px-5 md:px-6 py-3 bg-stone-50/30">
+        <ProjectStageField value={projectStage} onChange={setProjectStage} />
+      </div>
       <div className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-6 flex flex-col gap-4 sm:gap-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 items-start">
 
@@ -1079,11 +1135,13 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
             <div className="pt-2 border-t border-stone-100 space-y-3">
               <h4 className="text-[12px] font-bold text-[#9e7735] uppercase tracking-wide">Lead Source</h4>
               <div className="flex flex-col gap-1.5">
-                <label className={labelBase}>How did you hear about us?</label>
+                <label className={labelBase}>How did you hear about us? *</label>
                 <SearchableSelect
                   options={[{ value: '', label: '— Select Source —' }, ...SOURCE_OPTIONS]}
-                  value={sourceType} onChange={setSourceType}
+                  value={sourceType}
+                  onChange={v => { setSourceType(v); if (v) setFormErrors(p => ({ ...p, sourceType: '' })); }}
                 />
+                {formErrors.sourceType && <span className="text-[11px] font-semibold text-red-500">{formErrors.sourceType}</span>}
               </div>
               {sourceType === 'OTHER' && (
                 <div className="flex flex-col gap-1.5">
@@ -1104,9 +1162,6 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
             <div className="bg-stone-50/40 border border-stone-200/80 p-3 sm:p-4 rounded-xl space-y-3">
               <h4 className="text-[12px] font-bold text-[#9e7735] uppercase tracking-wide border-b border-stone-200/50 pb-1.5">Project Overview</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="sm:col-span-2">
-                  <ProjectStageField value={projectStage} onChange={setProjectStage} />
-                </div>
                 <BudgetInput
                   label="What is the budget range you are looking to invest?"
                   amount={budgetAmount} unit={budgetUnit}

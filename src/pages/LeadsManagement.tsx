@@ -14,6 +14,7 @@ import {
   AlertCircle, RefreshCw, Database, PlusCircle, Filter, Check,
   ClipboardList,
 } from 'lucide-react';
+import { ShimmerTable } from '../components/Shimmer.js';
 
 interface Lead {
   id: string;
@@ -57,7 +58,23 @@ const serviceLabels: Record<string, string> = {
   TURNKEY_CONSTRUCTION: 'Turnkey Construction',
   INTERIOR_EXECUTION: 'Interior Execution',
   RENOVATION: 'Renovation',
+  END_TO_END: 'End-to-End Solution Questionnaire',
 };
+
+const PLATFORM_SOURCE_OPTIONS = [
+  { value: 'INSTAGRAM',       label: 'Instagram' },
+  { value: 'META_FACEBOOK',   label: 'Meta / Facebook' },
+  { value: 'WHATSAPP',        label: 'WhatsApp' },
+  { value: 'JUST_DIAL',       label: 'Just Dial' },
+  { value: 'REFERENCE',       label: 'Reference' },
+  { value: 'WALK_IN',         label: 'Walk-In' },
+  { value: 'REPEATED_CLIENT', label: 'Repeated Client' },
+  { value: 'EMAIL',           label: 'Email' },
+  { value: 'OTHER',           label: 'Other' },
+];
+const platformLabel: Record<string, string> = Object.fromEntries(
+  PLATFORM_SOURCE_OPTIONS.map(o => [o.value, o.label])
+);
 
 const matchServiceKey = (rawService: string): string | null => {
   const clean = rawService.trim().toUpperCase().replace(/[\s\-]/g, '_');
@@ -142,7 +159,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
   const [campaignName, setCampaignName] = useState('');
   const [adsetName, setAdsetName] = useState('');
   const [adName, setAdName] = useState('');
-  const [platform, setPlatform] = useState('Meta');
+  const [platform, setPlatform] = useState('META_FACEBOOK');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -175,10 +192,12 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
   const [convertSubmitting, setConvertSubmitting] = useState(false);
 
   const platformToSourceType = (platform?: string | null): string => {
-    const map: Record<string, string> = {
+    if (platform && platformLabel[platform]) return platform;
+    const legacyMap: Record<string, string> = {
       Instagram: 'INSTAGRAM', Meta: 'META_FACEBOOK', Referral: 'REFERENCE',
+      Google: 'OTHER', LinkedIn: 'OTHER', YouTube: 'OTHER', Organic: 'OTHER', Other: 'OTHER',
     };
-    return map[platform || ''] || 'OTHER';
+    return legacyMap[platform || ''] || 'OTHER';
   };
 
   const leadToProspectInitialData = (lead: Lead) => ({
@@ -198,6 +217,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
       await prospectApi.createProspect(data);
       showToast('Client brief captured and linked successfully.', 'success');
       setConvertingLead(null);
+      fetchLeads(); // refresh so the services badge and action button update immediately
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Failed to create prospect brief.';
       showToast(msg, 'error');
@@ -517,14 +537,21 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
         }
       }
 
-      // Map platform
+      // Map platform string from CSV to enum key
       let matchedPlatform = item.platform;
       if (item.platform) {
-        const pLower = item.platform.toLowerCase();
-        const found = ['meta', 'google', 'linkedin', 'youtube', 'instagram', 'referral', 'organic', 'other'].find(p => p.toLowerCase() === pLower);
-        matchedPlatform = found ? found.charAt(0).toUpperCase() + found.slice(1) : 'Other';
+        const pLower = item.platform.toLowerCase().replace(/[\s\-]/g, '_');
+        const bulkMap: Record<string, string> = {
+          instagram: 'INSTAGRAM', meta: 'META_FACEBOOK', meta_facebook: 'META_FACEBOOK',
+          facebook: 'META_FACEBOOK', whatsapp: 'WHATSAPP', just_dial: 'JUST_DIAL',
+          justdial: 'JUST_DIAL', reference: 'REFERENCE', referral: 'REFERENCE',
+          walk_in: 'WALK_IN', walkin: 'WALK_IN', repeated_client: 'REPEATED_CLIENT',
+          repeated: 'REPEATED_CLIENT', email: 'EMAIL', other: 'OTHER',
+          google: 'OTHER', linkedin: 'OTHER', youtube: 'OTHER', organic: 'OTHER',
+        };
+        matchedPlatform = bulkMap[pLower] || 'OTHER';
       } else {
-        matchedPlatform = 'Other';
+        matchedPlatform = 'OTHER';
       }
 
       return {
@@ -810,7 +837,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
               <SearchableSelect
                 options={[
                   { value: 'ALL', label: 'All Platforms' },
-                  ...uniquePlatforms.map((p) => ({ value: p, label: p === 'ALL' ? 'All Platforms' : p.replace(/_/g, ' ') }))
+                  ...uniquePlatforms.map((p) => ({ value: p, label: platformLabel[p] || p.replace(/_/g, ' ') }))
                 ]}
                 value={filterPlatform}
                 onChange={setFilterPlatform}
@@ -905,9 +932,8 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
           <div className={`${card} flex-1 overflow-y-auto overflow-x-auto scrollbar-thin flex flex-col justify-between`}>
             <div className="overflow-x-auto min-w-full flex-1">
               {loading ? (
-                <div className="h-64 flex flex-col items-center justify-center gap-3">
-                  <RefreshCw className="animate-spin text-amber-600 w-8 h-8" />
-                  <span className="text-[12px] text-stone-500 font-medium">Retrieving Leads Database...</span>
+                <div className="p-4">
+                  <ShimmerTable rows={8} cols={5} />
                 </div>
               ) : filteredLeads.length === 0 ? (
                 <div className="py-24 text-center">
@@ -931,7 +957,15 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100 text-[12.5px] text-stone-705">
-                    {paginatedLeads.map((lead, index) => (
+                    {paginatedLeads.map((lead, index) => {
+                      const cleanPhone = lead.phoneNumber.replace(/[^0-9]/g, '').slice(-10);
+                      const matchedProspect = prospectMap[cleanPhone];
+                      // Show prospect's current services (may differ after editing) when converted
+                      const servicesDisplay: string[] = matchedProspect
+                        ? (matchedProspect.serviceType || '').split(',').filter(Boolean)
+                        : lead.services;
+
+                      return (
                       <tr key={lead.id} className="hover:bg-stone-50/40 transition-colors">
                         <td className="px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12px] font-medium text-stone-500 text-center">{indexStart + index + 1}</td>
                         <td className="px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12.5px] font-semibold text-stone-900 text-center whitespace-nowrap">{lead.fullName}</td>
@@ -942,20 +976,20 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                           {lead.city || <span className="italic text-stone-400">—</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
-                          <span className={`text-[12.5px] font-semibold uppercase tracking-wider ${
-                            lead.platform === 'Meta' ? 'text-blue-700' :
-                            lead.platform === 'Google' ? 'text-rose-655' :
-                            lead.platform === 'LinkedIn' ? 'text-sky-850' :
+                          <span className={`text-[12.5px] font-semibold ${
+                            lead.platform === 'META_FACEBOOK' || lead.platform === 'Meta' ? 'text-blue-700' :
+                            lead.platform === 'INSTAGRAM' || lead.platform === 'Instagram' ? 'text-pink-600' :
+                            lead.platform === 'WHATSAPP' ? 'text-green-600' :
                             'text-stone-600'
                           }`}>
-                            {lead.platform || 'Organic'}
+                            {platformLabel[lead.platform || ''] || lead.platform || '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
                           <div className="flex flex-wrap gap-1.5 justify-center">
-                            {lead.services.map((s, sIdx) => (
+                            {servicesDisplay.map((s, sIdx) => (
                               <span key={s} className="text-amber-800 text-[12px] font-semibold">
-                                {serviceLabels[s] || s}{sIdx < lead.services.length - 1 ? ',' : ''}
+                                {serviceLabels[s] || s}{sIdx < servicesDisplay.length - 1 ? ',' : ''}
                               </span>
                             ))}
                           </div>
@@ -988,35 +1022,29 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                           })}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
-                          {(() => {
-                            const cleanPhone = lead.phoneNumber.replace(/[^0-9]/g, '').slice(-10);
-                            const matchedProspect = prospectMap[cleanPhone];
-                            if (matchedProspect) {
-                              return (
-                                <button
-                                  onClick={() => navigate(`/prospects/${matchedProspect.id}`)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-stone-750 bg-amber-50 border border-[rgba(184,144,71,0.25)] hover:bg-amber-100 hover:text-amber-900 transition-all cursor-pointer"
-                                  title="View prospect requirement brief log"
-                                >
-                                  <FileText size={11} /> Req Log
-                                </button>
-                              );
-                            }
-                            return currentUser.role === 'SALES' ? (
-                              <button
-                                onClick={() => setConvertingLead(lead)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:shadow-md hover:-translate-y-px transition-all border-0 cursor-pointer"
-                                title="Convert lead to prospect brief"
-                              >
-                                <ClipboardList size={11} /> Fill Form
-                              </button>
-                            ) : (
-                              <span className="text-stone-400 italic">N/A</span>
-                            );
-                          })()}
+                          {matchedProspect ? (
+                            <button
+                              onClick={() => navigate(`/prospects/${matchedProspect.id}`)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-stone-750 bg-amber-50 border border-[rgba(184,144,71,0.25)] hover:bg-amber-100 hover:text-amber-900 transition-all cursor-pointer"
+                              title="View prospect requirement brief log"
+                            >
+                              <FileText size={11} /> Req Log
+                            </button>
+                          ) : currentUser.role === 'SALES' ? (
+                            <button
+                              onClick={() => setConvertingLead(lead)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:shadow-md hover:-translate-y-px transition-all border-0 cursor-pointer"
+                              title="Convert lead to prospect brief"
+                            >
+                              <ClipboardList size={11} /> Fill Form
+                            </button>
+                          ) : (
+                            <span className="text-stone-400 italic">N/A</span>
+                          )}
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               )}
@@ -1452,8 +1480,8 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                 onChange={(e) => setPlatform(e.target.value)}
                 className="w-full bg-white border border-[rgba(197,168,128,0.35)] text-stone-900 text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2 focus:ring-amber-100/50 cursor-pointer"
               >
-                {['Meta', 'Google', 'LinkedIn', 'YouTube', 'Instagram', 'Referral', 'Organic', 'Other'].map((p) => (
-                  <option key={p} value={p}>{p}</option>
+                {PLATFORM_SOURCE_OPTIONS.map((p) => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
                 ))}
               </select>
             </div>

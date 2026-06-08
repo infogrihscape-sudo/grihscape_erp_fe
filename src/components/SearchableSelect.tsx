@@ -27,6 +27,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [direction, setDirection] = useState<'down' | 'up'>('down');
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -62,6 +63,17 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
     if (isOpen) {
       setSearchTerm('');
       setTimeout(() => { searchInputRef.current?.focus(); }, 50);
+
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        // Dropdown max-h is 240px. With search bar and padding, it is around 280px.
+        if (spaceBelow < 280 && rect.top > 280) {
+          setDirection('up');
+        } else {
+          setDirection('down');
+        }
+      }
     }
   }, [isOpen]);
 
@@ -118,7 +130,9 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
             borderColor: 'var(--border)',
             boxShadow: 'var(--shadow-modal)',
           }}
-          className="absolute z-50 mt-1.5 w-full border rounded-xl overflow-hidden animate-fade-in max-h-60 flex flex-col"
+          className={`absolute z-50 left-0 w-full border rounded-xl overflow-hidden animate-fade-in max-h-60 flex flex-col ${
+            direction === 'up' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
+          }`}
         >
           {/* Search bar */}
           <div

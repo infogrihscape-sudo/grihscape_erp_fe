@@ -10,7 +10,10 @@ import { useRouter } from '../context/RouterContext.js';
 import {
   ClipboardList, Search, RefreshCw, ChevronLeft, ChevronRight, X,
   Edit2, Eye, Phone, Mail, Check, XCircle, ShieldCheck, Ban, FileText,
+  UserPlus, Loader2, Plus,
 } from 'lucide-react';
+import { clientApi } from '../services/api.js';
+import { ShimmerTable } from '../components/Shimmer.js';
 
 interface Props { currentUser: User; }
 
@@ -50,6 +53,7 @@ const statusBadgeClasses: Record<string, string> = {
 export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _currentUser }) => {
   const { showToast } = useToast();
   const { navigate } = useRouter();
+  const isAdminOrSuperAdmin = _currentUser.role === 'ADMIN' || _currentUser.role === 'SUPER_ADMIN';
 
   const [prospects, setProspects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,6 +72,16 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
   const [editTarget, setEditTarget] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [serviceBudgets, setServiceBudgets] = useState<Record<string, string[]>>({});
+
+  // Add New Service for Existing Client
+  const [showAddServiceModal, setShowAddServiceModal] = useState(false);
+  const [lookupPhone, setLookupPhone] = useState('');
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupResult, setLookupResult] = useState<any>(null);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [prefillData, setPrefillData] = useState<Partial<ProspectFormData> | null>(null);
+  const [addServiceFormKey, setAddServiceFormKey] = useState(0);
+  const [showAddServiceFormModal, setShowAddServiceFormModal] = useState(false);
 
   // Budget config modal
   const [showBudgetModal, setShowBudgetModal] = useState(false);
@@ -162,6 +176,58 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
     showToast('Exported successfully.', 'success');
   };
 
+  const handleClientLookup = async () => {
+    if (!lookupPhone.trim()) return;
+    setLookupLoading(true); setLookupError(null); setLookupResult(null);
+    try {
+      const digits = lookupPhone.replace(/\D/g, '').slice(-10);
+      const res = await clientApi.lookupByPhone(digits);
+      const client = res.data?.client;
+      if (!client) {
+        setLookupError('No client found with this phone number.');
+      } else {
+        setLookupResult(client);
+      }
+    } catch {
+      setLookupError('Lookup failed. Please try again.');
+    } finally { setLookupLoading(false); }
+  };
+
+  const handleOpenServiceForm = () => {
+    if (!lookupResult) return;
+    setPrefillData({
+      clientName: lookupResult.clientName,
+      mobileNo: lookupResult.mobileNo,
+      email: lookupResult.email || null,
+      preferredCommunication: lookupResult.preferredCommunication || 'PHONE_CALL',
+      locality: lookupResult.locality,
+      pincode: lookupResult.pincode || null,
+      district: lookupResult.district || null,
+      state: lookupResult.state || null,
+      sourceType: lookupResult.sourceType || null,
+      sourceCustom: lookupResult.sourceCustom || null,
+      serviceType: '',
+      status: 'ACTIVE',
+    });
+    setShowAddServiceModal(false);
+    setAddServiceFormKey(k => k + 1);
+    setShowAddServiceFormModal(true);
+  };
+
+  const handleAddServiceSubmit = async (data: ProspectFormData) => {
+    try {
+      await prospectApi.createProspect(data);
+      showToast('New service added successfully.', 'success');
+      setShowAddServiceFormModal(false);
+      setPrefillData(null);
+      fetchProspects();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Failed to add service.';
+      showToast(msg, 'error');
+      throw err;
+    }
+  };
+
   const uniqueStates = useMemo(() => ['ALL', ...Array.from(new Set(prospects.map(p => p.state).filter(Boolean)))], [prospects]);
   const uniqueDistricts = useMemo(() => ['ALL', ...Array.from(new Set(prospects.map(p => p.district).filter(Boolean)))], [prospects]);
 
@@ -206,6 +272,9 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
         <button onClick={fetchProspects} className={btnSecondary}>
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
         </button>
+        <button onClick={() => { setLookupPhone(''); setLookupResult(null); setLookupError(null); setShowAddServiceModal(true); }} className={btnSecondary}>
+          <UserPlus size={14} /><span>Add New Service</span>
+        </button>
       </div>
 
       {success && (
@@ -220,9 +289,9 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
       )}
 
       {loading ? (
-        <div className="flex flex-col flex-1 min-h-0">
-          <div className={`${card} flex items-center px-3.5 py-3.5 mb-4 shrink-0`}><div className="h-4 w-64 bg-stone-100 rounded shimmer" /></div>
-          <div className={`${card} flex-1 overflow-hidden flex flex-col`}><div className="py-20 text-center text-stone-400">Loading prospects...</div></div>
+        <div className="flex flex-col flex-1 min-h-0 gap-3">
+          <div className={`${card} flex items-center px-3.5 py-3 shrink-0`}><div className="h-4 w-56 shimmer rounded-full" /></div>
+          <div className={`${card} flex-1 overflow-hidden p-3`}><ShimmerTable rows={8} cols={7} /></div>
         </div>
       ) : (
         <div className="flex flex-col flex-1 min-h-0">
@@ -300,7 +369,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                       </td>
                       <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
                         <div className="inline-flex gap-1 justify-center">
-                          {p.status === 'PENDING_DELETE' && (
+                          {isAdminOrSuperAdmin && p.status === 'PENDING_DELETE' && (
                             <>
                               <button onClick={() => handleApproveStatus(p.id, 'DELETED')} className={`${btnSecondary} text-rose-600 border-rose-100 hover:bg-rose-50`} style={{ padding: '5px 8px' }} title="Approve deletion">
                                 <Check size={11} />
@@ -310,7 +379,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                               </button>
                             </>
                           )}
-                          {p.status === 'DELETED' && (
+                          {isAdminOrSuperAdmin && p.status === 'DELETED' && (
                             <button onClick={() => handleApproveStatus(p.id, 'ACTIVE')} className={`${btnSecondary} text-emerald-600 border-emerald-100 hover:bg-emerald-50`} style={{ padding: '5px 8px' }} title="Restore">
                               <RefreshCw size={11} />
                             </button>
@@ -318,7 +387,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                           <button onClick={() => navigate(`/prospects/${p.id}`)} className={btnSecondary} style={{ padding: '5px 8px' }} title="View pipeline">
                             <Eye size={11} />
                           </button>
-                          {p.status !== 'PENDING_DELETE' && p.status !== 'DELETED' && (
+                          {isAdminOrSuperAdmin && p.status !== 'PENDING_DELETE' && p.status !== 'DELETED' && (
                             <button onClick={() => { setEditTarget(p); setShowFormModal(true); }} className={btnSecondary} style={{ padding: '5px 8px' }} title="Edit brief">
                               <Edit2 size={11} />
                             </button>
@@ -410,6 +479,86 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                 <button onClick={handleSaveBudgets} className={`${btnPrimary} flex-1 justify-center`}>Save Ranges</button>
               </div>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+      {/* Add New Service — Client Lookup Modal */}
+      {showAddServiceModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowAddServiceModal(false)}>
+          <div className="animate-scale-in w-full max-w-md bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+                <UserPlus size={16} className="text-[#b89047]" /> Add New Service
+              </h3>
+              <button onClick={() => setShowAddServiceModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 cursor-pointer border-0 bg-transparent"><X size={15} /></button>
+            </div>
+            <p className="text-[12px] text-stone-500 mb-4 leading-relaxed">
+              Enter the client's registered mobile number to look them up. A new service engagement will be added without duplicating their contact info.
+            </p>
+            <div className="flex gap-2 mb-4">
+              <input type="text" placeholder="10-digit mobile number" value={lookupPhone}
+                onChange={e => { setLookupPhone(e.target.value); setLookupResult(null); setLookupError(null); }}
+                onKeyDown={e => e.key === 'Enter' && handleClientLookup()}
+                className="flex-1 px-3 py-2 border border-stone-200 rounded-lg text-[13px] outline-none focus:border-[#b89047]"
+                maxLength={15} />
+              <button onClick={handleClientLookup} disabled={lookupLoading || !lookupPhone.trim()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-[#b89047] hover:bg-[#9e7735] disabled:opacity-50 cursor-pointer border-0">
+                {lookupLoading ? <Loader2 size={13} className="animate-spin" /> : <Search size={13} />} Lookup
+              </button>
+            </div>
+            {lookupError && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-[12px] mb-3">
+                <X size={13} className="shrink-0 mt-0.5" />{lookupError}
+              </div>
+            )}
+            {lookupResult && (
+              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 mb-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Check size={14} className="text-emerald-600 shrink-0" />
+                  <span className="text-[13px] font-bold text-stone-900">{lookupResult.clientName}</span>
+                </div>
+                <div className="text-[11.5px] text-stone-600 space-y-0.5">
+                  <p><span className="font-medium">Phone:</span> {lookupResult.mobileNo}</p>
+                  {lookupResult.email && <p><span className="font-medium">Email:</span> {lookupResult.email}</p>}
+                  {lookupResult.locality && <p><span className="font-medium">Locality:</span> {lookupResult.locality}{lookupResult.state ? `, ${lookupResult.state}` : ''}</p>}
+                  {lookupResult.prospects?.length > 0 && (
+                    <p className="mt-1.5 pt-1.5 border-t border-emerald-200">
+                      <span className="font-medium">Existing services ({lookupResult.prospects.length}):</span>{' '}
+                      {lookupResult.prospects.map((pr: any) => pr.serviceType?.split(',')[0]).join(', ')}
+                    </p>
+                  )}
+                </div>
+                <button onClick={handleOpenServiceForm} className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-[#b89047] hover:bg-[#9e7735] cursor-pointer border-0">
+                  <Plus size={13} /> Add New Service for This Client
+                </button>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Add Service Form Modal */}
+      {showAddServiceFormModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowAddServiceFormModal(false)}>
+          <div className="animate-scale-in w-full max-w-5xl lg:max-w-6xl bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-[rgba(184,144,71,0.3)] flex flex-col h-screen sm:h-auto sm:max-h-[calc(100vh-40px)]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 sm:p-5 border-b border-stone-100 shrink-0">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+                <UserPlus size={16} className="text-[#b89047]" /> Add New Service — {prefillData?.clientName}
+              </h3>
+              <button onClick={() => { setShowAddServiceFormModal(false); setPrefillData(null); }} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 cursor-pointer border-0 bg-transparent"><X size={16} /></button>
+            </div>
+            <ProspectForm
+              key={addServiceFormKey}
+              mode="create"
+              serviceBudgets={serviceBudgets}
+              onSubmit={handleAddServiceSubmit}
+              onCancel={() => { setShowAddServiceFormModal(false); setPrefillData(null); }}
+              isSubmitting={submitting}
+              initialData={prefillData || undefined}
+              adminHeaderSlot={budgetSlot}
+            />
           </div>
         </div>,
         document.body

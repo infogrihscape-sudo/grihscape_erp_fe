@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { prospectApi } from '../services/api.js';
+import { prospectApi, contractApi, BACKEND_BASE } from '../services/api.js';
 import type { User } from '../context/AuthContext.js';
 import { SearchableSelect } from '../components/SearchableSelect.js';
 import { PROJECT_PHASES } from '../components/ProspectForm.js';
@@ -8,7 +8,8 @@ import { useToast } from '../context/ToastContext.js';
 import { useRouter } from '../context/RouterContext.js';
 import {
   ClipboardList, RefreshCw, X, ArrowLeft, Loader2,
-  MapPin, Phone, Mail, Check, FileText
+  MapPin, Phone, Mail, Check, FileText, DollarSign, ShieldCheck,
+  FilePlus, Send, Upload, BadgeCheck
 } from 'lucide-react';
 
 interface Props {
@@ -38,14 +39,42 @@ const workflowStageBadgeClasses: Record<string, string> = {
   PROPOSAL_ACCEPTED: 'text-emerald-700 font-semibold',
   PROPOSAL_REJECTED: 'text-rose-700 font-semibold',
   PROPOSAL_AGREED: 'text-emerald-700 font-semibold',
-  FINAL_DISCUSSION: 'text-amber-705 font-semibold',
+  CONTRACT_CREATED: 'text-sky-700 font-semibold',
+  CONTRACT_EMAILED: 'text-blue-700 font-semibold',
+  SIGNED_CONTRACT_UPLOADED: 'text-violet-700 font-semibold',
+  INITIAL_PAYMENT_RECEIVED: 'text-indigo-700 font-semibold',
+  ACCOUNTS_VERIFIED: 'text-emerald-700 font-bold',
+  FINAL_DISCUSSION: 'text-amber-700 font-semibold',
   WON: 'text-green-700 font-bold',
   LOST: 'text-red-700 font-bold',
   FOLLOW_UP_GENERAL: 'text-stone-700 font-semibold',
   NEGOTIATION_FOLLOW_UP: 'text-amber-700 font-semibold',
   ON_CALL_FOLLOW_UP: 'text-sky-700 font-semibold',
   OFFLINE_FOLLOW_UP: 'text-stone-700 font-semibold',
+  ACTIVITY_LOG: 'text-stone-500 font-semibold',
 };
+
+const STAGE_RANK: Record<string, number> = {
+  LEAD_CAPTURED: 1,
+  FOLLOW_UP: 1.1, FOLLOW_UP_GENERAL: 1.1, NEGOTIATION_FOLLOW_UP: 1.1, ON_CALL_FOLLOW_UP: 1.1, OFFLINE_FOLLOW_UP: 1.1, ACTIVITY_LOG: 1.1,
+  OFFLINE_MEETING: 2, ONLINE_MEETING: 2, MEETING_SCHEDULED: 2,
+  SITE_DETAILS_REQUESTED: 2.5,
+  SITE_DETAILS_UPLOADED: 3,
+  PROPOSAL_IN_PROGRESS: 3.5,
+  PROPOSAL_SENT: 4,
+  PROPOSAL_ACCEPTED: 5,
+  PROPOSAL_REJECTED: 5,
+  PROPOSAL_AGREED: 6,
+  CONTRACT_CREATED: 6.2,
+  CONTRACT_EMAILED: 6.5,
+  SIGNED_CONTRACT_UPLOADED: 6.7,
+  INITIAL_PAYMENT_RECEIVED: 6.9,
+  ACCOUNTS_VERIFIED: 7.3,
+  FINAL_DISCUSSION: 7,
+  WON: 8,
+  LOST: 0,
+};
+const stageRank = (s?: string | null) => STAGE_RANK[s ?? ''] ?? 1;
 
 const workflowStageLabel = (stage?: string | null) => {
   if (!stage) return 'Lead Captured';
@@ -99,7 +128,6 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
   const [activityType, setActivityType] = useState('meeting');
   const [activitySubtype, setActivitySubtype] = useState('offline');
   const [contractFileUrl, setContractFileUrl] = useState<string | null>(null);
-  const [contractFileName, setContractFileName] = useState<string | null>(null);
 
   // Send proposal fields
   const [proposalSubject, setProposalSubject] = useState('');
@@ -124,6 +152,18 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
   const [meetingNotes, setMeetingNotes] = useState('');
   const [meetingLink, setMeetingLink] = useState('');
   const [sendingMeetingInvite, setSendingMeetingInvite] = useState(false);
+
+  // Contract / payment section state
+  const [showInitialPaymentModal, setShowInitialPaymentModal] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentUnit, setPaymentUnit] = useState('LAKH');
+  const [paymentNotes, setPaymentNotes] = useState('');
+  const [paymentDocUrl, setPaymentDocUrl] = useState<string | null>(null);
+  const [paymentDocName, setPaymentDocName] = useState<string | null>(null);
+  const [submittingContract, setSubmittingContract] = useState(false);
+  // Accounts: revised payment amount for verification
+  const [revisedPaymentAmount, setRevisedPaymentAmount] = useState('');
+  const [revisedPaymentUnit, setRevisedPaymentUnit] = useState('LAKH');
 
   // File Uploader Statuses
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>({});
@@ -173,27 +213,16 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
 
     setSubmitting(true);
     try {
-      let stage = 'FOLLOW_UP';
-      if (activityType === 'meeting') {
-        stage = activitySubtype === 'offline' ? 'OFFLINE_MEETING' : 'ONLINE_MEETING';
-      } else {
-        if (activitySubtype === 'In general Follow up') stage = 'FOLLOW_UP_GENERAL';
-        else if (activitySubtype === 'Negociation Follow Up') stage = 'NEGOTIATION_FOLLOW_UP';
-        else if (activitySubtype === 'On call') stage = 'ON_CALL_FOLLOW_UP';
-        else if (activitySubtype === 'Offline') stage = 'OFFLINE_FOLLOW_UP';
-      }
-
       const res = await prospectApi.logFollowUp(prospectId, {
-        stage,
         notes: followUpNotes.trim(),
         contractFileUrl: contractFileUrl || null,
+        logOnly: true,  // activity log never advances the pipeline stage
       });
 
       if (res.data.success) {
         showToast('Activity logged successfully.', 'success');
         setFollowUpNotes('');
         setContractFileUrl(null);
-        setContractFileName(null);
         setShowLogFollowUpModal(false);
         await fetchProspectData();
       }
@@ -356,6 +385,152 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
     }
   };
 
+  const handleCreateContract = async () => {
+    setSubmittingContract(true);
+    try {
+      const res = await contractApi.createDraft({ prospectId });
+      if (res.data.success) {
+        showToast('Contract created successfully.', 'success');
+        await fetchProspectData();
+        await handleUpdateStage('CONTRACT_CREATED', 'Contract record created for this prospect.');
+      }
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to create contract.', 'error');
+    } finally {
+      setSubmittingContract(false);
+    }
+  };
+
+  const handleUploadDraftPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const contract = prospect?.contracts?.[0];
+    if (!contract) { showToast('Create a contract first.', 'error'); return; }
+
+    const formData = new FormData();
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const uniqueName = `draft_${prospectId}_${Date.now()}.${ext}`;
+    formData.append('file', file, uniqueName);
+
+    setUploadingFiles(p => ({ ...p, draftPdf: true }));
+    try {
+      const uploadRes = await contractApi.uploadFile(formData);
+      const fileUrl = uploadRes.data.fileUrl;
+      await contractApi.saveDraftUrl(contract.id, fileUrl);
+      showToast('Draft PDF uploaded.', 'success');
+      await fetchProspectData();
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Upload failed.', 'error');
+    } finally {
+      setUploadingFiles(p => ({ ...p, draftPdf: false }));
+      e.target.value = '';
+    }
+  };
+
+  const handleApproveContract = async () => {
+    const contract = prospect?.contracts?.[0];
+    if (!contract) return;
+    try {
+      await contractApi.approve(contract.id);
+      showToast('Contract approved.', 'success');
+      await fetchProspectData();
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Approval failed.', 'error');
+    }
+  };
+
+  const handleSendContractEmail = async () => {
+    const contract = prospect?.contracts?.[0];
+    if (!contract) return;
+    if (!prospect.email) { showToast('Client has no email address. Edit the brief first.', 'error'); return; }
+    setSubmittingContract(true);
+    try {
+      await contractApi.sendContract(contract.id, { clientEmail: prospect.email, clientName: prospect.clientName });
+      showToast('Contract email sent.', 'success');
+      await fetchProspectData();
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to send contract email.', 'error');
+    } finally {
+      setSubmittingContract(false);
+    }
+  };
+
+  const handleUploadSignedContract = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const contract = prospect?.contracts?.[0];
+    if (!contract) { showToast('No contract found.', 'error'); return; }
+
+    const formData = new FormData();
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const uniqueName = `signed_${prospectId}_${Date.now()}.${ext}`;
+    formData.append('file', file, uniqueName);
+
+    setUploadingFiles(p => ({ ...p, signedPdf: true }));
+    try {
+      const uploadRes = await contractApi.uploadFile(formData);
+      const fileUrl = uploadRes.data.fileUrl;
+      await contractApi.saveSignedUrl(contract.id, fileUrl);
+      showToast('Signed contract uploaded.', 'success');
+      await fetchProspectData();
+      await handleUpdateStage('SIGNED_CONTRACT_UPLOADED', 'Signed contract received from client.');
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Upload failed.', 'error');
+    } finally {
+      setUploadingFiles(p => ({ ...p, signedPdf: false }));
+      e.target.value = '';
+    }
+  };
+
+  const handleRecordInitialPayment = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!paymentNotes.trim() && !paymentAmount) {
+      showToast('Please enter payment amount or notes.', 'error');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await prospectApi.recordInitialPayment(prospectId, {
+        amount: paymentAmount || undefined,
+        unit: paymentUnit,
+        notes: paymentNotes.trim() || `Initial payment of ${paymentAmount} ${paymentUnit} received.`,
+        attachmentUrl: paymentDocUrl,
+        attachmentName: paymentDocName,
+      });
+      if (res.data.success) {
+        showToast('Initial payment recorded.', 'success');
+        setPaymentAmount('');
+        setPaymentNotes('');
+        setPaymentDocUrl(null);
+        setPaymentDocName(null);
+        setShowInitialPaymentModal(false);
+        await fetchProspectData();
+      }
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to record payment.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleVerifyByAccounts = async () => {
+    try {
+      const revisedAmt = revisedPaymentAmount ? parseFloat(revisedPaymentAmount) : null;
+      const res = await prospectApi.verifyByAccounts(prospectId, {
+        notes: 'Payment and documentation verified by Accounts.',
+        revisedAmount: revisedAmt,
+        revisedUnit: revisedPaymentUnit,
+      });
+      if (res.data.success) {
+        showToast('Verified! Project moved to WON.', 'success');
+        setRevisedPaymentAmount('');
+        await fetchProspectData();
+      }
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Verification failed.', 'error');
+    }
+  };
+
   const renderRadioField = (label: string, value: string) => (
     <div className="flex flex-col gap-1.5">
       <label className={labelBase}>{label}</label>
@@ -381,53 +556,62 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
     const selectedPhase = activeIndex !== -1 ? PROJECT_PHASES[activeIndex] : null;
 
     return (
-      <div className="flex flex-col gap-2.5 sm:col-span-2 bg-stone-50/50 p-4 rounded-xl border border-[rgba(197,168,128,0.15)] select-none">
-        <div className="flex flex-wrap justify-between items-center gap-2">
+      <div className="w-full select-none">
+        <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
           <label className={labelBase}>{label}</label>
           <span className="text-[10px] font-bold text-[#9e7735] bg-[rgba(184,144,71,0.08)] px-1.5 py-0.5 rounded border border-[rgba(184,144,71,0.22)]">
             {fillPct}% complete
           </span>
         </div>
-
-        {selectedPhase && (
-          <div className="flex items-center gap-2 bg-[rgba(184,144,71,0.08)] border border-[rgba(184,144,71,0.25)] rounded-lg px-3 py-2">
-            <span className="w-6 h-6 rounded-full bg-[#b89047] text-white text-[11px] font-bold flex items-center justify-center shrink-0">
+        {selectedPhase ? (
+          <div className="flex items-center gap-2 bg-[rgba(184,144,71,0.08)] border border-[rgba(184,144,71,0.25)] rounded-lg px-3 py-1.5 mb-3">
+            <span className="w-5 h-5 rounded-full bg-[#b89047] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
               {selectedPhase.letter}
             </span>
             <span className="text-[12px] font-semibold text-stone-700">{selectedPhase.label}</span>
           </div>
+        ) : (
+          <p className="text-[11px] text-stone-400 italic mb-3">No project stage recorded</p>
         )}
-
-        <div className="w-full h-1.5 bg-stone-200 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full"
-            style={{ width: `${fillPct}%`, background: 'linear-gradient(to right, #b89047, #9e7735)' }}
-          />
-        </div>
-
-        <div className="grid grid-cols-5 gap-1.5">
-          {PROJECT_PHASES.map((phase, idx) => {
-            const isSelected = value === phase.label;
-            const isPast = activeIndex !== -1 && idx < activeIndex;
-            return (
-              <div
-                key={phase.letter}
-                title={phase.label}
-                className={`flex flex-col items-center justify-start gap-0.5 p-1.5 rounded-lg border text-center ${
-                  isSelected
-                    ? 'bg-[#b89047] border-[#b89047] text-white shadow-sm shadow-[rgba(184,144,71,0.35)]'
-                    : isPast
-                      ? 'bg-[rgba(184,144,71,0.12)] border-[rgba(184,144,71,0.3)] text-[#9e7735]'
-                      : 'bg-white border-stone-200 text-stone-400'
-                }`}
-              >
-                <span className="text-[11px] font-bold leading-none">{phase.letter}</span>
-                <span className={`text-[7.5px] leading-tight text-center line-clamp-2 ${isSelected ? 'text-white/90' : ''}`}>
-                  {phase.shortName}
-                </span>
+        <div className="overflow-x-auto p-2">
+          <div className="relative min-w-[520px]">
+            <div className="flex items-start relative z-10">
+              {PROJECT_PHASES.map((phase, idx) => {
+                const isSelected = value === phase.label;
+                const isPast = activeIndex !== -1 && idx < activeIndex;
+                return (
+                  <div
+                    key={phase.letter}
+                    title={phase.label}
+                    className="flex-1 flex flex-col items-center gap-0.5 p-0 pb-1"
+                  >
+                    <span className={`w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8.5px] font-bold leading-none ${
+                      isSelected
+                        ? 'bg-[#b89047] text-white shadow ring-2 ring-[rgba(184,144,71,0.3)] scale-[1.3]'
+                        : isPast
+                          ? 'bg-[#b89047] text-white'
+                          : 'bg-white border-2 border-stone-300 text-stone-400'
+                    }`}>
+                      {phase.letter}
+                    </span>
+                    <span className={`text-[6.5px] leading-tight text-center font-medium ${
+                      isSelected ? 'text-[#b89047] font-bold' : isPast ? 'text-[#9e7735]/70' : 'text-stone-400'
+                    }`}>
+                      {phase.shortName}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="absolute z-0" style={{ top: '9px', left: 'calc(100% / 40)', right: 'calc(100% / 40)', height: '2px' }}>
+              <div className="w-full h-full bg-stone-200 rounded-full">
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${fillPct}%`, background: 'linear-gradient(to right, #b89047, #9e7735)' }}
+                />
               </div>
-            );
-          })}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -580,9 +764,6 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
           </div>
           <ReadField label="Lead Source" value={sourceLabel(prospect.sourceType, prospect.sourceCustom)} />
           <ReadField label="Budget" value={budgetLabel(prospect.budgetAmount, prospect.budgetUnit)} />
-          <div className="col-span-2">
-            {renderProjectStageField('Current Stage of Project', prospect.projectStage)}
-          </div>
           <ReadField label="Expected Completion" value={formatDate(prospect.expectedCompletion)} />
         </div>
 
@@ -737,7 +918,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
   return (
     <div className="animate-fade-in flex flex-col h-full min-h-0">
       {/* Header bar */}
-      <div className="flex items-start justify-between gap-2 mb-4 shrink-0 border-b border-stone-200 pb-3">
+      <div className="flex items-start justify-between gap-2 mb-0 shrink-0 border-b border-stone-200 pb-3">
         <div className="flex items-start gap-2 min-w-0">
           <button onClick={() => navigate('/prospects')} className="p-2 rounded-lg hover:bg-stone-100 text-stone-550 border-0 bg-transparent cursor-pointer shrink-0 mt-0.5" title="Back to listing">
             <ArrowLeft size={16} />
@@ -759,8 +940,13 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
         </button>
       </div>
 
+      {/* Stage bar — full width, sticky below header */}
+      <div className="shrink-0 border-b border-stone-100 px-0 py-3 bg-stone-50/30">
+        {renderProjectStageField('Current Stage of Project', prospect.projectStage || '')}
+      </div>
+
       {/* Main content grid */}
-      <div className="flex-1 overflow-y-auto min-h-0 pr-1 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto min-h-0 pr-1 scrollbar-thin mt-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start pb-8">
           {/* Left Column: Client profile — narrow sidebar */}
           <div className="lg:col-span-3 bg-stone-50/40 border border-stone-200/80 p-4 rounded-2xl space-y-3">
@@ -876,37 +1062,35 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                   {workflowStageLabel(prospect.workflowStage)}
                 </span>
               </div>
-              
-              <div className="space-y-4">
-                {[
-                  { key: 'LEAD_CAPTURED', label: 'Lead Captured' },
-                  { key: 'MEETING', label: 'Meeting' },
-                  { key: 'PROPOSAL_SENT', label: 'Proposal Emailed' },
-                  { key: 'PROPOSAL_AGREED', label: 'Client Agreed (Yes)' },
-                  { key: 'FINAL_DISCUSSION', label: 'Final Discussion' },
-                  { key: 'WON', label: 'Project Won' },
-                ].map((stageItem, idx, arr) => {
-                  const activeStage = prospect.workflowStage || 'LEAD_CAPTURED';
-                  // Normalize stages to map intermediate/followup milestones to primary stepper steps
-                  const normalised = (s: string) => {
-                    if (['OFFLINE_MEETING', 'ONLINE_MEETING', 'MEETING_SCHEDULED', 'SITE_DETAILS_REQUESTED', 'SITE_DETAILS_UPLOADED', 'PROPOSAL_IN_PROGRESS', 'FOLLOW_UP', 'FOLLOW_UP_GENERAL', 'NEGOTIATION_FOLLOW_UP', 'ON_CALL_FOLLOW_UP', 'OFFLINE_FOLLOW_UP'].includes(s)) {
-                      return 'MEETING';
-                    }
-                    if (s === 'PROPOSAL_ACCEPTED' || s === 'PROPOSAL_REJECTED') {
-                      return 'PROPOSAL_AGREED';
-                    }
-                    return s;
-                  };
-                  const activeNorm = normalised(activeStage);
-                  const activeIdx = arr.findIndex(s => s.key === activeNorm);
-                  const isCompleted = activeStage === 'LOST' ? false : (activeNorm === 'WON' || idx < activeIdx || activeNorm === stageItem.key);
-                  const isActive = activeNorm === stageItem.key;
-                  
+
+              {prospect.workflowStage === 'LOST' && (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">
+                  <span className="text-[11px] font-bold text-red-700">Lead marked as Lost.</span>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {([
+                  { key: 'LEAD_CAPTURED', label: 'Lead Captured', rank: 1 },
+                  { key: 'MEETING', label: 'Meeting / Follow-up', rank: 2 },
+                  { key: 'SITE_DETAILS', label: 'Site Details', rank: 3 },
+                  { key: 'PROPOSAL_SENT', label: 'Proposal Emailed', rank: 4 },
+                  { key: 'PROPOSAL_AGREED', label: 'Client Agreed', rank: 6 },
+                  { key: 'CONTRACT_EMAILED', label: 'Contract Sent', rank: 6.5 },
+                  { key: 'SIGNED_CONTRACT_UPLOADED', label: 'Contract Signed', rank: 6.7 },
+                  { key: 'INITIAL_PAYMENT_RECEIVED', label: 'Payment Received', rank: 6.9 },
+                  { key: 'WON', label: 'Project Won', rank: 8 },
+                ] as { key: string; label: string; rank: number }[]).map((step, idx, arr) => {
+                  const activeRank = stageRank(prospect.workflowStage);
+                  const isLost = prospect.workflowStage === 'LOST';
+                  const isCompleted = !isLost && activeRank > step.rank;
+                  const isActive = !isLost && activeRank >= step.rank && (idx === arr.length - 1 ? activeRank >= step.rank : activeRank < arr[idx + 1].rank);
+
                   return (
-                    <div key={stageItem.key} className="flex items-start gap-3">
+                    <div key={step.key} className="flex items-start gap-3">
                       <div className="flex flex-col items-center">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border transition-colors ${
-                          isActive 
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border transition-colors shrink-0 ${
+                          isActive
                             ? 'bg-[#b89047] text-white border-[#b89047] ring-4 ring-[rgba(184,144,71,0.2)]'
                             : isCompleted
                               ? 'bg-emerald-500 text-white border-emerald-500'
@@ -915,12 +1099,12 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                           {isCompleted ? <Check size={10} /> : idx + 1}
                         </div>
                         {idx < arr.length - 1 && (
-                          <div className={`w-0.5 h-6 my-1 ${isCompleted ? 'bg-emerald-500' : 'bg-stone-200'}`} />
+                          <div className={`w-0.5 h-5 my-0.5 ${isCompleted ? 'bg-emerald-400' : 'bg-stone-200'}`} />
                         )}
                       </div>
                       <div className="pt-0.5">
-                        <p className={`text-[11.5px] font-semibold ${isActive ? 'text-[#7e5a20] font-bold' : isCompleted ? 'text-stone-700' : 'text-stone-400'}`}>
-                          {stageItem.label}
+                        <p className={`text-[11.5px] font-semibold leading-tight ${isActive ? 'text-[#7e5a20] font-bold' : isCompleted ? 'text-stone-700' : 'text-stone-400'}`}>
+                          {step.label}
                         </p>
                       </div>
                     </div>
@@ -929,7 +1113,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
               </div>
             </div>
 
-            {/* Sales actions panel: Only rendered for SALES role */}
+            {/* Sales actions panel */}
             {currentUser.role === 'SALES' && (
               <div className="bg-stone-50/40 border border-stone-200/80 p-3 sm:p-5 rounded-xl sm:rounded-2xl space-y-3 shrink-0">
                 <h4 className="text-[12px] font-bold text-[#9e7735] uppercase tracking-wide border-b border-stone-200/50 pb-1.5 mb-2">
@@ -937,150 +1121,272 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                 </h4>
                 {isWon && (
                   <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 mb-1">
-                    <span className="text-[11px] font-bold text-emerald-700">🏆 Project Won — all actions are locked.</span>
+                    <span className="text-[11px] font-bold text-emerald-700">Project Won — all actions are locked.</span>
                   </div>
                 )}
+
+                {/* ── Core action buttons ── */}
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    disabled={isWon}
-                    onClick={() => {
-                      setActivityType('meeting');
-                      setActivitySubtype('offline');
-                      setFollowUpNotes('');
-                      setContractFileUrl(null);
-                      setContractFileName(null);
-                      setShowLogFollowUpModal(true);
-                    }}
-                    className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10.5px] font-bold text-stone-750 bg-white border border-stone-200 hover:bg-stone-50 hover:text-stone-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    onClick={() => { setActivityType('meeting'); setActivitySubtype('offline'); setFollowUpNotes(''); setContractFileUrl(null); setShowLogFollowUpModal(true); }}
+                    className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10.5px] font-bold text-stone-750 bg-white border border-stone-200 hover:bg-stone-50 transition-colors cursor-pointer"
                   >
-                    Log Meeting / Notes
+                    <ClipboardList size={12} /> Log Meeting / Notes
                   </button>
+
+                  {/* Request Site Details — once only (hidden after SITE_DETAILS_REQUESTED or later) */}
+                  {stageRank(prospect.workflowStage) < stageRank('SITE_DETAILS_REQUESTED') && (
+                    <button
+                      type="button"
+                      disabled={isWon}
+                      onClick={() => {
+                        setSiteRequestSubject(`Request for Site Location Details - Grihscape - ${prospect.clientName}`);
+                       setSiteRequestBody(`Hope you are doing well.\n\nTo move forward with preparing a detailed project proposal, we kindly request you to please share the Google Maps location URL of your site.\n\nBest regards,\nGrihscape Design & Construction`);
+                        setShowRequestSiteDetailsModal(true);
+                      }}
+                      className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10.5px] font-bold text-stone-750 bg-white border border-stone-200 hover:bg-stone-50 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Mail size={12} /> Request Site Details
+                    </button>
+                  )}
+
+                  {/* Upload Site Details — shown only while site location missing */}
+                  {isSiteDetailsMissing && (
+                    <button
+                      type="button"
+                      disabled={isWon}
+                      onClick={() => { setSiteGoogleMapsLinkInput(''); setShowUploadSiteDetailsModal(true); }}
+                      className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10.5px] font-bold text-stone-750 bg-white border border-stone-200 hover:bg-stone-50 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Upload size={12} /> Upload Site Details
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     disabled={isWon}
-                    onClick={() => {
-                      setSiteRequestSubject(`Request for Site Location Details - Grihscape - ${prospect.clientName}`);
-                      setSiteRequestBody(`Dear ${prospect.clientName || 'Client'},\n\nHope you are doing well.\n\nTo move forward with preparing a detailed project proposal, we request you to share the site coordinates (latitude/longitude) along with some photos and videos of the plot.\n\nYou can email them to us or upload them. Let us know if you need any assistance.\n\nBest regards,\nGrihscape Design & Construction`);
-                      setShowRequestSiteDetailsModal(true);
-                    }}
-                    className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10.5px] font-bold text-stone-750 bg-white border border-stone-200 hover:bg-stone-50 hover:text-stone-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    onClick={() => { setMeetingType('ONLINE'); setMeetingDate(''); setMeetingNotes(''); setMeetingLink(''); setShowMeetingInviteModal(true); }}
+                    className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10.5px] font-bold text-stone-750 bg-white border border-stone-200 hover:bg-stone-50 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    Request Site Details
+                    <Mail size={12} /> Send Meeting Invite
                   </button>
-                  <button
-                    type="button"
-                    disabled={isWon || !isSiteDetailsMissing}
-                    onClick={() => {
-                      setSiteGoogleMapsLinkInput('');
-                      setShowUploadSiteDetailsModal(true);
-                    }}
-                    className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10.5px] font-bold text-stone-750 bg-white border border-stone-200 hover:bg-stone-50 hover:text-stone-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                    title={isWon ? 'Project is Won.' : !isSiteDetailsMissing ? 'Site location has already been saved.' : 'Save Google Maps link for this site'}
-                  >
-                    Upload Site Details
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isWon}
-                    onClick={() => {
-                      setMeetingType('ONLINE');
-                      setMeetingDate('');
-                      setMeetingNotes('');
-                      setMeetingLink('');
-                      setShowMeetingInviteModal(true);
-                    }}
-                    className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10.5px] font-bold text-stone-750 bg-white border border-stone-200 hover:bg-stone-50 hover:text-stone-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Send Meeting Invite
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isWon || isSiteDetailsMissing}
-                    onClick={() => {
-                      setProposalSubject(`Project Proposal - Grihscape - ${prospect.clientName}`);
-                      setProposalBody(`Dear ${prospect.clientName || 'Client'},\n\nThank you for sharing your project requirements and site details with us.\n\nWe have prepared a comprehensive proposal custom-tailored to the services you requested (${prospect.serviceType.split(',').map((s: string) => serviceLabels[s]).join(', ')}).\n\nPlease find the PDF document attached. If you have any questions or would like to schedule a session to review this proposal, please feel free to call us.\n\nBest regards,\nGrihscape Design & Construction`);
-                      setProposalFileUrl(null);
-                      setProposalFileName(null);
-                      setShowSendProposalModal(true);
-                    }}
-                    className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow transition-all cursor-pointer border-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                    title={isWon ? 'Project is Won.' : isSiteDetailsMissing ? 'Save site location first before sending a proposal.' : 'Send Proposal Email'}
-                  >
-                    Send Proposal Email
-                  </button>
+
+                  {/* Send / Resend Proposal — disabled after PROPOSAL_AGREED */}
+                  {stageRank(prospect.workflowStage) < stageRank('PROPOSAL_AGREED') && (
+                    <button
+                      type="button"
+                      disabled={isWon || isSiteDetailsMissing}
+                      onClick={() => {
+                        setProposalSubject(`Project Proposal - Grihscape - ${prospect.clientName}`);
+                        setProposalBody(`Thank you for sharing your project requirements and site details with us.\n\nWe have prepared a comprehensive proposal for the services you requested.\n\nPlease find the attached PDF for your review.\n\nBest regards,\nGrihscape Design & Construction`);
+                        setProposalFileUrl(null);
+                        setProposalFileName(null);
+                        setShowSendProposalModal(true);
+                      }}
+                      className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow transition-all cursor-pointer border-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                      title={isSiteDetailsMissing ? 'Save site location first.' : 'Send Proposal Email'}
+                    >
+                      <Send size={12} /> Send Proposal
+                    </button>
+                  )}
                 </div>
-                {!isWon && isSiteDetailsMissing && (
-                  <p className="text-[9.5px] text-[#7e5a20] font-semibold mt-1">
-                    ⚠️ Save site location first to enable Proposal.
-                  </p>
+
+                {/* ── Proposal response buttons ── */}
+                {['PROPOSAL_SENT', 'PROPOSAL_IN_PROGRESS', 'PROPOSAL_ACCEPTED'].includes(prospect.workflowStage || '') && (
+                  <div className="space-y-1.5 border-t border-stone-200/50 pt-2">
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-stone-500">Update Proposal Response</span>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <button type="button" onClick={() => handleUpdateStage('PROPOSAL_ACCEPTED', 'Client accepted the proposal terms.')}
+                        className={`py-1.5 rounded-lg text-[9px] font-bold border-0 cursor-pointer text-center transition-colors ${prospect.workflowStage === 'PROPOSAL_ACCEPTED' ? 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-400' : 'text-white bg-emerald-600 hover:bg-emerald-700'}`}>
+                        Accepted
+                      </button>
+                      <button type="button" onClick={() => handleUpdateStage('PROPOSAL_REJECTED', 'Client rejected the proposal.')}
+                        className="py-1.5 rounded-lg text-[9px] font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors border-0 cursor-pointer text-center">
+                        Rejected
+                      </button>
+                      <button type="button" onClick={() => handleUpdateStage('PROPOSAL_IN_PROGRESS', 'Proposal status set to In Progress.')}
+                        className="py-1.5 rounded-lg text-[9px] font-bold text-white bg-amber-600 hover:bg-amber-700 transition-colors border-0 cursor-pointer text-center">
+                        In Progress
+                      </button>
+                    </div>
+                    {/* Mark as Agreed — locked once AGREED */}
+                    {prospect.workflowStage === 'PROPOSAL_ACCEPTED' && (
+                      <button type="button" onClick={() => handleUpdateStage('PROPOSAL_AGREED', 'Client formally agreed to proposal terms.')}
+                        className="w-full inline-flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition-colors cursor-pointer border-0 mt-1">
+                        <BadgeCheck size={12} /> Mark as Agreed (Locks Proposal)
+                      </button>
+                    )}
+                  </div>
                 )}
 
-                <div className="flex flex-col gap-2 pt-1.5 border-t border-stone-200/50 mt-1.5">
-                  {['PROPOSAL_SENT', 'PROPOSAL_IN_PROGRESS'].includes(prospect.workflowStage || '') && (
-                    <div className="space-y-1.5">
-                      <span className="text-[9px] font-bold uppercase tracking-wide text-stone-500">Update Proposal Response</span>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateStage('PROPOSAL_ACCEPTED', 'Client accepted the proposal terms.')}
-                          className="py-1.5 rounded-lg text-[9px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors border-0 cursor-pointer text-center"
-                        >
-                          Accept
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateStage('PROPOSAL_REJECTED', 'Client rejected the proposal.')}
-                          className="py-1.5 rounded-lg text-[9px] font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors border-0 cursor-pointer text-center"
-                        >
-                          Reject
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateStage('PROPOSAL_IN_PROGRESS', 'Proposal status set to In Progress.')}
-                          className="py-1.5 rounded-lg text-[9px] font-bold text-white bg-amber-600 hover:bg-amber-700 transition-colors border-0 cursor-pointer text-center"
-                        >
-                          In Progress
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                {/* ── Contract section (PROPOSAL_AGREED or later) ── */}
+                {stageRank(prospect.workflowStage) >= stageRank('PROPOSAL_AGREED') && !isWon && (() => {
+                  const contract = prospect?.contracts?.[0];
+                  return (
+                    <div className="space-y-2 border-t border-stone-200/50 pt-2">
+                      <span className="text-[9px] font-bold uppercase tracking-wide text-stone-500 flex items-center gap-1.5">
+                        <FilePlus size={10} /> Contract Management
+                      </span>
 
-                  {prospect.workflowStage === 'PROPOSAL_ACCEPTED' && (
+                      {/* Step 1: Create contract */}
+                      {!contract && (
+                        <button type="button" disabled={submittingContract} onClick={handleCreateContract}
+                          className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px transition-all cursor-pointer border-0 disabled:opacity-50">
+                          {submittingContract ? <RefreshCw size={12} className="animate-spin" /> : <FilePlus size={12} />}
+                          Create Contract
+                        </button>
+                      )}
+
+                      {/* Step 2: Upload draft PDF (once) */}
+                      {contract && !contract.draftPdfUrl && (
+                        <label className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-stone-750 bg-white border border-stone-200 hover:bg-stone-50 transition-colors cursor-pointer">
+                          {uploadingFiles['draftPdf'] ? <RefreshCw size={12} className="animate-spin text-amber-600" /> : <Upload size={12} />}
+                          Upload Draft PDF
+                          <input type="file" accept=".pdf" className="hidden" onChange={handleUploadDraftPdf} />
+                        </label>
+                      )}
+
+                      {/* Draft PDF uploaded indicator */}
+                      {contract?.draftPdfUrl && (
+                        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 text-[10.5px] text-emerald-700 font-semibold">
+                          <Check size={12} />
+                          Draft PDF uploaded
+                          <a href={`${BACKEND_BASE}${contract.draftPdfUrl}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-amber-600 hover:underline font-bold text-[9.5px]">View</a>
+                        </div>
+                      )}
+
+                      {/* Upload / Replace Signed Contract — locked once payment is recorded */}
+                      {contract && stageRank(prospect.workflowStage) >= stageRank('CONTRACT_EMAILED') && stageRank(prospect.workflowStage) < stageRank('INITIAL_PAYMENT_RECEIVED') && (
+                        <label className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-stone-750 bg-white border border-stone-200 hover:bg-stone-50 transition-colors cursor-pointer">
+                          {uploadingFiles['signedPdf'] ? <RefreshCw size={12} className="animate-spin text-amber-600" /> : <Upload size={12} />}
+                          {contract.signedPdfUrl ? 'Replace Signed Contract' : 'Upload Signed Contract'}
+                          <input type="file" accept=".pdf" className="hidden" onChange={handleUploadSignedContract} />
+                        </label>
+                      )}
+                      {contract?.signedPdfUrl && (
+                        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 text-[10.5px] text-emerald-700 font-semibold">
+                          <Check size={12} />
+                          Signed contract on file
+                          <a href={`${BACKEND_BASE}${contract.signedPdfUrl}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-amber-600 hover:underline font-bold text-[9.5px]">View</a>
+                        </div>
+                      )}
+
+                      {/* Record Initial Payment */}
+                      {stageRank(prospect.workflowStage) >= stageRank('SIGNED_CONTRACT_UPLOADED') && stageRank(prospect.workflowStage) < stageRank('INITIAL_PAYMENT_RECEIVED') && (
+                        <button type="button" onClick={() => setShowInitialPaymentModal(true)}
+                          className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors cursor-pointer border-0">
+                          <DollarSign size={12} /> Record Initial Payment
+                        </button>
+                      )}
+                      {stageRank(prospect.workflowStage) >= stageRank('INITIAL_PAYMENT_RECEIVED') && (
+                        <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-lg px-2.5 py-1.5 text-[10.5px] text-indigo-700 font-semibold">
+                          <DollarSign size={12} />
+                          Initial payment recorded
+                          {prospect.initialPaymentAmount && (
+                            <span className="ml-auto font-bold text-indigo-800">
+                              {prospect.initialPaymentAmount} {prospect.initialPaymentUnit || 'Lakh'}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* ── Mark Lost ── */}
+                {!isWon && prospect.workflowStage !== 'LOST' && (
+                  <div className="border-t border-stone-200/50 pt-2">
                     <button
                       type="button"
-                      onClick={() => handleUpdateStage('FINAL_DISCUSSION', 'Scheduled final discussion to align on work timelines.')}
-                      className="w-full inline-flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold text-white bg-indigo-650 hover:bg-indigo-750 transition-colors cursor-pointer border-0"
-                    >
-                      Start Final Discussion
-                    </button>
-                  )}
-                  {['PROPOSAL_ACCEPTED', 'FINAL_DISCUSSION'].includes(prospect.workflowStage || '') && (
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateStage('WON', 'Contract signed successfully! Project moved to execution.')}
-                      className="w-full inline-flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 transition-colors cursor-pointer border-0"
-                    >
-                      Mark as Won
-                    </button>
-                  )}
-                  {prospect.workflowStage !== 'WON' && prospect.workflowStage !== 'LOST' && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const reason = prompt("Enter lost reason notes:");
-                        if (reason && reason.trim() !== '') {
-                          handleUpdateStage('LOST', `Client lost. Reason: ${reason}`);
-                        }
-                      }}
+                      onClick={() => { const r = prompt('Enter reason for marking as lost:'); if (r?.trim()) handleUpdateStage('LOST', `Client lost. Reason: ${r}`); }}
                       className="w-full inline-flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold text-stone-500 bg-stone-100 hover:bg-stone-200 transition-colors cursor-pointer border-0"
                     >
                       Mark Lost
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Admin / Accounts Actions panel */}
+            {(currentUser.role === 'ADMIN' || currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ACCOUNTS') && stageRank(prospect.workflowStage) >= stageRank('CONTRACT_CREATED') && !isWon && (() => {
+              const contract = prospect?.contracts?.[0];
+              return (
+                <div className="bg-blue-50/40 border border-blue-200/80 p-3 sm:p-5 rounded-xl sm:rounded-2xl space-y-2.5 shrink-0">
+                  <h4 className="text-[12px] font-bold text-blue-800 uppercase tracking-wide border-b border-blue-200/50 pb-1.5 mb-2 flex items-center gap-1.5">
+                    <ShieldCheck size={13} /> Admin Actions
+                  </h4>
+
+                  {/* Approve contract — Admin/SuperAdmin only */}
+                  {currentUser.role !== 'ACCOUNTS' && contract && contract.status === 'PENDING' && contract.draftPdfUrl && (
+                    <button type="button" onClick={handleApproveContract}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer border-0">
+                      <BadgeCheck size={12} /> Approve Contract
+                    </button>
+                  )}
+                  {contract && contract.status !== 'PENDING' && (
+                    <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 text-[10.5px] text-emerald-700 font-semibold">
+                      <Check size={12} />
+                      Contract {contract.status.toLowerCase()} {contract.approvedBy?.name ? `by ${contract.approvedBy.name}` : ''}
+                    </div>
+                  )}
+
+                  {/* Send contract email — Admin/SuperAdmin only; once only; locked after payment */}
+                  {currentUser.role !== 'ACCOUNTS' && contract?.status === 'APPROVED' && stageRank(prospect.workflowStage) < stageRank('CONTRACT_EMAILED') && stageRank(prospect.workflowStage) < stageRank('INITIAL_PAYMENT_RECEIVED') && (
+                    <button type="button" disabled={submittingContract || !prospect.email} onClick={handleSendContractEmail}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-violet-600 hover:bg-violet-700 transition-colors cursor-pointer border-0 disabled:opacity-50"
+                      title={!prospect.email ? 'Client has no email.' : 'Send approved contract to client'}>
+                      {submittingContract ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12} />}
+                      Send Contract Email
+                    </button>
+                  )}
+                  {stageRank(prospect.workflowStage) >= stageRank('CONTRACT_EMAILED') && (
+                    <div className="flex items-center gap-2 bg-violet-50 border border-violet-200 rounded-lg px-2.5 py-1.5 text-[10.5px] text-violet-700 font-semibold">
+                      <Check size={12} /> Contract email sent to client
+                    </div>
+                  )}
+
+                  {/* Verify by accounts → WON */}
+                  {stageRank(prospect.workflowStage) >= stageRank('INITIAL_PAYMENT_RECEIVED') && (
+                    <div className="space-y-2 border border-emerald-200 rounded-xl p-3 bg-emerald-50/50">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">Payment Verification</p>
+                      {prospect.initialPaymentAmount ? (
+                        <p className="text-[11px] text-emerald-700 font-semibold">
+                          Sales logged: <span className="font-bold">{prospect.initialPaymentAmount} {prospect.initialPaymentUnit || 'Lakh'}</span>
+                        </p>
+                      ) : (
+                        <p className="text-[10.5px] text-stone-400 italic">No amount logged by sales.</p>
+                      )}
+                      <p className="text-[10px] text-stone-500">Revise actual received amount (optional):</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder={prospect.initialPaymentAmount ? String(prospect.initialPaymentAmount) : 'Amount'}
+                          value={revisedPaymentAmount}
+                          onChange={e => setRevisedPaymentAmount(e.target.value)}
+                          className="flex-1 text-[11px] bg-white border border-[rgba(184,144,71,0.35)] text-stone-900 rounded-lg px-2.5 py-1.5 outline-none focus:border-[#b89047] focus:ring-1 focus:ring-[rgba(184,144,71,0.2)] font-[inherit]"
+                        />
+                        <select
+                          value={revisedPaymentUnit}
+                          onChange={e => setRevisedPaymentUnit(e.target.value)}
+                          className="w-16 text-[11px] bg-white border border-[rgba(184,144,71,0.35)] text-stone-900 rounded-lg px-1.5 py-1.5 outline-none focus:border-[#b89047] font-[inherit]"
+                        >
+                          <option value="LAKH">L</option>
+                          <option value="CRORE">Cr</option>
+                        </select>
+                      </div>
+                      <button type="button" onClick={handleVerifyByAccounts}
+                        className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition-colors cursor-pointer border-0">
+                        <ShieldCheck size={12} /> Verify & Mark Won
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Activities Timeline Log */}
             <div className="flex-1 flex flex-col min-h-0 bg-stone-50/40 border border-stone-200/80 p-5 rounded-2xl">
@@ -1200,28 +1506,6 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                 />
               </div>
 
-              {/* Direct Contract Upload */}
-              {!hasDraftPdf && renderFileUploadField(
-                'Upload Contract Document (PDF, max 10MB)',
-                'contractFile',
-                contractFileUrl || '',
-                (url) => {
-                  setContractFileUrl(url);
-                  if (url) {
-                    const name = url.split('/').pop() || 'contract.pdf';
-                    setContractFileName(name);
-                  } else {
-                    setContractFileName(null);
-                  }
-                },
-                10
-              )}
-              {hasDraftPdf && (
-                <div className="text-[11px] text-stone-500 bg-stone-50 border border-stone-200 rounded-lg p-2.5 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                  <span>Contract PDF already uploaded for this prospect.</span>
-                </div>
-              )}
 
               <div className="flex gap-2.5 pt-2">
                 <button type="button" onClick={() => setShowLogFollowUpModal(false)} className={`${btnSecondary} flex-1 justify-center`}>Cancel</button>
@@ -1475,6 +1759,102 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                 <button type="submit" disabled={sendingMeetingInvite || !prospect.email || !meetingDate} className={`${btnPrimary} flex-1 justify-center`}>
                   {sendingMeetingInvite ? <RefreshCw size={13} className="animate-spin" /> : <Mail size={13} />}
                   {sendingMeetingInvite ? 'Sending…' : 'Send Invite'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── Initial Payment Modal ── */}
+      {showInitialPaymentModal && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs" onClick={() => setShowInitialPaymentModal(false)}>
+          <div className="animate-scale-in w-full max-w-[480px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+                <DollarSign size={16} className="text-[#b89047]" /> Record Initial Payment
+              </h3>
+              <button onClick={() => setShowInitialPaymentModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleRecordInitialPayment} className="flex flex-col gap-4">
+              <div className="flex gap-2">
+                <div className="flex-1 flex flex-col gap-1.5">
+                  <label className={labelBase}>Amount</label>
+                  <input
+                    type="number"
+                    value={paymentAmount}
+                    onChange={e => setPaymentAmount(e.target.value)}
+                    placeholder="e.g. 5"
+                    className={inputBase}
+                  />
+                </div>
+                <div className="w-28 flex flex-col gap-1.5">
+                  <label className={labelBase}>Unit</label>
+                  <select value={paymentUnit} onChange={e => setPaymentUnit(e.target.value)} className={inputBase}>
+                    <option value="LAKH">Lakh</option>
+                    <option value="CRORE">Crore</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className={labelBase}>Notes / Description *</label>
+                <textarea
+                  rows={3}
+                  required
+                  value={paymentNotes}
+                  onChange={e => setPaymentNotes(e.target.value)}
+                  placeholder="e.g. Initial advance payment for Architectural Consultation received via NEFT..."
+                  className={`${inputBase} resize-none`}
+                />
+              </div>
+
+              {/* Supporting doc upload */}
+              <div className="flex flex-col gap-1.5 bg-stone-50/40 p-3 rounded-xl border border-dashed border-stone-200">
+                <label className={labelBase}>Supporting Document (PDF, max 10MB)</label>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const ext = file.name.split('.').pop()?.toLowerCase();
+                    const uniqueName = `payment_${prospectId}_${Date.now()}.${ext}`;
+                    const formData = new FormData();
+                    formData.append('file', file, uniqueName);
+                    setUploadingFiles(p => ({ ...p, paymentDoc: true }));
+                    try {
+                      const res = await contractApi.uploadFile(formData);
+                      setPaymentDocUrl(res.data.fileUrl);
+                      setPaymentDocName(uniqueName);
+                    } catch {
+                      showToast('Document upload failed.', 'error');
+                    } finally {
+                      setUploadingFiles(p => ({ ...p, paymentDoc: false }));
+                      e.target.value = '';
+                    }
+                  }}
+                  disabled={uploadingFiles['paymentDoc'] || !!paymentDocUrl}
+                  className="text-[12px] text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11.5px] file:font-semibold file:bg-amber-50 file:text-[#af926a] file:hover:bg-amber-100 cursor-pointer disabled:opacity-50"
+                />
+                {uploadingFiles['paymentDoc'] && <span className="text-[11px] text-amber-600 font-semibold flex items-center gap-1"><RefreshCw size={11} className="animate-spin" /> Uploading…</span>}
+                {paymentDocUrl && (
+                  <div className="flex items-center gap-2 text-[11px] text-emerald-700 font-semibold bg-emerald-50 p-2 rounded-lg border border-emerald-150">
+                    <Check size={12} /> Document uploaded
+                    <a href={`${BACKEND_BASE}${paymentDocUrl}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-amber-600 hover:underline font-bold">View</a>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button type="button" onClick={() => setShowInitialPaymentModal(false)} className={`${btnSecondary} flex-1 justify-center`}>Cancel</button>
+                <button type="submit" disabled={submitting || !paymentNotes.trim()} className={`${btnPrimary} flex-1 justify-center`}>
+                  {submitting ? <RefreshCw size={13} className="animate-spin" /> : <DollarSign size={13} />}
+                  {submitting ? 'Recording…' : 'Record Payment'}
                 </button>
               </div>
             </form>

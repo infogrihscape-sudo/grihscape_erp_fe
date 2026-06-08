@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   LayoutDashboard, Users, LogOut, ChevronLeft, ChevronRight,
-  X, ClipboardList, Database, Sun, Moon, ScrollText,
+  X, ClipboardList, Database, Sun, Moon, ScrollText, Award,
 } from 'lucide-react';
 import type { User } from '../context/AuthContext.js';
 import { ROLE_ROUTES } from '../config/permissions.js';
@@ -9,8 +9,8 @@ import { useTheme } from '../context/ThemeContext.js';
 
 interface SidebarProps {
   user: User;
-  activeTab: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts';
-  setActiveTab: (tab: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts') => void;
+  activeTab: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders';
+  setActiveTab: (tab: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders') => void;
   logout: () => void;
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
@@ -19,17 +19,16 @@ interface SidebarProps {
 }
 
 const roleBadge: Record<string, string> = {
-  SUPER_ADMIN:       'bg-red-500/15 text-red-400 border border-red-500/25',
-  ADMIN:             'bg-amber-500/15 text-amber-400 border border-amber-500/25',
-  SALES:             'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25',
-  PROJECT_MANAGER:   'bg-blue-500/15 text-blue-400 border border-blue-500/25',
-  PROJECT_ARCHITECT: 'bg-violet-500/15 text-violet-400 border border-violet-500/25',
+  SUPER_ADMIN: 'bg-red-500/15 text-red-400 border border-red-500/25',
+  ADMIN:       'bg-amber-500/15 text-amber-400 border border-amber-500/25',
+  SALES:       'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25',
+  ACCOUNTS:    'bg-blue-500/15 text-blue-400 border border-blue-500/25',
 };
 const roleBadgeClass = (r: string) => roleBadge[r] ?? 'bg-stone-700/50 text-stone-400 border border-stone-700';
 const roleLabel = (r: string) => r.replace(/_/g, ' ');
 
 interface SidebarItem {
-  id: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts';
+  id: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders';
   route: string;
   icon: React.ReactNode;
   label: string;
@@ -41,6 +40,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { id: 'prospects', route: '/prospects', icon: <ClipboardList size={16} />,   label: 'Prospects Form' },
   { id: 'leads',     route: '/leads',     icon: <Database size={16} />,        label: 'Leads Management' },
   { id: 'contracts', route: '/contracts', icon: <ScrollText size={16} />,      label: 'Contracts' },
+  { id: 'tenders',   route: '/tenders',   icon: <Award size={16} />,           label: 'Tender Management' },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -56,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { isDark, toggleTheme } = useTheme();
 
   const navItem = (
-    tab: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts',
+    tab: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders',
     icon: React.ReactNode,
     label: string,
   ) => {

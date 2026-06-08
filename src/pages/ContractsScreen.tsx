@@ -4,8 +4,11 @@ import { useToast } from '../context/ToastContext.js';
 import type { User } from '../context/AuthContext.js';
 import {
   Loader2, Plus, CheckCircle2, Send, Upload, ScrollText,
-  RefreshCw, X, FileText, Lock, ExternalLink, AlertTriangle,
+  RefreshCw, X, FileText, Lock, ExternalLink, AlertTriangle, ShieldCheck,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react';
+import { useRouter } from '../context/RouterContext.js';
+import { ShimmerList } from '../components/Shimmer.js';
 
 interface Props { currentUser: User; }
 
@@ -21,10 +24,14 @@ interface Contract {
   createdAt: string;
   prospect: {
     clientName: string;
+    email: string | null;
     mobileNo: string;
     serviceType: string;
     locality: string;
     state: string;
+    workflowStage: string | null;
+    initialPaymentAmount: number | null;
+    initialPaymentUnit: string | null;
   } | null;
   createdBy:  { name: string } | null;
   approvedBy: { name: string } | null;
@@ -36,6 +43,8 @@ const statusStyle: Record<ContractStatus, string> = {
   APPROVED: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700/50',
   REJECTED: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-700/50',
 };
+
+const ITEMS_PER_PAGE = 9;
 
 /** Prepend backend host so relative /uploads/... URLs become clickable links. */
 const fullUrl = (url: string | null) =>
@@ -49,6 +58,7 @@ const inputCls = 'w-full bg-[var(--input-bg)] border border-[var(--input-border)
 // ── component ─────────────────────────────────────────────────────────────────
 export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
   const { showToast } = useToast();
+  const { navigate } = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [contracts, setContracts]   = useState<Contract[]>([]);
@@ -70,7 +80,13 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
   const [sendEmail,  setSendEmail]  = useState('');
   const [sending,    setSending]    = useState(false);
 
-  const isAdmin = currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
+  const isAdmin    = currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
+  const isAccounts = currentUser.role === 'ACCOUNTS';
+
+  const [verifying, setVerifying] = useState<string | null>(null); // contract id being verified
+  // Per-contract: editable revised payment amount for accounts verification
+  const [verifyAmounts, setVerifyAmounts] = useState<Record<string, { amount: string; unit: string }>>({});
+  const [currentPage, setCurrentPage] = useState(1);
 
   // ── fetch ──────────────────────────────────────────────────────────────────
   const fetchAll = async () => {
@@ -81,6 +97,7 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
         prospectApi.getProspects(),
       ]);
       setContracts(cRes.data.contracts || []);
+      setCurrentPage(1);
 
       const allContracts: Contract[] = cRes.data.contracts || [];
       // Prospect IDs that already have a contract (any status) — one contract per prospect
@@ -209,6 +226,28 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
     }
   };
 
+  // ── verify payment (Accounts role) ───────────────────────────────────────
+  const handleVerifyPayment = async (contractId: string, prospectId: string | null) => {
+    if (!prospectId) return;
+    setVerifying(contractId);
+    try {
+      const override = verifyAmounts[contractId];
+      const revisedAmount = override?.amount ? parseFloat(override.amount) : undefined;
+      const revisedUnit   = override?.unit   || 'LAKH';
+      await prospectApi.verifyByAccounts(prospectId, {
+        notes: 'Payment and documentation verified by Accounts.',
+        revisedAmount: revisedAmount ?? null,
+        revisedUnit,
+      });
+      showToast('Payment verified. Project marked as Won!', 'success');
+      fetchAll();
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Verification failed.', 'error');
+    } finally {
+      setVerifying(null);
+    }
+  };
+
   // ── render ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -218,6 +257,10 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
       </div>
     );
   }
+
+  const indexStart = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedContracts = contracts.slice(indexStart, indexStart + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(contracts.length / ITEMS_PER_PAGE) || 1;
 
   return (
     <div className="animate-fade-in flex flex-col h-full min-h-0">
@@ -231,33 +274,47 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
         onChange={handleFileChange}
       />
 
-      {/* Actions bar */}
-      <div className="shrink-0 flex flex-wrap items-center justify-end gap-2 mb-4">
-        <button onClick={fetchAll} className={btnSecondary} disabled={loading}>
-          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-        </button>
-        <button onClick={() => { setShowDraftModal(true); setSelectedProspectId(''); }} className={btnPrimary}>
-          <Plus size={14} /> New Contract
-        </button>
+      {/* Actions & Legend bar */}
+      <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 mb-4 p-2.5 rounded-xl bg-[var(--hover-bg)] border border-[var(--border-subtle)]">
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-[var(--text-muted)]">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+            <span><strong>PENDING</strong> — upload draft PDF, awaiting admin approval</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+            <span><strong>APPROVED</strong> — send to client, upload signed PDF once client returns it</span>
+          </span>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex items-center gap-2">
+          <button onClick={fetchAll} className={btnSecondary} disabled={loading}>
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+          </button>
+          <button onClick={() => { setShowDraftModal(true); setSelectedProspectId(''); }} className={btnPrimary}>
+            <Plus size={14} /> New Contract
+          </button>
+        </div>
       </div>
 
-      {/* ── Workflow legend ── */}
-      <div className="shrink-0 flex flex-wrap gap-3 mb-4 p-3 rounded-xl bg-[var(--hover-bg)] border border-[var(--border-subtle)] text-[11px] text-[var(--text-muted)]">
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" /> <strong>PENDING</strong> — upload draft PDF, awaiting admin approval</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" /> <strong>APPROVED</strong> — send to client, upload signed PDF once client returns it</span>
-      </div>
-
-      {/* ── Empty state ── */}
-      {contracts.length === 0 ? (
+      {/* ── Loading shimmer ── */}
+      {loading ? (
+        <div className="flex-1 overflow-y-auto min-h-0 p-1">
+          <ShimmerList items={6} />
+        </div>
+      ) : contracts.length === 0 ? (
         <div className={`${card} flex flex-col items-center justify-center py-20 gap-3 flex-1`}>
           <ScrollText size={36} className="text-[var(--text-muted)]" />
           <p className="text-[13px] font-semibold text-[var(--text-primary)]">No contracts yet</p>
           <p className="text-[12px] text-[var(--text-muted)]">Click "New Contract" to create a draft for a WON project.</p>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pb-4">
-            {contracts.map((c) => {
+        <>
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pb-4">
+              {paginatedContracts.map((c) => {
               const isApproved  = c.status === 'APPROVED';
               const hasDraftPdf = !!c.draftPdfUrl;
               const draftLink   = fullUrl(c.draftPdfUrl);
@@ -282,6 +339,22 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
                       {c.status}
                     </span>
                   </div>
+
+                  {/* Client Info Block */}
+                  {c.prospect && (
+                    <div className="grid grid-cols-2 gap-2 p-2 bg-[var(--hover-bg)]/40 rounded-lg border border-[var(--border-subtle)] text-[11px] text-[var(--text-secondary)] font-[inherit]">
+                      <div>
+                        <span className="text-[9.5px] font-bold uppercase tracking-wider text-[var(--text-muted)] block">Mobile</span>
+                        <span className="font-semibold text-[var(--text-primary)]">{c.prospect.mobileNo}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9.5px] font-bold uppercase tracking-wider text-[var(--text-muted)] block">Email</span>
+                        <span className="font-semibold text-[var(--text-primary)] truncate block" title={c.prospect.email || ''}>
+                          {c.prospect.email || '—'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Documents */}
                   <div className="space-y-1.5 border-t border-[var(--border-subtle)] pt-2">
@@ -346,29 +419,29 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
                     )}
 
                     {/* APPROVED actions */}
-                    {isApproved && (
-                      <>
-                        {/* Send email */}
-                        <button
-                          onClick={() => { setSendModal(c); setSendEmail(''); }}
-                          className={`${btnPrimary} w-full justify-center`}
-                        >
-                          <Send size={13} /> Send to Client
-                        </button>
+                    {/* Send email — disabled once signed PDF is received */}
+                    {isApproved && !c.signedPdfUrl && (
+                      <button
+                        onClick={() => { setSendModal(c); setSendEmail(c.prospect?.email || ''); }}
+                        className={`${btnPrimary} w-full justify-center`}
+                      >
+                        <Send size={13} /> Send to Client
+                      </button>
+                    )}
 
-                        {/* Upload signed PDF */}
-                        <button
-                          onClick={() => triggerUpload(c.id, 'signed')}
-                          disabled={(uploading && uploadFor === c.id) || !!c.signedPdfUrl}
-                          className={`${btnSecondary} w-full justify-center`}
-                        >
-                          {uploading && uploadFor === c.id && uploadMode === 'signed'
-                            ? <Loader2 size={12} className="animate-spin" />
-                            : <Upload size={12} />
-                          }
-                          {c.signedPdfUrl ? 'Signed PDF Uploaded' : 'Upload Signed PDF'}
-                        </button>
-                      </>
+                    {/* Upload signed PDF — locked after upload */}
+                    {isApproved && (
+                      <button
+                        onClick={() => triggerUpload(c.id, 'signed')}
+                        disabled={(uploading && uploadFor === c.id) || !!c.signedPdfUrl}
+                        className={`${btnSecondary} w-full justify-center`}
+                      >
+                        {uploading && uploadFor === c.id && uploadMode === 'signed'
+                          ? <Loader2 size={12} className="animate-spin" />
+                          : <Upload size={12} />
+                        }
+                        {c.signedPdfUrl ? 'Signed PDF Uploaded' : 'Upload Signed PDF'}
+                      </button>
                     )}
 
                     {/* Lock indicator for unapproved send */}
@@ -378,12 +451,122 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
                         Send email locked until admin approves
                       </div>
                     )}
+
+                    {/* Accounts / Admin: verify payment section */}
+                    {(isAccounts || isAdmin) && c.prospect?.workflowStage === 'INITIAL_PAYMENT_RECEIVED' && (
+                      <div className="space-y-1.5 border border-emerald-200 dark:border-emerald-700/40 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-lg p-2.5">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800 dark:text-emerald-400">Payment Verification</p>
+                        {c.prospect.initialPaymentAmount ? (
+                          <p className="text-[10.5px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                            Logged by sales: <span className="font-bold">{c.prospect.initialPaymentAmount} {c.prospect.initialPaymentUnit || 'Lakh'}</span>
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-[var(--text-muted)] italic">No amount logged by sales.</p>
+                        )}
+                        {/* Editable actual received amount */}
+                        <div className="flex gap-1.5">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder={c.prospect.initialPaymentAmount ? String(c.prospect.initialPaymentAmount) : 'Actual amt'}
+                            value={verifyAmounts[c.id]?.amount ?? ''}
+                            onChange={e => setVerifyAmounts(prev => ({ ...prev, [c.id]: { amount: e.target.value, unit: prev[c.id]?.unit || c.prospect?.initialPaymentUnit || 'LAKH' } }))}
+                            className="flex-1 text-[11px] bg-[var(--input-bg)] border border-[var(--input-border)] rounded-md px-2 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 font-[inherit]"
+                          />
+                          <select
+                            value={verifyAmounts[c.id]?.unit || c.prospect.initialPaymentUnit || 'LAKH'}
+                            onChange={e => setVerifyAmounts(prev => ({ ...prev, [c.id]: { amount: prev[c.id]?.amount ?? '', unit: e.target.value } }))}
+                            className="w-16 text-[11px] bg-[var(--input-bg)] border border-[var(--input-border)] rounded-md px-1 py-1.5 outline-none focus:border-emerald-500 font-[inherit]"
+                          >
+                            <option value="LAKH">L</option>
+                            <option value="CRORE">Cr</option>
+                          </select>
+                        </div>
+                        <p className="text-[9.5px] text-[var(--text-muted)]">Leave blank to confirm sales amount as-is.</p>
+                        <button
+                          onClick={() => handleVerifyPayment(c.id, c.prospectId)}
+                          disabled={verifying === c.id}
+                          className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition-colors cursor-pointer border-0 disabled:opacity-50"
+                        >
+                          {verifying === c.id ? <Loader2 size={12} className="animate-spin" /> : <ShieldCheck size={12} />}
+                          Verify & Mark Won
+                        </button>
+                      </div>
+                    )}
+                    {/* Awaiting Verification (visible to Sales / non-Accounts/non-Admins) */}
+                    {c.prospect && c.prospect.initialPaymentAmount !== null && c.prospect.workflowStage === 'INITIAL_PAYMENT_RECEIVED' && !isAccounts && !isAdmin && (
+                      <div className="space-y-1.5 border border-amber-200 dark:border-amber-700/40 bg-amber-50/60 dark:bg-amber-950/20 rounded-lg p-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wide text-amber-800 dark:text-amber-450">Payment Verification</span>
+                          <span className="text-[10px] text-amber-600 dark:text-amber-450 font-bold uppercase tracking-wide">Awaiting</span>
+                        </div>
+                        <p className="text-[11.5px] text-amber-700 dark:text-amber-450 font-bold">
+                          Logged Amount: <span className="text-[12.5px]">{c.prospect.initialPaymentAmount} {c.prospect.initialPaymentUnit || 'Lakh'}</span>
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Verified & Won Status */}
+                    {c.prospect?.workflowStage === 'WON' && (
+                      <div className="space-y-1.5 border border-emerald-200 dark:border-emerald-700/40 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-lg p-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-800 dark:text-emerald-400">Payment Verified</span>
+                          <ShieldCheck size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        </div>
+                        {c.prospect.initialPaymentAmount ? (
+                          <p className="text-[11.5px] text-emerald-700 dark:text-emerald-400 font-bold">
+                            Verified Amount: <span className="text-[12.5px]">{c.prospect.initialPaymentAmount} {c.prospect.initialPaymentUnit || 'Lakh'}</span>
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-[var(--text-muted)] italic">No amount recorded.</p>
+                        )}
+                        <div className="flex items-center justify-center gap-1.5 text-[10.5px] text-emerald-700 dark:text-emerald-450 font-bold pt-1.5 border-t border-emerald-100/50 dark:border-emerald-900/20">
+                          Project Won
+                        </div>
+                      </div>
+                    )}
+
+                    {/* View full pipeline */}
+                    {c.prospectId && (
+                      <button
+                        onClick={() => navigate(`/prospects/${c.prospectId}`)}
+                        className="w-full inline-flex items-center justify-center gap-1 py-1 text-[10px] font-semibold text-[var(--text-muted)] hover:text-[#b89047] transition-colors border-0 bg-transparent cursor-pointer"
+                      >
+                        View Pipeline →
+                      </button>
+                    )}
                   </div>
                 </div>
               );
             })}
+            </div>
           </div>
-        </div>
+
+          {/* Pagination Controls */}
+          {contracts.length > ITEMS_PER_PAGE && (
+            <div className="shrink-0 flex items-center justify-between px-3.5 py-2.5 mt-2 border-t border-[var(--border-subtle)] text-[11px] text-[var(--text-muted)] bg-[var(--hover-bg)]/30 rounded-xl select-none">
+              <span>Showing {indexStart + 1}–{Math.min(indexStart + ITEMS_PER_PAGE, contracts.length)} of {contracts.length}</span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  className="p-1 rounded border border-[var(--border)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] disabled:opacity-40 cursor-pointer transition-colors"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={12} />
+                </button>
+                <span className="px-1.5">Page {currentPage} of {totalPages}</span>
+                <button
+                  className="p-1 rounded border border-[var(--border)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] disabled:opacity-40 cursor-pointer transition-colors"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight size={12} />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* ── Create Draft Modal ── */}
@@ -469,17 +652,36 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
                 {sendModal.draftPdfUrl && <span className="text-[#b89047]"> (with PDF attached)</span>}
               </div>
 
+              {/* Already-sent warning */}
+              {['CONTRACT_EMAILED', 'SIGNED_CONTRACT_UPLOADED', 'INITIAL_PAYMENT_RECEIVED', 'ACCOUNTS_VERIFIED', 'WON'].includes(sendModal.prospect?.workflowStage || '') && (
+                <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-700/40 text-[11.5px] text-amber-800 dark:text-amber-400">
+                  <AlertTriangle size={13} className="shrink-0 mt-0.5" />
+                  <span>This contract email was already sent. Sending again will deliver a duplicate to the client — proceed only if the client requested a resend.</span>
+                </div>
+              )}
+
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11.5px] font-semibold text-[var(--text-secondary)]">Client Email Address *</label>
-                <input
-                  type="email"
-                  placeholder="client@example.com"
-                  value={sendEmail}
-                  onChange={e => setSendEmail(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSend()}
-                  autoFocus
-                  className={inputCls}
-                />
+                <label className="text-[11.5px] font-semibold text-[var(--text-secondary)]">Client Email Address</label>
+                {sendEmail ? (
+                  <input
+                    type="email"
+                    value={sendEmail}
+                    disabled
+                    className={`${inputCls} bg-stone-100 cursor-not-allowed text-stone-600`}
+                  />
+                ) : (
+                  <input
+                    type="email"
+                    placeholder="client@example.com (no email saved — edit prospect first)"
+                    value={sendEmail}
+                    onChange={e => setSendEmail(e.target.value)}
+                    autoFocus
+                    className={inputCls}
+                  />
+                )}
+                {!sendModal?.prospect?.email && (
+                  <p className="text-[10px] text-amber-600 font-semibold">No email on record — update the prospect brief to add one.</p>
+                )}
               </div>
 
               <div className="flex gap-2 pt-1">

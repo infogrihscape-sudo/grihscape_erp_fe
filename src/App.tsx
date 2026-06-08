@@ -5,6 +5,7 @@ import { ToastProvider } from './context/ToastContext.js';
 import { ThemeProvider } from './context/ThemeContext.js';
 import { Loader2 } from 'lucide-react';
 import { ROLE_ROUTES } from './config/permissions.js';
+import { LoadingOverlay } from './components/LoadingOverlay.js';
 
 const Login = React.lazy(() =>
   import('./pages/Login.js').then((m) => ({ default: m.Login }))
@@ -67,6 +68,7 @@ export default function App() {
         <RouterProvider>
           <ToastProvider>
             <MainApp />
+            <LoadingOverlay />
           </ToastProvider>
         </RouterProvider>
       </AuthProvider>
