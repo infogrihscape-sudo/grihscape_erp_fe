@@ -288,9 +288,20 @@ export const Login: React.FC = () => {
                 <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1c1009', margin: '0 0 4px', lineHeight: 1.1 }}>
                   Grihscape
                 </h1>
-                <p style={{ fontSize: '12.5px', color: '#78716c', margin: 0, lineHeight: 1.4 }}>
+                <p style={{ fontSize: '12.5px', color: '#78716c', margin: '0 0 7px', lineHeight: 1.4 }}>
                   {step === 1 ? 'Verify your identity to log in' : 'Enter the verification code sent to your email'}
                 </p>
+                <span style={{
+                  display: 'inline-block',
+                  fontSize: '9.5px',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  color: '#b45309',
+                  background: 'rgba(245,158,11,0.1)',
+                  border: '1px solid rgba(180,83,9,0.25)',
+                  borderRadius: '99px',
+                  padding: '2px 9px',
+                }}>Beta v.1</span>
               </div>
             </div>
 
