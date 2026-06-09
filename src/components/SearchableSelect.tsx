@@ -130,7 +130,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
             borderColor: 'var(--border)',
             boxShadow: 'var(--shadow-modal)',
           }}
-          className={`absolute z-50 left-0 w-full border rounded-xl overflow-hidden animate-fade-in max-h-60 flex flex-col ${
+          className={`absolute z-[9999] left-0 w-full border rounded-xl overflow-hidden animate-fade-in max-h-60 flex flex-col ${
             direction === 'up' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
           }`}
         >

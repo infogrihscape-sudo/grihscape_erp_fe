@@ -9,7 +9,7 @@ import {
   UserPlus, Ban, Unlock, RefreshCw,
   Search, ShieldCheck, Mail, Phone, Calendar,
   Settings, Plus, Edit2, ChevronLeft, ChevronRight, X, MapPin,
-  FileText
+  FileText, Trash2
 } from 'lucide-react';
 
 interface DbRole { id: string; name: string; description: string | null; createdAt: string; }
@@ -39,8 +39,10 @@ const inputInvalid = 'border-red-300 focus:border-red-400 focus:ring-red-100';
 const labelBase = 'text-[10px] font-bold uppercase tracking-wide text-stone-500';
 const btnPrimary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0';
 const btnSecondary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-stone-600 bg-stone-150/70 border border-[rgba(184,144,71,0.28)] hover:bg-stone-200 hover:text-stone-850 transition-colors duration-150 cursor-pointer';
-const btnDanger = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-rose-600 bg-rose-50/70 border border-rose-100 hover:bg-rose-600 hover:text-white hover:-translate-y-px transition-all duration-150 cursor-pointer shadow-xs';
+const btnDanger  = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-rose-600 bg-rose-50/70 border border-rose-100 hover:bg-rose-600 hover:text-white hover:-translate-y-px transition-all duration-150 cursor-pointer shadow-xs';
 const btnSuccess = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-emerald-700 bg-emerald-50/70 border border-emerald-100 hover:bg-emerald-600 hover:text-white hover:-translate-y-px transition-all duration-150 cursor-pointer shadow-xs';
+const btnEdit    = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-sky-600 bg-sky-50/70 border border-sky-100 hover:bg-sky-600 hover:text-white hover:-translate-y-px transition-all duration-150 cursor-pointer shadow-xs';
+const btnWarn    = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-amber-600 bg-amber-50/70 border border-amber-100 hover:bg-amber-600 hover:text-white hover:-translate-y-px transition-all duration-150 cursor-pointer shadow-xs';
 const card = 'bg-white border border-[rgba(184,144,71,0.24)] rounded-xl shadow-xs';
 
 export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
@@ -70,8 +72,24 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
   const [newRoleDesc, setNewRoleDesc] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [mapData, setMapData] = useState<{ lat: number; lng: number; name: string } | null>(null);
+  // Edit user modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editUserName, setEditUserName] = useState('');
+  const [editUserEmail, setEditUserEmail] = useState('');
+  const [editUserPhone, setEditUserPhone] = useState('');
+  const [editUserRoleId, setEditUserRoleId] = useState('');
+  const [editFormErrors, setEditFormErrors] = useState<{ name?: string; email?: string; phone?: string; roleId?: string }>({});
+  // Delete confirm state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const { path, navigate } = useRouter();
   const activeSubTab = path === '/roles' ? 'roles' : path === '/logs' ? 'logs' : 'users';
+
+  const availableRoles = useMemo(() =>
+    currentUser.role === 'ADMIN'
+      ? roles.filter(r => !['SUPER_ADMIN', 'ADMIN'].includes(r.name))
+      : roles,
+  [roles, currentUser.role]);
 
   const fetchData = async (forceLoadRoles = false) => {
     setLoading(true); setError(null);
@@ -262,6 +280,73 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
       const errMsg = err.response?.data?.message || `Failed to ${action} user.`;
       setError(errMsg);
       showToast(errMsg, 'error');
+    }
+  };
+
+  const closeEditModal = () => {
+    setShowEditModal(false);
+    setEditingUser(null);
+    setEditUserName(''); setEditUserEmail(''); setEditUserPhone(''); setEditUserRoleId('');
+    setEditFormErrors({});
+  };
+
+  const handleOpenEditUser = (u: User) => {
+    setEditingUser(u);
+    setEditUserName(u.name);
+    setEditUserEmail(u.email);
+    setEditUserPhone(u.phone);
+    const roleObj = roles.find(r => r.name === u.role);
+    setEditUserRoleId(roleObj?.id || '');
+    setEditFormErrors({});
+    setShowEditModal(true);
+  };
+
+  const validateEditForm = () => {
+    const errors: typeof editFormErrors = {};
+    const n = editUserName.trim(), e = editUserEmail.trim(), p = editUserPhone.trim();
+    if (!n) errors.name = 'Full name is required.';
+    else if (n.length > 20) errors.name = 'Full name cannot exceed 20 characters.';
+    if (!e) errors.email = 'Email address is required.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) errors.email = 'Please enter a valid email address.';
+    if (!p) errors.phone = 'Phone number is required.';
+    else if (!/^\d+$/.test(p)) errors.phone = 'Phone number must contain only digits.';
+    else if (p.length !== 10) errors.phone = 'Phone number must be exactly 10 digits.';
+    if (!editUserRoleId) errors.roleId = 'Please select an access role.';
+    setEditFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser || !validateEditForm()) return;
+    setSubmitting(true); setError(null);
+    try {
+      const res = await userApi.updateUser(editingUser.id, {
+        name: editUserName.trim(),
+        email: editUserEmail.trim(),
+        phone: editUserPhone.trim(),
+        roleId: editUserRoleId,
+      });
+      const msg = res.data.message || 'User updated successfully.';
+      setSuccess(msg); showToast(msg, 'success');
+      closeEditModal(); fetchData();
+    } catch (err: any) {
+      const errMsg = err.response?.data?.message || 'Failed to update user.';
+      setError(errMsg); showToast(errMsg, 'error');
+    } finally { setSubmitting(false); }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    setError(null);
+    try {
+      await userApi.deleteUser(userId);
+      const msg = 'User deleted successfully.';
+      setSuccess(msg); showToast(msg, 'success');
+      setShowDeleteConfirm(null); fetchData();
+    } catch (err: any) {
+      const errMsg = err.response?.data?.message || 'Failed to delete user.';
+      setError(errMsg); showToast(errMsg, 'error');
+      setShowDeleteConfirm(null);
     }
   };
 
@@ -672,18 +757,18 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                 <col style={{ width: '120px' }} />
                 <col style={{ width: '90px' }} />
                 <col style={{ width: '150px' }} />
-                <col style={{ width: '90px' }} />
+                <col style={{ width: '140px' }} />
               </colgroup>
               <thead>
-                <tr className="bg-stone-50/80 sticky top-0 z-10 backdrop-blur-xs">
-                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">#</th>
-                  <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50">Full Name</th>
-                  <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50">Email</th>
-                  <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50">Phone Number</th>
-                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">Role</th>
-                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">Status</th>
-                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">Session</th>
-                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">Actions</th>
+                <tr>
+                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">#</th>
+                  <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Full Name</th>
+                  <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Email</th>
+                  <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Phone Number</th>
+                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">Role</th>
+                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">Status</th>
+                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">Session</th>
+                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -717,9 +802,17 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                         ? <span className="text-[11px] italic text-stone-400 font-medium">You</span>
                         : currentUser.role === 'ADMIN' && (u.role === 'SUPER_ADMIN' || u.role === 'ADMIN')
                           ? <span className="text-[11px] text-stone-400">Protected</span>
-                          : <button onClick={() => handleToggleBlock(u)} className={u.isBlocked ? btnSuccess : btnDanger}>
-                              {u.isBlocked ? <><Unlock size={10} />Unblock</> : <><Ban size={10} />Block</>}
-                            </button>}
+                          : <div className="inline-flex items-center gap-1">
+                              <button onClick={() => handleOpenEditUser(u)} className={btnEdit} title="Edit user">
+                                <Edit2 size={10} />Edit
+                              </button>
+                              <button onClick={() => handleToggleBlock(u)} className={u.isBlocked ? btnSuccess : btnWarn} title={u.isBlocked ? 'Unblock user' : 'Block user'}>
+                                {u.isBlocked ? <><Unlock size={10} />Unblock</> : <><Ban size={10} />Block</>}
+                              </button>
+                              <button onClick={() => setShowDeleteConfirm(u.id)} className={btnDanger} title="Delete user">
+                                <Trash2 size={10} />Delete
+                              </button>
+                            </div>}
                     </td>
                   </tr>
                 ))}
@@ -753,11 +846,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               <col style={{ width: '100px' }} />
             </colgroup>
             <thead>
-              <tr className="bg-stone-50/80 sticky top-0 z-10 backdrop-blur-xs">
-                <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">#</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50">Role Code</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50">Description</th>
-                <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">Actions</th>
+              <tr>
+                <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">#</th>
+                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Role Code</th>
+                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Description</th>
+                <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -821,12 +914,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               <col style={{ width: '180px' }} />
             </colgroup>
             <thead>
-              <tr className="bg-stone-50/80 sticky top-0 z-10 backdrop-blur-xs">
-                <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">#</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50">Timestamp</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50">Operator</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50">Action</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50">Metadata</th>
+              <tr>
+                <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">#</th>
+                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Timestamp</th>
+                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Operator</th>
+                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Action</th>
+                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Metadata</th>
               </tr>
             </thead>
             <tbody>
@@ -887,6 +980,96 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
       </>
       )}
 
+      {/* ── Edit User Modal ── */}
+      {showEditModal && editingUser && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={closeEditModal}>
+          <div className="animate-scale-in w-full max-w-[440px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6 max-h-[calc(100vh-40px)] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="flex items-center gap-2 text-[16px] font-bold text-stone-900">
+                <Edit2 size={18} className="text-[#b89047]" />Edit Member
+              </h3>
+              <button onClick={closeEditModal} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
+                <X size={16} />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateUser} noValidate className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <div className="flex justify-between items-center">
+                  <label className={labelBase}>Full Name</label>
+                  <span className={`text-[10px] ${editUserName.length >= 20 ? 'text-red-500' : 'text-stone-400'}`}>{editUserName.length}/20</span>
+                </div>
+                <input type="text" maxLength={20} placeholder="John Doe" value={editUserName}
+                  onChange={e => { setEditUserName(e.target.value); if (e.target.value.trim()) setEditFormErrors(p => ({...p, name: undefined})); }}
+                  className={`${inputBase} ${editFormErrors.name ? inputInvalid : ''}`} />
+                {editFormErrors.name && <span className="text-[11px] font-semibold text-red-500">{editFormErrors.name}</span>}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className={labelBase}>Email Address</label>
+                <input type="email" placeholder="john@company.com" value={editUserEmail}
+                  onChange={e => { setEditUserEmail(e.target.value); if (e.target.value.trim()) setEditFormErrors(p => ({...p, email: undefined})); }}
+                  className={`${inputBase} ${editFormErrors.email ? inputInvalid : ''}`} />
+                {editFormErrors.email && <span className="text-[11px] font-semibold text-red-500">{editFormErrors.email}</span>}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className={labelBase}>Phone Number</label>
+                <input type="text" maxLength={10} placeholder="1234567890" value={editUserPhone}
+                  onChange={e => { const d = e.target.value.replace(/\D/g,'').slice(0,10); setEditUserPhone(d); if (d) setEditFormErrors(p => ({...p, phone: undefined})); }}
+                  className={`${inputBase} ${editFormErrors.phone ? inputInvalid : ''}`} />
+                {editFormErrors.phone && <span className="text-[11px] font-semibold text-red-500">{editFormErrors.phone}</span>}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className={labelBase}>Access Role</label>
+                <SearchableSelect
+                  options={[
+                    { value: '', label: '— Select a role —' },
+                    ...availableRoles.map(r => ({ value: r.id, label: roleLabel(r.name) })),
+                  ]}
+                  value={editUserRoleId}
+                  onChange={(val) => { setEditUserRoleId(val); if (val) setEditFormErrors(p => ({ ...p, roleId: undefined })); }}
+                  error={editFormErrors.roleId}
+                />
+                {editFormErrors.roleId && <span className="text-[11px] font-semibold text-red-500">{editFormErrors.roleId}</span>}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={closeEditModal} className={`${btnSecondary} flex-1 justify-center`}>Cancel</button>
+                <button type="submit" disabled={submitting} className={`${btnPrimary} flex-1 justify-center`}>
+                  {submitting ? <RefreshCw size={13} className="animate-spin" /> : <Edit2 size={13} />}
+                  {submitting ? 'Saving…' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── Delete Confirm Modal ── */}
+      {showDeleteConfirm && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(null)}>
+          <div className="animate-scale-in w-full max-w-[380px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="flex items-center gap-2 text-[16px] font-bold text-stone-900">
+                <Trash2 size={18} className="text-rose-500" />Delete Member
+              </h3>
+              <button onClick={() => setShowDeleteConfirm(null)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
+                <X size={16} />
+              </button>
+            </div>
+            <p className="text-[13px] text-stone-600 mb-2">
+              Are you sure you want to delete <span className="font-semibold text-stone-900">{users.find(u => u.id === showDeleteConfirm)?.name}</span>?
+            </p>
+            <p className="text-[12px] text-stone-400 mb-5">This soft-deletes the user — their data is preserved but they can no longer log in.</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowDeleteConfirm(null)} className={`${btnSecondary} flex-1 justify-center`}>Cancel</button>
+              <button type="button" onClick={() => handleDeleteUser(showDeleteConfirm)} className="inline-flex items-center justify-center gap-1.5 flex-1 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-white bg-rose-500 hover:bg-rose-600 hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0">
+                <Trash2 size={13} />Delete Member
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* ── Add User Modal ── */}
       {showUserModal && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={closeUserModal}>
@@ -933,7 +1116,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                 <SearchableSelect
                   options={[
                     { value: '', label: '— Select a role —' },
-                    ...roles.map(r => ({ value: r.id, label: roleLabel(r.name) })),
+                    ...availableRoles.map(r => ({ value: r.id, label: roleLabel(r.name) })),
                   ]}
                   value={newUserRoleId}
                   onChange={(val) => {
