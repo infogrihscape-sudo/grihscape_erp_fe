@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useToast } from '../context/ToastContext.js';
 import { leadApi, prospectApi } from '../services/api.js';
@@ -116,7 +116,7 @@ const normalizeAndValidatePhone = (phone: string): { isValid: boolean; normalize
   return { isValid, normalized: isValid ? `+91${clean}` : phone };
 };
 
-/* ── Shared tailwind classes ── */
+/* â”€â”€ Shared tailwind classes â”€â”€ */
 const inputBase = 'w-full bg-white border border-[rgba(184,144,71,0.38)] text-stone-900 text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-amber-100/50 font-[inherit] compact-input';
 const labelBase = 'text-[10px] font-bold uppercase tracking-wide text-stone-500';
 const btnPrimary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0';
@@ -187,7 +187,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
 
   const hasActiveFilters = searchTerm !== '' || filterPlatform !== 'ALL' || filterService !== 'ALL' || filterSource !== 'ALL' || filterDate !== 'ALL';
 
-  // ── Lead → Prospect conversion ──────────────────────────────────────────────
+  // â”€â”€ Lead â†’ Prospect conversion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
   const [convertSubmitting, setConvertSubmitting] = useState(false);
 
@@ -355,7 +355,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
     }
   };
 
-  // ── Bulk Upload Logic ───────────────────────────────────────────────────────
+  // â”€â”€ Bulk Upload Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const downloadTemplate = () => {
     const headers = ['sr.no', 'adset_name', 'ad_name', 'campaign_name', 'platform', 'services', 'full_name', 'phone_number', 'city'];
     const sampleRow = ['1', 'Adset Summer Special', 'Static Image Ad', 'Interior Renovations 2026', 'Meta', 'INTERIOR_DESIGN_SERVICES,RENOVATION', 'Gopal Sharma', '9876543210', 'Gurgaon'];
@@ -650,7 +650,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
     }
   };
 
-  // ── Filter & Pagination Directory ──────────────────────────────────────────
+  // â”€â”€ Filter & Pagination Directory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const prospectMap = useMemo(() => {
     const map: Record<string, any> = {};
     for (const p of prospects) {
@@ -759,7 +759,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
         </span>
 
         <div className="flex items-center gap-2">
-          {currentUser.role === 'SALES' && (
+          {currentUser.role === 'SALES_AND_MARKETING' && (
             <button
               onClick={handleOpenDrawer}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#c5a880] to-[#af926a] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0"
@@ -805,7 +805,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
         </button>
       </div>
 
-      {/* ── Active Leads Directory Tab ───────────────────────────────────────── */}
+      {/* â”€â”€ Active Leads Directory Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {activeTab === 'directory' && (
         <div className="flex-grow flex flex-col min-h-0">
           {/* Filtration / Search */}
@@ -973,7 +973,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                           {lead.phoneNumber}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] text-stone-750 font-medium text-center whitespace-nowrap">
-                          {lead.city || <span className="italic text-stone-400">—</span>}
+                          {lead.city || <span className="italic text-stone-400">â€”</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
                           <span className={`text-[12.5px] font-semibold ${
@@ -982,7 +982,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                             lead.platform === 'WHATSAPP' ? 'text-green-600' :
                             'text-stone-600'
                           }`}>
-                            {platformLabel[lead.platform || ''] || lead.platform || '—'}
+                            {platformLabel[lead.platform || ''] || lead.platform || 'â€”'}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
@@ -995,13 +995,13 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                           </div>
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-stone-705" title={lead.campaignName || ''}>
-                          {lead.campaignName || <span className="italic text-stone-400">—</span>}
+                          {lead.campaignName || <span className="italic text-stone-400">â€”</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-stone-705" title={lead.adsetName || ''}>
-                          {lead.adsetName || <span className="italic text-stone-400">—</span>}
+                          {lead.adsetName || <span className="italic text-stone-400">â€”</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-stone-705" title={lead.adName || ''}>
-                          {lead.adName || <span className="italic text-stone-400">—</span>}
+                          {lead.adName || <span className="italic text-stone-400">â€”</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
                           <span className={`text-[12px] font-bold uppercase tracking-wider ${
@@ -1030,7 +1030,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                             >
                               <FileText size={11} /> Req Log
                             </button>
-                          ) : currentUser.role === 'SALES' ? (
+                          ) : currentUser.role === 'SALES_AND_MARKETING' ? (
                             <button
                               onClick={() => setConvertingLead(lead)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:shadow-md hover:-translate-y-px transition-all border-0 cursor-pointer"
@@ -1086,7 +1086,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
         </div>
       )}
 
-      {/* ── Bulk Ingestion Hub Tab ───────────────────────────────────────────── */}
+      {/* â”€â”€ Bulk Ingestion Hub Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {activeTab === 'bulk' && (
         <div className="flex-1 flex flex-col min-h-0 gap-4">
           
@@ -1266,7 +1266,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                             {item.phoneNumber || <span className="italic font-normal text-rose-500">Missing Phone</span>}
                           </td>
                           <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-stone-700 font-medium">
-                            {item.city || <span className="italic text-stone-400">—</span>}
+                            {item.city || <span className="italic text-stone-400">â€”</span>}
                           </td>
                           <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
                             <span className="text-[12px] uppercase font-bold text-stone-600">
@@ -1288,7 +1288,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                               {item.services.length === 0 && <span className="italic text-rose-500">None selected</span>}
                             </div>
                           </td>
-                          <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-stone-550 max-w-xs truncate">{item.campaignName || <span className="italic text-stone-300">—</span>}</td>
+                          <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-stone-550 max-w-xs truncate">{item.campaignName || <span className="italic text-stone-300">â€”</span>}</td>
                           <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center border-l border-stone-100/50">
                             {hasErrors ? (
                               <div className="space-y-0.5 flex flex-col items-center">
@@ -1316,7 +1316,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
         </div>
       )}
 
-      {/* ── Slide Drawer Form (Manual Ingestion) ─────────────────────────────── */}
+      {/* â”€â”€ Slide Drawer Form (Manual Ingestion) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div
         className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${
           isDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -1555,7 +1555,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
       </div>
     </div>
 
-      {/* ── Convert Lead → Prospect Modal ───────────────────────────────────── */}
+      {/* â”€â”€ Convert Lead â†’ Prospect Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {convertingLead && createPortal(
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-stone-900/40 backdrop-blur-sm"
@@ -1573,7 +1573,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                   <h3 className="text-[14px] sm:text-[15px] font-bold text-stone-900">Capture Client Brief</h3>
                   <p className="text-[11px] text-stone-500 mt-0.5 truncate">
                     Converting: <span className="font-bold text-stone-700">{convertingLead.fullName}</span>
-                    <span className="hidden sm:inline">{' · '}{convertingLead.phoneNumber}</span>
+                    <span className="hidden sm:inline">{' Â· '}{convertingLead.phoneNumber}</span>
                   </p>
                 </div>
               </div>
@@ -1585,7 +1585,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
               </button>
             </div>
 
-            {/* Form — pre-filled from lead data */}
+            {/* Form â€” pre-filled from lead data */}
             <ProspectForm
               key={convertingLead.id}
               mode="create"

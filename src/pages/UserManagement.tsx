@@ -26,7 +26,7 @@ const ITEMS_PER_PAGE = 10;
 const roleBadge: Record<string, string> = {
   SUPER_ADMIN:       'text-stone-900 font-semibold',
   ADMIN:             'text-stone-900 font-semibold',
-  SALES:             'text-stone-900 font-semibold',
+  SALES_AND_MARKETING: 'text-stone-900 font-semibold',
   PROJECT_MANAGER:   'text-stone-900 font-semibold',
   PROJECT_ARCHITECT: 'text-stone-900 font-semibold',
 };

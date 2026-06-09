@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+﻿import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from '../context/RouterContext.js';
 import { userApi, prospectApi, leadApi } from '../services/api.js';
 import type { User } from '../context/AuthContext.js';
@@ -20,9 +20,9 @@ const getBudgetInLakhs = (amount?: number | null, unit?: string | null): number 
 const formatBudget = (valueInLakhs: number): string => {
   if (valueInLakhs >= 100) {
     const crores = valueInLakhs / 100;
-    return `₹${crores.toFixed(2).replace(/\.00$/, '')} Cr`;
+    return `â‚¹${crores.toFixed(2).replace(/\.00$/, '')} Cr`;
   }
-  return `₹${valueInLakhs.toFixed(0)} L`;
+  return `â‚¹${valueInLakhs.toFixed(0)} L`;
 };
 
 const serviceLabels: Record<string, string> = {
@@ -142,14 +142,14 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
 
   // Role based filtering (Sales reps can toggle their own telemetry)
   const displayLeads = useMemo(() => {
-    if (user?.role === 'SALES' && isPersonalView) {
+    if (user?.role === 'SALES_AND_MARKETING' && isPersonalView) {
       return timeFilteredLeads.filter(l => l.createdById === user?.id);
     }
     return timeFilteredLeads;
   }, [timeFilteredLeads, user, isPersonalView]);
 
   const displayProspects = useMemo(() => {
-    if (user?.role === 'SALES' && isPersonalView) {
+    if (user?.role === 'SALES_AND_MARKETING' && isPersonalView) {
       return timeFilteredProspects.filter(p => p.createdBy === user?.id);
     }
     return timeFilteredProspects;
@@ -287,7 +287,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
   const repsLeaderboard = useMemo(() => {
     if (user?.role !== 'SUPER_ADMIN' && user?.role !== 'ADMIN') return [];
     
-    const salesUsers = allUsers.filter(u => u.role === 'SALES');
+    const salesUsers = allUsers.filter(u => u.role === 'SALES_AND_MARKETING');
     return salesUsers.map(rep => {
       const repProspects = allProspects.filter(p => p.createdBy === rep.id && p.status !== 'DELETED' && !p.isDeleted);
       const repLeads = allLeads.filter(l => l.createdById === rep.id);
@@ -353,7 +353,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
         .map(p => (p.mobileNo ?? '').replace(/[^0-9]/g, '').slice(-10))
     );
 
-    const targetLeads = user?.role === 'SALES' && isPersonalView
+    const targetLeads = user?.role === 'SALES_AND_MARKETING' && isPersonalView
       ? allLeads.filter(l => l.createdById === user?.id)
       : allLeads;
 
@@ -412,7 +412,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
         </div>
 
         {/* Personal vs Team Toggle */}
-        {user.role === 'SALES' && (
+        {user.role === 'SALES_AND_MARKETING' && (
           <button
             onClick={() => setIsPersonalView(!isPersonalView)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[var(--border)] rounded-lg text-[11.5px] font-semibold bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] text-[var(--text-secondary)] shadow-[var(--shadow-card)] transition-colors cursor-pointer"
@@ -433,7 +433,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
       </div>
 
       {/* Sub tabs: Insights vs Security */}
-      {(user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SALES') && (
+      {(user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SALES_AND_MARKETING') && (
         <div className="flex border-b border-[var(--border)] shrink-0">
           <button
             onClick={() => setActiveSubTab('insights')}
@@ -462,9 +462,9 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
       {dataLoading ? (
         <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3">
           <Loader2 className="animate-spin text-amber-600" size={32} />
-          <span className="text-[12px] text-[var(--text-muted)] font-medium">Aggregating telemetry…</span>
+          <span className="text-[12px] text-[var(--text-muted)] font-medium">Aggregating telemetryâ€¦</span>
         </div>
-      ) : activeSubTab === 'insights' && (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SALES') ? (
+      ) : activeSubTab === 'insights' && (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SALES_AND_MARKETING') ? (
         /* INSIGHTS SUB TAB */
         <div className="flex flex-col gap-5">
           {/* KPI CARDS GRID */}
@@ -617,7 +617,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <div className="text-[9.5px] text-[var(--text-muted)] mt-0.5">{formatBudget(svc.value)} · {svc.count} projects</div>
+                      <div className="text-[9.5px] text-[var(--text-muted)] mt-0.5">{formatBudget(svc.value)} Â· {svc.count} projects</div>
                     </div>
                   );
                 })}
@@ -647,7 +647,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                   <div key={plat.platform} className="py-2.5 flex items-center justify-between text-[12px]">
                     <div>
                       <span className="font-semibold text-[var(--text-primary)]">{plat.platform}</span>
-                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{plat.leads} ingested · {plat.converted} converted</p>
+                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{plat.leads} ingested Â· {plat.converted} converted</p>
                     </div>
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
                       plat.conversionRate >= 50
@@ -693,7 +693,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                 </div>
               </div>
 
-              {user.role === 'SALES' && (
+              {user.role === 'SALES_AND_MARKETING' && (
                 <div className="pt-3 border-t border-[var(--border-subtle)] mt-3">
                   <button
                     onClick={() => {
@@ -709,7 +709,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
             </div>
 
             {/* Actionable leads (Sales) or Recent Briefs (Admin) */}
-            {user.role === 'SALES' ? (
+            {user.role === 'SALES_AND_MARKETING' ? (
               <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-4 shadow-[var(--shadow-card)] flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2 mb-3">
@@ -725,7 +725,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                       <div key={l.id} className="py-2.5 flex items-center justify-between text-[11.5px]">
                         <div>
                           <span className="font-semibold text-[var(--text-primary)]">{l.fullName}</span>
-                          <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{l.phoneNumber} · {l.platform}</p>
+                          <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{l.phoneNumber} Â· {l.platform}</p>
                         </div>
                         <button
                           onClick={() => handleConvertAction(l.phoneNumber)}
@@ -736,7 +736,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                       </div>
                     ))}
                     {unconvertedLeads.length === 0 && (
-                      <div className="text-center py-10 text-[var(--text-muted)] italic text-[11px]">All leads converted! 🎉</div>
+                      <div className="text-center py-10 text-[var(--text-muted)] italic text-[11px]">All leads converted! ðŸŽ‰</div>
                     )}
                   </div>
                 </div>
@@ -768,7 +768,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                       >
                         <div>
                           <span className="font-semibold text-[var(--text-primary)] text-[12px] block">{p.clientName}</span>
-                          <span className="text-[10px] text-[var(--text-muted)]">{p.locality} · {p.mobileNo}</span>
+                          <span className="text-[10px] text-[var(--text-muted)]">{p.locality} Â· {p.mobileNo}</span>
                         </div>
                         <span className="text-[10.5px] font-bold text-[#b89047] shrink-0 ml-2">
                           {formatBudget(getBudgetInLakhs(p.budgetAmount, p.budgetUnit))}
@@ -976,7 +976,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
             </div>
 
             <div className="bg-[var(--hover-bg)] rounded-lg p-2 border border-[rgba(197,168,128,0.15)] text-[10px] text-[var(--text-muted)]">
-              Redis Cache active on port 6379 · Uptime diagnostics stable.
+              Redis Cache active on port 6379 Â· Uptime diagnostics stable.
             </div>
           </div>
 

@@ -1119,7 +1119,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
             </div>
 
             {/* Sales actions panel */}
-            {currentUser.role === 'SALES' && (
+            {currentUser.role === 'SALES_AND_MARKETING' && (
               <div className="bg-stone-50/40 border border-stone-200/80 p-3 sm:p-5 rounded-xl sm:rounded-2xl space-y-3 shrink-0">
                 <h4 className="text-[12px] font-bold text-[#9e7735] uppercase tracking-wide border-b border-stone-200/50 pb-1.5 mb-2">
                   Sales Actions
