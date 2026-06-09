@@ -20,9 +20,9 @@ const getBudgetInLakhs = (amount?: number | null, unit?: string | null): number 
 const formatBudget = (valueInLakhs: number): string => {
   if (valueInLakhs >= 100) {
     const crores = valueInLakhs / 100;
-    return `â‚¹${crores.toFixed(2).replace(/\.00$/, '')} Cr`;
+    return `₹${crores.toFixed(2).replace(/\.00$/, '')} Cr`;
   }
-  return `â‚¹${valueInLakhs.toFixed(0)} L`;
+  return `₹${valueInLakhs.toFixed(0)} L`;
 };
 
 const serviceLabels: Record<string, string> = {
