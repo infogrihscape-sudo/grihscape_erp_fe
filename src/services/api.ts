@@ -92,11 +92,18 @@ api.interceptors.response.use(
       originalRequest.url?.includes('/auth/refresh') ||
       originalRequest.url?.includes('/auth/verify-otp')
     ) {
+      console.warn(
+        `[API] ❌ ${originalRequest.url} returned ${error.response?.status}`,
+        '| data:', error.response?.data,
+        '| network error:', error.message,
+      );
       stopProgress();
       return Promise.reject(error);
     }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.warn(`[API] 401 on ${originalRequest.url} — queuing refresh`);
+
       if (isRefreshing) {
         return new Promise((resolve) => {
           subscribeTokenRefresh((token) => {
@@ -109,14 +116,19 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
+      const refreshUrl = `${API_BASE_URL}/auth/refresh`;
+      console.log(`[API] Calling refresh endpoint: ${refreshUrl}`);
+      console.log(`[API] withCredentials: true  |  cookies visible to JS: "${document.cookie || '(none)'}"`);
+
       try {
         const refreshResponse = await axios.post(
-          `${API_BASE_URL}/auth/refresh`,
+          refreshUrl,
           {},
           { withCredentials: true }
         );
 
         const newAccessToken = refreshResponse.data.accessToken;
+        console.log('[API] ✅ Token refresh succeeded — new access token obtained');
         setAccessToken(newAccessToken);
         isRefreshing = false;
         onRefreshed(newAccessToken);
@@ -124,7 +136,13 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         stopProgress();
         return api(originalRequest);
-      } catch (refreshError) {
+      } catch (refreshError: any) {
+        console.error(
+          '[API] ❌ Token refresh FAILED',
+          '| status:', refreshError?.response?.status,
+          '| data:', refreshError?.response?.data,
+          '| message:', refreshError?.message,
+        );
         isRefreshing = false;
         setAccessToken(null);
         stopProgress();

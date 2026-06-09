@@ -36,7 +36,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Attempt silent refresh on mount
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log('[AUTH] initializeAuth — attempting silent refresh...');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('[AUTH] initializeAuth — page load / refresh detected');
+      console.log('[AUTH] API base URL :', import.meta.env.VITE_API_URL ?? '/api');
+      console.log('[AUTH] VITE_NODE_ENV :', import.meta.env.VITE_NODE_ENV ?? '(not set)');
+      console.log('[AUTH] Cookies (JS-visible):', document.cookie || '(none — likely all HttpOnly)');
+      console.log('[AUTH] Attempting silent token refresh via /auth/refresh ...');
       try {
         const response = await authApi.refresh();
         const token = response.data.accessToken;
@@ -46,15 +51,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const meResponse = await authApi.getMe();
         setUser(meResponse.data.user);
         setIsAuthenticated(true);
-        console.log('[AUTH] Silent refresh OK — user:', meResponse.data.user?.name);
+        console.log('[AUTH] ✅ Silent refresh OK — user:', meResponse.data.user?.name, '| role:', meResponse.data.user?.role);
         startGeoWatch(logout);
       } catch (error: any) {
-        console.warn('[AUTH] Silent refresh failed (not logged in):', error?.response?.status, error?.message);
+        const status  = error?.response?.status;
+        const data    = error?.response?.data;
+        const message = error?.message;
+        console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.warn('[AUTH] ❌ Silent refresh FAILED — user will be shown login page');
+        console.warn('[AUTH]   HTTP status :', status ?? 'N/A (network error?)');
+        console.warn('[AUTH]   Response    :', data ?? '(no response body)');
+        console.warn('[AUTH]   Error msg   :', message);
+        if (!status) {
+          console.warn('[AUTH]   ⚠️  No HTTP status — possible causes:');
+          console.warn('[AUTH]      1. CORS preflight blocked (check browser Network tab → OPTIONS /auth/refresh)');
+          console.warn('[AUTH]      2. Backend is sleeping (Render free tier cold start)');
+          console.warn('[AUTH]      3. Network / DNS failure');
+        } else if (status === 401) {
+          console.warn('[AUTH]   ℹ️  401 means backend received request but cookie was missing or token expired');
+          console.warn('[AUTH]      Check: was refreshToken cookie sent? (Network tab → Request Headers → Cookie)');
+        }
         setAccessToken(null);
         setUser(null);
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       }
     };
 
