@@ -173,7 +173,7 @@ export const SERVICE_LABELS: Record<string, string> = {
   TURNKEY_CONSTRUCTION: 'Turnkey Construction',
   INTERIOR_EXECUTION: 'Interior Execution',
   RENOVATION: 'Renovation',
-  END_TO_END: 'End-to-End Solution Questionnaire',
+  END_TO_END: 'End-to-End Solution',
 };
 
 // ─── CSS tokens ──────────────────────────────────────────────────────────────
@@ -1226,7 +1226,7 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
                       <input type="checkbox" checked={isSelected} onChange={() => {}} className="accent-[#b89047] w-4 h-4 shrink-0 cursor-pointer" />
                       <div>
                         <span className={`text-[12.5px] font-semibold block ${isSelected ? 'text-stone-900' : 'text-stone-700'}`}>
-                          End-to-End Solution Questionnaire
+                          End-to-End Solution
                         </span>
                         <span className="text-[10px] text-stone-400 leading-tight">Complete project support — from design to handover. Selecting this disables individual services.</span>
                       </div>

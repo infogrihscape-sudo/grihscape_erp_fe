@@ -24,7 +24,7 @@ const serviceLabels: Record<string, string> = {
   TURNKEY_CONSTRUCTION: 'Turnkey Construction',
   INTERIOR_EXECUTION: 'Interior Execution',
   RENOVATION: 'Renovation',
-  END_TO_END: 'End-to-End Solution Questionnaire',
+  END_TO_END: 'End-to-End Solution',
 };
 
 const workflowStageBadgeClasses: Record<string, string> = {
