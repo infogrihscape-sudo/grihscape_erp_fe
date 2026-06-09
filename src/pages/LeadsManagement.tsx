@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useToast } from '../context/ToastContext.js';
 import { leadApi, prospectApi } from '../services/api.js';
@@ -759,7 +759,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
         </span>
 
         <div className="flex items-center gap-2">
-          {currentUser.role === 'SALES_AND_MARKETING' && (
+          {currentUser.role === 'Sales & Marketing' && (
             <button
               onClick={handleOpenDrawer}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#c5a880] to-[#af926a] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0"
@@ -1030,7 +1030,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                             >
                               <FileText size={11} /> Req Log
                             </button>
-                          ) : currentUser.role === 'SALES_AND_MARKETING' ? (
+                          ) : currentUser.role === 'Sales & Marketing' ? (
                             <button
                               onClick={() => setConvertingLead(lead)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:shadow-md hover:-translate-y-px transition-all border-0 cursor-pointer"

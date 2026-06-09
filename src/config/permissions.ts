@@ -1,6 +1,8 @@
 export const ROLE_ROUTES: Record<string, string[]> = {
-  SUPER_ADMIN: ['/overview', '/users', '/roles', '/logs', '/prospects', '/leads', '/contracts', '/tenders'],
-  ADMIN:       ['/overview', '/users', '/roles', '/logs', '/prospects', '/leads', '/contracts', '/tenders'],
-  SALES:       ['/overview', '/prospects', '/leads', '/contracts', '/tenders'],
-  ACCOUNTS:    ['/contracts', '/prospects'],
+  'Super Admin':       ['/overview', '/users', '/roles', '/logs', '/prospects', '/leads', '/contracts', '/tenders'],
+  'Admin':             ['/overview', '/users', '/roles', '/logs', '/prospects', '/leads', '/contracts', '/tenders'],
+  'Sales & Marketing': ['/overview', '/prospects', '/leads', '/contracts', '/tenders'],
+  'Project Manager':   ['/overview', '/prospects', '/contracts', '/tenders'],
+  'Project Architect': ['/overview', '/prospects', '/contracts'],
+  'Accounts':          ['/contracts', '/prospects'],
 };

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from '../context/RouterContext.js';
 import { userApi, prospectApi, leadApi } from '../services/api.js';
 import type { User } from '../context/AuthContext.js';
@@ -8,14 +8,7 @@ import {
   BarChart3, MapPin, PlusCircle, Loader2, Target, ClipboardList, Award, Home
 } from 'lucide-react';
 
-const ROLE_DISPLAY: Record<string, string> = {
-  SUPER_ADMIN: 'Super Admin',
-  ADMIN: 'Admin',
-  SALES_AND_MARKETING: 'Sales & Marketing',
-  PROJECT_MANAGER: 'Project Manager',
-  PROJECT_ARCHITECT: 'Project Architect',
-};
-const roleLabel = (r: string) => ROLE_DISPLAY[r] ?? r.replace(/_/g, ' ');
+const roleLabel = (r: string) => r;
 
 // Budget Conversion Helpers
 const getBudgetInLakhs = (amount?: number | null, unit?: string | null): number => {
@@ -78,8 +71,8 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
         prospectApi.getProspects().catch(() => ({ data: { prospects: [] } }))
       ];
       
-      const isAdmin = user.role === 'SUPER_ADMIN' || user.role === 'ADMIN';
-      const isSuperAdmin = user.role === 'SUPER_ADMIN';
+      const isAdmin = user.role === 'Super Admin' || user.role === 'Admin';
+      const isSuperAdmin = user.role === 'Super Admin';
       
       if (isAdmin) {
         promises.push(userApi.getUsers().catch(() => ({ data: { users: [] } })));
@@ -149,14 +142,14 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
 
   // Role based filtering (Sales reps can toggle their own telemetry)
   const displayLeads = useMemo(() => {
-    if (user?.role === 'SALES_AND_MARKETING' && isPersonalView) {
+    if (user?.role === 'Sales & Marketing' && isPersonalView) {
       return timeFilteredLeads.filter(l => l.createdById === user?.id);
     }
     return timeFilteredLeads;
   }, [timeFilteredLeads, user, isPersonalView]);
 
   const displayProspects = useMemo(() => {
-    if (user?.role === 'SALES_AND_MARKETING' && isPersonalView) {
+    if (user?.role === 'Sales & Marketing' && isPersonalView) {
       return timeFilteredProspects.filter(p => p.createdBy === user?.id);
     }
     return timeFilteredProspects;
@@ -292,9 +285,9 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
 
   // Sales rep leaderboard
   const repsLeaderboard = useMemo(() => {
-    if (user?.role !== 'SUPER_ADMIN' && user?.role !== 'ADMIN') return [];
+    if (user?.role !== 'Super Admin' && user?.role !== 'Admin') return [];
     
-    const salesUsers = allUsers.filter(u => u.role === 'SALES_AND_MARKETING');
+    const salesUsers = allUsers.filter(u => u.role === 'Sales & Marketing');
     return salesUsers.map(rep => {
       const repProspects = allProspects.filter(p => p.createdBy === rep.id && p.status !== 'DELETED' && !p.isDeleted);
       const repLeads = allLeads.filter(l => l.createdById === rep.id);
@@ -360,7 +353,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
         .map(p => (p.mobileNo ?? '').replace(/[^0-9]/g, '').slice(-10))
     );
 
-    const targetLeads = user?.role === 'SALES_AND_MARKETING' && isPersonalView
+    const targetLeads = user?.role === 'Sales & Marketing' && isPersonalView
       ? allLeads.filter(l => l.createdById === user?.id)
       : allLeads;
 
@@ -390,7 +383,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
     navigate('/leads');
   };
 
-  const showAdminTab = user.role === 'SUPER_ADMIN' || user.role === 'ADMIN';
+  const showAdminTab = user.role === 'Super Admin' || user.role === 'Admin';
 
   return (
     <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-y-auto">
@@ -419,7 +412,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
         </div>
 
         {/* Personal vs Team Toggle */}
-        {user.role === 'SALES_AND_MARKETING' && (
+        {user.role === 'Sales & Marketing' && (
           <button
             onClick={() => setIsPersonalView(!isPersonalView)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[var(--border)] rounded-lg text-[11.5px] font-semibold bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] text-[var(--text-secondary)] shadow-[var(--shadow-card)] transition-colors cursor-pointer"
@@ -440,7 +433,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
       </div>
 
       {/* Sub tabs: Insights vs Security */}
-      {(user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SALES_AND_MARKETING') && (
+      {(user.role === 'Super Admin' || user.role === 'Admin' || user.role === 'Sales & Marketing') && (
         <div className="flex border-b border-[var(--border)] shrink-0">
           <button
             onClick={() => setActiveSubTab('insights')}
@@ -471,7 +464,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
           <Loader2 className="animate-spin text-amber-600" size={32} />
           <span className="text-[12px] text-[var(--text-muted)] font-medium">Aggregating telemetryâ€¦</span>
         </div>
-      ) : activeSubTab === 'insights' && (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SALES_AND_MARKETING') ? (
+      ) : activeSubTab === 'insights' && (user.role === 'Super Admin' || user.role === 'Admin' || user.role === 'Sales & Marketing') ? (
         /* INSIGHTS SUB TAB */
         <div className="flex flex-col gap-5">
           {/* KPI CARDS GRID */}
@@ -700,7 +693,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                 </div>
               </div>
 
-              {user.role === 'SALES_AND_MARKETING' && (
+              {user.role === 'Sales & Marketing' && (
                 <div className="pt-3 border-t border-[var(--border-subtle)] mt-3">
                   <button
                     onClick={() => {
@@ -716,7 +709,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
             </div>
 
             {/* Actionable leads (Sales) or Recent Briefs (Admin) */}
-            {user.role === 'SALES_AND_MARKETING' ? (
+            {user.role === 'Sales & Marketing' ? (
               <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-4 shadow-[var(--shadow-card)] flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2 mb-3">
@@ -932,7 +925,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                 {[
                   'Read operational modules and details',
                   ...(showAdminTab ? ['Register and edit organization members', 'Manage member access states (Block/Unblock)'] : []),
-                  ...(user.role === 'SUPER_ADMIN' ? ['Audit comprehensive platform event logs'] : []),
+                  ...(user.role === 'Super Admin' ? ['Audit comprehensive platform event logs'] : []),
                 ].map(priv => (
                   <div key={priv} className="flex items-start gap-2">
                     <div className="p-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0">
@@ -988,7 +981,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
           </div>
 
           {/* Audit Logs (Super Admin) */}
-          {user.role === 'SUPER_ADMIN' && allLogs.length > 0 && (
+          {user.role === 'Super Admin' && allLogs.length > 0 && (
             <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-card)] p-4 md:col-span-2 lg:col-span-3">
               <div className="flex items-center gap-1.5 border-b border-[var(--border-subtle)] pb-2 mb-3">
                 <Database size={15} className="text-[#b89047]" />

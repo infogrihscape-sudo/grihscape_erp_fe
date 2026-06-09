@@ -23,22 +23,8 @@ interface UserManagementProps { currentUser: User; }
 
 const ITEMS_PER_PAGE = 10;
 
-const roleBadge: Record<string, string> = {
-  SUPER_ADMIN:       'text-stone-900 font-semibold',
-  ADMIN:             'text-stone-900 font-semibold',
-  SALES_AND_MARKETING: 'text-stone-900 font-semibold',
-  PROJECT_MANAGER:   'text-stone-900 font-semibold',
-  PROJECT_ARCHITECT: 'text-stone-900 font-semibold',
-};
-const roleBadgeClass = (r: string) => roleBadge[r] ?? 'text-stone-900 font-semibold';
-const ROLE_DISPLAY: Record<string, string> = {
-  SUPER_ADMIN: 'Super Admin',
-  ADMIN: 'Admin',
-  SALES_AND_MARKETING: 'Sales & Marketing',
-  PROJECT_MANAGER: 'Project Manager',
-  PROJECT_ARCHITECT: 'Project Architect',
-};
-const roleLabel = (r: string) => ROLE_DISPLAY[r] ?? r.replace(/_/g, ' ');
+const roleBadgeClass = (_r: string) => 'text-stone-900 font-semibold';
+const roleLabel = (r: string) => r;
 
 /* ── shared Tailwind snippets ── */
 const inputBase = 'w-full bg-white border border-[rgba(184,144,71,0.38)] text-stone-900 text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-[rgba(184,144,71,0.2)] font-[inherit] compact-input';
@@ -93,15 +79,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
   const activeSubTab = path === '/roles' ? 'roles' : path === '/logs' ? 'logs' : 'users';
 
   const availableRoles = useMemo(() =>
-    currentUser.role === 'ADMIN'
-      ? roles.filter(r => !['SUPER_ADMIN', 'ADMIN'].includes(r.name))
+    currentUser.role === 'Admin'
+      ? roles.filter(r => !['Super Admin', 'Admin'].includes(r.name))
       : roles,
   [roles, currentUser.role]);
 
   const fetchData = async (forceLoadRoles = false) => {
     setLoading(true); setError(null);
     const shouldFetchRoles = roles.length === 0 || forceLoadRoles;
-    const shouldFetchLogs  = ['SUPER_ADMIN', 'ADMIN'].includes(currentUser.role);
+    const shouldFetchLogs  = ['Super Admin', 'Admin'].includes(currentUser.role);
     try {
       const calls: Promise<any>[] = [userApi.getUsers()];
       if (shouldFetchRoles) calls.push(userApi.getRoles());
@@ -569,7 +555,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
       <div className="flex gap-1 border-b border-[rgba(184,144,71,0.22)] mb-4 overflow-x-auto scrollbar-none">
         {tabBtn('users', `Users (${users.length})`)}
         {tabBtn('roles', `Roles (${roles.length})`)}
-        {['SUPER_ADMIN', 'ADMIN'].includes(currentUser.role) && tabBtn('logs', 'Audit Trail')}
+        {['Super Admin', 'Admin'].includes(currentUser.role) && tabBtn('logs', 'Audit Trail')}
       </div>
 
       {/* Alerts */}
@@ -807,7 +793,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                     <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
                       {u.id === currentUser.id
                         ? <span className="text-[11px] italic text-stone-400 font-medium">You</span>
-                        : currentUser.role === 'ADMIN' && (u.role === 'SUPER_ADMIN' || u.role === 'ADMIN')
+                        : currentUser.role === 'Admin' && (u.role === 'Super Admin' || u.role === 'Admin')
                           ? <span className="text-[11px] text-stone-400">Protected</span>
                           : <div className="inline-flex items-center gap-1">
                               <button onClick={() => handleOpenEditUser(u)} className={btnEdit} title="Edit user">
@@ -873,7 +859,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                     {role.description || <span className="italic text-stone-400">No description configured.</span>}
                   </td>
                   <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
-                    {['SUPER_ADMIN', 'ADMIN'].includes(role.name)
+                    {['Super Admin', 'Admin'].includes(role.name)
                       ? <span className="inline-flex items-center gap-1 text-[11px] text-stone-400 font-medium"><Settings size={10} />System</span>
                       : <button onClick={() => handleOpenEditRole(role)} className={btnSecondary} style={{padding:'5px 10px', fontSize:'11px'}}>
                           <Edit2 size={10} />Edit

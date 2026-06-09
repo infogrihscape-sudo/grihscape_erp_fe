@@ -80,8 +80,8 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
   const [sendEmail,  setSendEmail]  = useState('');
   const [sending,    setSending]    = useState(false);
 
-  const isAdmin    = currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
-  const isAccounts = currentUser.role === 'ACCOUNTS';
+  const isAdmin    = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
+  const isAccounts = currentUser.role === 'Accounts';
 
   const [verifying, setVerifying] = useState<string | null>(null); // contract id being verified
   // Per-contract: editable revised payment amount for accounts verification

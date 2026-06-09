@@ -62,8 +62,8 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
 
-  const isAdmin = currentUser.role === 'ADMIN' || currentUser.role === 'SUPER_ADMIN';
-  const isSuperAdmin = currentUser.role === 'SUPER_ADMIN';
+  const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'Super Admin';
+  const isSuperAdmin = currentUser.role === 'Super Admin';
 
   // ── Fetch Tenders ──────────────────────────────────────────────────────────
   const fetchTenders = useCallback(async () => {

@@ -1119,7 +1119,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
             </div>
 
             {/* Sales actions panel */}
-            {currentUser.role === 'SALES_AND_MARKETING' && (
+            {currentUser.role === 'Sales & Marketing' && (
               <div className="bg-stone-50/40 border border-stone-200/80 p-3 sm:p-5 rounded-xl sm:rounded-2xl space-y-3 shrink-0">
                 <h4 className="text-[12px] font-bold text-[#9e7735] uppercase tracking-wide border-b border-stone-200/50 pb-1.5 mb-2">
                   Sales Actions
@@ -1315,7 +1315,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
             )}
 
             {/* Admin / Accounts Actions panel */}
-            {(currentUser.role === 'ADMIN' || currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ACCOUNTS') && stageRank(prospect.workflowStage) >= stageRank('CONTRACT_CREATED') && !isWon && (() => {
+            {(currentUser.role === 'Admin' || currentUser.role === 'Super Admin' || currentUser.role === 'Accounts') && stageRank(prospect.workflowStage) >= stageRank('CONTRACT_CREATED') && !isWon && (() => {
               const contract = prospect?.contracts?.[0];
               return (
                 <div className="bg-blue-50/40 border border-blue-200/80 p-3 sm:p-5 rounded-xl sm:rounded-2xl space-y-2.5 shrink-0">
@@ -1324,7 +1324,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                   </h4>
 
                   {/* Approve contract — Admin/SuperAdmin only */}
-                  {currentUser.role !== 'ACCOUNTS' && contract && contract.status === 'PENDING' && contract.draftPdfUrl && (
+                  {currentUser.role !== 'Accounts' && contract && contract.status === 'PENDING' && contract.draftPdfUrl && (
                     <button type="button" onClick={handleApproveContract}
                       className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer border-0">
                       <BadgeCheck size={12} /> Approve Contract
@@ -1338,7 +1338,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                   )}
 
                   {/* Send contract email — Admin/SuperAdmin only; once only; locked after payment */}
-                  {currentUser.role !== 'ACCOUNTS' && contract?.status === 'APPROVED' && stageRank(prospect.workflowStage) < stageRank('CONTRACT_EMAILED') && stageRank(prospect.workflowStage) < stageRank('INITIAL_PAYMENT_RECEIVED') && (
+                  {currentUser.role !== 'Accounts' && contract?.status === 'APPROVED' && stageRank(prospect.workflowStage) < stageRank('CONTRACT_EMAILED') && stageRank(prospect.workflowStage) < stageRank('INITIAL_PAYMENT_RECEIVED') && (
                     <button type="button" disabled={submittingContract || !prospect.email} onClick={handleSendContractEmail}
                       className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-violet-600 hover:bg-violet-700 transition-colors cursor-pointer border-0 disabled:opacity-50"
                       title={!prospect.email ? 'Client has no email.' : 'Send approved contract to client'}>

@@ -35,14 +35,7 @@ interface AppRouterProps {
 }
 
 const VALID_PATHS = ['/overview', '/users', '/roles', '/logs', '/prospects', '/leads', '/contracts', '/tenders'];
-const ROLE_DISPLAY: Record<string, string> = {
-  SUPER_ADMIN: 'Super Admin',
-  ADMIN: 'Admin',
-  SALES_AND_MARKETING: 'Sales & Marketing',
-  PROJECT_MANAGER: 'Project Manager',
-  PROJECT_ARCHITECT: 'Project Architect',
-};
-const roleLabel = (r: string) => ROLE_DISPLAY[r] ?? r.replace(/_/g, ' ');
+const roleLabel = (r: string) => r;
 
 const PageLoader: React.FC<{ text: string }> = ({ text }) => (
   <div className="flex flex-col items-center justify-center flex-1 gap-3">
@@ -136,7 +129,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
           </Suspense>
         ) : isProspects ? (
           <Suspense fallback={<PageLoader text="Preparing Prospects Terminal…" />}>
-            {user.role === 'SALES_AND_MARKETING' ? (
+            {user.role === 'Sales & Marketing' ? (
               <ProspectRequirementsSales currentUser={user} />
             ) : (
               <ProspectRequirementsAdmin currentUser={user} />

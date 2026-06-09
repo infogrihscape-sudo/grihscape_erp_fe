@@ -53,7 +53,7 @@ const statusBadgeClasses: Record<string, string> = {
 export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _currentUser }) => {
   const { showToast } = useToast();
   const { navigate } = useRouter();
-  const isAdminOrSuperAdmin = _currentUser.role === 'ADMIN' || _currentUser.role === 'SUPER_ADMIN';
+  const isAdminOrSuperAdmin = _currentUser.role === 'Admin' || _currentUser.role === 'Super Admin';
 
   const [prospects, setProspects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
