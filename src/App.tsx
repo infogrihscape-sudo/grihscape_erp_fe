@@ -45,7 +45,7 @@ const MainApp: React.FC = () => {
     if (isAuthenticated) {
       // Authenticated users: if on portfolio or login → redirect to first allowed CRM page
       if (isPortfolioPath || isLoginPath) {
-        const allowed = user ? ROLE_ROUTES[user.role] : [];
+        const allowed = (user && ROLE_ROUTES[user.role]) || [];
         navigate(allowed[0] || '/overview');
       }
       // On a CRM path they don't have access to → AppRouter handles the "Access Restricted" UI
