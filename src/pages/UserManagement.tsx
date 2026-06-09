@@ -31,7 +31,14 @@ const roleBadge: Record<string, string> = {
   PROJECT_ARCHITECT: 'text-stone-900 font-semibold',
 };
 const roleBadgeClass = (r: string) => roleBadge[r] ?? 'text-stone-900 font-semibold';
-const roleLabel = (r: string) => r.replace(/_/g, ' ');
+const ROLE_DISPLAY: Record<string, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Admin',
+  SALES_AND_MARKETING: 'Sales & Marketing',
+  PROJECT_MANAGER: 'Project Manager',
+  PROJECT_ARCHITECT: 'Project Architect',
+};
+const roleLabel = (r: string) => ROLE_DISPLAY[r] ?? r.replace(/_/g, ' ');
 
 /* ── shared Tailwind snippets ── */
 const inputBase = 'w-full bg-white border border-[rgba(184,144,71,0.38)] text-stone-900 text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-[rgba(184,144,71,0.2)] font-[inherit] compact-input';

@@ -25,7 +25,14 @@ const roleBadge: Record<string, string> = {
   ACCOUNTS:    'bg-blue-500/15 text-blue-400 border border-blue-500/25',
 };
 const roleBadgeClass = (r: string) => roleBadge[r] ?? 'bg-stone-700/50 text-stone-400 border border-stone-700';
-const roleLabel = (r: string) => r.replace(/_/g, ' ');
+const ROLE_DISPLAY: Record<string, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Admin',
+  SALES_AND_MARKETING: 'Sales & Marketing',
+  PROJECT_MANAGER: 'Project Manager',
+  PROJECT_ARCHITECT: 'Project Architect',
+};
+const roleLabel = (r: string) => ROLE_DISPLAY[r] ?? r.replace(/_/g, ' ');
 
 interface SidebarItem {
   id: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders';

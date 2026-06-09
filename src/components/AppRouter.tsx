@@ -35,7 +35,14 @@ interface AppRouterProps {
 }
 
 const VALID_PATHS = ['/overview', '/users', '/roles', '/logs', '/prospects', '/leads', '/contracts', '/tenders'];
-const roleLabel = (r: string) => r.replace(/_/g, ' ');
+const ROLE_DISPLAY: Record<string, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Admin',
+  SALES_AND_MARKETING: 'Sales & Marketing',
+  PROJECT_MANAGER: 'Project Manager',
+  PROJECT_ARCHITECT: 'Project Architect',
+};
+const roleLabel = (r: string) => ROLE_DISPLAY[r] ?? r.replace(/_/g, ' ');
 
 const PageLoader: React.FC<{ text: string }> = ({ text }) => (
   <div className="flex flex-col items-center justify-center flex-1 gap-3">

@@ -8,7 +8,14 @@ import {
   BarChart3, MapPin, PlusCircle, Loader2, Target, ClipboardList, Award, Home
 } from 'lucide-react';
 
-const roleLabel = (r: string) => r.replace(/_/g, ' ');
+const ROLE_DISPLAY: Record<string, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Admin',
+  SALES_AND_MARKETING: 'Sales & Marketing',
+  PROJECT_MANAGER: 'Project Manager',
+  PROJECT_ARCHITECT: 'Project Architect',
+};
+const roleLabel = (r: string) => ROLE_DISPLAY[r] ?? r.replace(/_/g, ' ');
 
 // Budget Conversion Helpers
 const getBudgetInLakhs = (amount?: number | null, unit?: string | null): number => {
