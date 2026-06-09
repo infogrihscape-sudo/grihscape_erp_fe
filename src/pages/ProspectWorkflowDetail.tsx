@@ -171,17 +171,22 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
 
   const fetchProspectData = async () => {
     setLoading(true);
+    setLoadingFollowUps(true);
     setError(null);
     try {
-      const res = await prospectApi.getProspectById(prospectId);
-      setProspect(res.data.prospect);
-      await fetchFollowUps(prospectId);
+      const [prospectRes, followUpsRes] = await Promise.all([
+        prospectApi.getProspectById(prospectId),
+        prospectApi.getFollowUps(prospectId),
+      ]);
+      setProspect(prospectRes.data.prospect);
+      setFollowUps(followUpsRes.data.followUps || []);
     } catch (err: any) {
       const errMsg = err.response?.data?.message || 'Failed to load prospect details.';
       setError(errMsg);
       showToast(errMsg, 'error');
     } finally {
       setLoading(false);
+      setLoadingFollowUps(false);
     }
   };
 

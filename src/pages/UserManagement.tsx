@@ -75,17 +75,18 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
 
   const fetchData = async (forceLoadRoles = false) => {
     setLoading(true); setError(null);
+    const shouldFetchRoles = roles.length === 0 || forceLoadRoles;
+    const shouldFetchLogs  = ['SUPER_ADMIN', 'ADMIN'].includes(currentUser.role);
     try {
-      const usersRes = await userApi.getUsers();
-      setUsers(usersRes.data.users);
-      if (roles.length === 0 || forceLoadRoles) {
-        const rolesRes = await userApi.getRoles();
-        setRoles(rolesRes.data.roles);
-      }
-      if (['SUPER_ADMIN', 'ADMIN'].includes(currentUser.role)) {
-        const logsRes = await userApi.getLogs();
-        setLogs(logsRes.data.logs);
-      }
+      const calls: Promise<any>[] = [userApi.getUsers()];
+      if (shouldFetchRoles) calls.push(userApi.getRoles());
+      if (shouldFetchLogs)  calls.push(userApi.getLogs());
+
+      const results = await Promise.all(calls);
+      setUsers(results[0].data.users);
+      let idx = 1;
+      if (shouldFetchRoles) setRoles(results[idx++].data.roles);
+      if (shouldFetchLogs)  setLogs(results[idx].data.logs);
     } catch (err: any) {
       const errMsg = err.response?.data?.message || 'Failed to load system details.';
       setError(errMsg);

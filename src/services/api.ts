@@ -19,9 +19,11 @@ const dispatchLoadingEvent = (active: boolean) => {
 };
 
 const startProgress = () => {
-  if (pendingRequests === 0) dispatchLoadingEvent(true);
+  if (pendingRequests === 0) {
+    NProgress.start();
+    dispatchLoadingEvent(true);
+  }
   pendingRequests++;
-  NProgress.start();
 };
 
 const stopProgress = () => {
