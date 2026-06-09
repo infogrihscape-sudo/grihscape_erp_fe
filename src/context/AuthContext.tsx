@@ -36,6 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Attempt silent refresh on mount
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log('[AUTH] initializeAuth — attempting silent refresh...');
       try {
         const response = await authApi.refresh();
         const token = response.data.accessToken;
@@ -45,9 +46,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const meResponse = await authApi.getMe();
         setUser(meResponse.data.user);
         setIsAuthenticated(true);
+        console.log('[AUTH] Silent refresh OK — user:', meResponse.data.user?.name);
         startGeoWatch(logout);
-      } catch (error) {
-        // Silent catch: User is not logged in / no refresh token exists
+      } catch (error: any) {
+        console.warn('[AUTH] Silent refresh failed (not logged in):', error?.response?.status, error?.message);
         setAccessToken(null);
         setUser(null);
         setIsAuthenticated(false);
@@ -80,21 +82,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const startGeoWatch = (doLogout: () => Promise<void>) => {
-    if (!GEO_CONFIG.enabled || !navigator.geolocation) return;
+    if (!GEO_CONFIG.enabled) {
+      console.log('[GEO] Geo-fence disabled (VITE_NODE_ENV is not PRODUCTION)');
+      return;
+    }
+    if (!navigator.geolocation) {
+      console.warn('[GEO] Geolocation not available in this browser');
+      return;
+    }
+    console.log(`[GEO] ✅ Geo-fence ACTIVE`);
+    console.log(`[GEO]   Office  : ${GEO_CONFIG.officeLat}, ${GEO_CONFIG.officeLng}`);
+    console.log(`[GEO]   Radius  : ${GEO_CONFIG.radiusMeters}m`);
     stopGeoWatch();
     geoWatchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        const dist = getDistanceMeters(
-          pos.coords.latitude,
-          pos.coords.longitude,
-          GEO_CONFIG.officeLat,
-          GEO_CONFIG.officeLng,
-        );
+        const { latitude, longitude, accuracy } = pos.coords;
+        const dist = getDistanceMeters(latitude, longitude, GEO_CONFIG.officeLat, GEO_CONFIG.officeLng);
+        console.log(`[GEO] 📍 Your location : ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        console.log(`[GEO]    GPS accuracy  : ±${Math.round(accuracy)}m`);
+        console.log(`[GEO]    Distance      : ${Math.round(dist)}m  (limit: ${GEO_CONFIG.radiusMeters}m)`);
         if (dist > GEO_CONFIG.radiusMeters) {
+          console.warn(`[GEO] ❌ OUTSIDE fence — triggering logout`);
           doLogout();
+        } else {
+          console.log(`[GEO] ✅ Inside fence — OK`);
         }
       },
-      () => { /* ignore errors — network GPS glitches shouldn't force logout */ },
+      (err) => { console.warn('[GEO] ⚠️ Position error (ignored):', err.message, `(code ${err.code})`); },
       { enableHighAccuracy: true, maximumAge: 15_000, timeout: 20_000 },
     );
   };
@@ -113,6 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await authApi.verifyOtp(phone, otp, latitude, longitude);
       const { accessToken: token, user: userData } = response.data;
 
+      console.log('[AUTH] OTP verified — user:', userData?.name, '| role:', userData?.role);
       setAccessToken(token);
       setUser(userData);
       setIsAuthenticated(true);
@@ -120,6 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { success: true, message: 'Logged in successfully.' };
     } catch (error: any) {
+      console.error('[AUTH] OTP verify failed:', error.response?.data?.message || error.message);
       throw new Error(error.response?.data?.message || 'Failed to verify OTP.');
     }
   };
