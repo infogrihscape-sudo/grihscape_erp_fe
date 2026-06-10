@@ -116,7 +116,7 @@ const normalizeAndValidatePhone = (phone: string): { isValid: boolean; normalize
   return { isValid, normalized: isValid ? `+91${clean}` : phone };
 };
 
-/* â”€â”€ Shared tailwind classes â”€â”€ */
+/* â"€â"€ Shared tailwind classes â"€â"€ */
 const inputBase = 'w-full bg-[var(--input-bg)] border border-[rgba(184,144,71,0.38)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-amber-100/50 font-[inherit] compact-input';
 const labelBase = 'text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]';
 const btnPrimary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0';
@@ -187,7 +187,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
 
   const hasActiveFilters = searchTerm !== '' || filterPlatform !== 'ALL' || filterService !== 'ALL' || filterSource !== 'ALL' || filterDate !== 'ALL';
 
-  // â”€â”€ Lead â†’ Prospect conversion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Lead â†’ Prospect conversion â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
   const [convertSubmitting, setConvertSubmitting] = useState(false);
 
@@ -355,7 +355,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
     }
   };
 
-  // â”€â”€ Bulk Upload Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Bulk Upload Logic â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const downloadTemplate = () => {
     const headers = ['sr.no', 'adset_name', 'ad_name', 'campaign_name', 'platform', 'services', 'full_name', 'phone_number', 'city'];
     const sampleRow = ['1', 'Adset Summer Special', 'Static Image Ad', 'Interior Renovations 2026', 'Meta', 'INTERIOR_DESIGN_SERVICES,RENOVATION', 'Gopal Sharma', '9876543210', 'Gurgaon'];
@@ -650,7 +650,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
     }
   };
 
-  // â”€â”€ Filter & Pagination Directory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Filter & Pagination Directory â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const prospectMap = useMemo(() => {
     const map: Record<string, any> = {};
     for (const p of prospects) {
@@ -805,7 +805,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
         </button>
       </div>
 
-      {/* â”€â”€ Active Leads Directory Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â"€â"€ Active Leads Directory Tab â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       {activeTab === 'directory' && (
         <div className="flex-grow flex flex-col min-h-0">
           {/* Filtration / Search */}
@@ -966,14 +966,14 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                         : lead.services;
 
                       return (
-                      <tr key={lead.id} className=”hover:bg-[var(--hover-bg)]/40 transition-colors”>
-                        <td className=”px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12px] font-medium text-[var(--text-muted)] text-center”>{indexStart + index + 1}</td>
-                        <td className=”px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12.5px] font-semibold text-[var(--text-primary)] text-center whitespace-nowrap”>{lead.fullName}</td>
-                        <td className=”px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] text-[var(--text-secondary)] font-medium text-center whitespace-nowrap”>
+                      <tr key={lead.id} className="hover:bg-[var(--hover-bg)]/40 transition-colors">
+                        <td className="px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12px] font-medium text-[var(--text-muted)] text-center">{indexStart + index + 1}</td>
+                        <td className="px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12.5px] font-semibold text-[var(--text-primary)] text-center whitespace-nowrap">{lead.fullName}</td>
+                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] text-[var(--text-secondary)] font-medium text-center whitespace-nowrap">
                           {lead.phoneNumber}
                         </td>
-                        <td className=”px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] text-[var(--text-secondary)] font-medium text-center whitespace-nowrap”>
-                          {lead.city || <span className=”italic opacity-40”>-</span>}
+                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] text-[var(--text-secondary)] font-medium text-center whitespace-nowrap">
+                          {lead.city || <span className="italic opacity-40">-</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
                           <span className={`text-[12.5px] font-semibold ${
@@ -1000,13 +1000,13 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                           </div>
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-[var(--text-secondary)]" title={lead.campaignName || ''}>
-                          {lead.campaignName || <span className=”italic opacity-40”>-</span>}
+                          {lead.campaignName || <span className="italic opacity-40">-</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-[var(--text-secondary)]" title={lead.adsetName || ''}>
-                          {lead.adsetName || <span className=”italic opacity-40”>-</span>}
+                          {lead.adsetName || <span className="italic opacity-40">-</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-[var(--text-secondary)]" title={lead.adName || ''}>
-                          {lead.adName || <span className=”italic opacity-40”>-</span>}
+                          {lead.adName || <span className="italic opacity-40">-</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
                           <span className={`text-[12px] font-bold uppercase tracking-wider ${
@@ -1091,7 +1091,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
         </div>
       )}
 
-      {/* â”€â”€ Bulk Ingestion Hub Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â"€â"€ Bulk Ingestion Hub Tab â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       {activeTab === 'bulk' && (
         <div className="flex-1 flex flex-col min-h-0 gap-4">
           
@@ -1270,8 +1270,8 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                           }`}>
                             {item.phoneNumber || <span className="italic font-normal text-rose-500">Missing Phone</span>}
                           </td>
-                          <td className=”px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-[var(--text-secondary)] font-medium”>
-                            {item.city || <span className=”italic text-[var(--text-muted)]”>—</span>}
+                          <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-[var(--text-secondary)] font-medium">
+                            {item.city || <span className="italic text-[var(--text-muted)]">—</span>}
                           </td>
                           <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
                             <span className="text-[12px] uppercase font-bold text-[var(--text-secondary)]">
@@ -1293,8 +1293,8 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                               {item.services.length === 0 && <span className="italic text-rose-500">None selected</span>}
                             </div>
                           </td>
-                          <td className=”px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-[var(--text-muted)] max-w-xs truncate”>{item.campaignName || <span className=”italic opacity-40”>-</span>}</td>
-                          <td className=”px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center border-l border-[var(--border)]/50”>
+                          <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-[var(--text-muted)] max-w-xs truncate">{item.campaignName || <span className="italic opacity-40">-</span>}</td>
+                          <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center border-l border-[var(--border)]/50">
                             {hasErrors ? (
                               <div className="space-y-0.5 flex flex-col items-center">
                                 {item.errors.map((err, eIdx) => (
@@ -1321,7 +1321,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
         </div>
       )}
 
-      {/* â”€â”€ Slide Drawer Form (Manual Ingestion) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â"€â"€ Slide Drawer Form (Manual Ingestion) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       <div
         className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${
           isDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -1560,7 +1560,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
       </div>
     </div>
 
-      {/* â”€â”€ Convert Lead â†’ Prospect Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â"€â"€ Convert Lead â†’ Prospect Modal â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       {convertingLead && createPortal(
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-stone-900/40 backdrop-blur-sm"
@@ -1590,7 +1590,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
               </button>
             </div>
 
-            {/* Form â€” pre-filled from lead data */}
+            {/* Form â€" pre-filled from lead data */}
             <ProspectForm
               key={convertingLead.id}
               mode="create"

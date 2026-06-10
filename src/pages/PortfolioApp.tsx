@@ -351,7 +351,7 @@ export const PortfolioApp: React.FC = () => {
           <div className="grid lg:grid-cols-3 gap-6">
             {SERVICES.map(({ icon: Icon, title, desc, img }) => (
               <div key={title}
-                className="group relative rounded-2xl overflow-hidden bg-[#14161a] border border-white/6 hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-900/12">
+                className="group relative rounded-2xl overflow-hidden bg-[#14161a] border border-white/6 hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-900/12 [will-change:transform]">
                 <div className="relative h-52 overflow-hidden [transform:translateZ(0)]">
                   <img src={img} alt={title} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 [backface-visibility:hidden]" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#14161a] to-transparent" />
