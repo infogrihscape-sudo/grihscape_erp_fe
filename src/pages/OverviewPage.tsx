@@ -45,8 +45,10 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
   // Active Tab within Dashboard Overview: 'insights' | 'security'
   const [activeSubTab, setActiveSubTab] = useState<'insights' | 'security'>('insights');
 
-  // Filter timeframe state: 'all' | 'today' | '7days' | '30days'
-  const [timeframe, setTimeframe] = useState<'all' | 'today' | '7days' | '30days'>('all');
+  // Filter timeframe state
+  const [timeframe, setTimeframe] = useState<'all' | 'today' | '7days' | '30days' | 'custom'>('all');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
 
   // Sales View Toggle: Personal vs Team
   const [isPersonalView, setIsPersonalView] = useState(true);
@@ -114,12 +116,12 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
   const filterByTimeframe = (dateStr?: string | Date | null) => {
     if (!dateStr) return false;
     if (timeframe === 'all') return true;
-    
+
     const date = new Date(dateStr);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (timeframe === 'today') {
       const today = new Date();
       return date.getDate() === today.getDate() &&
@@ -128,17 +130,25 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
     }
     if (timeframe === '7days') return diffDays <= 7;
     if (timeframe === '30days') return diffDays <= 30;
+    if (timeframe === 'custom') {
+      if (!customStart && !customEnd) return true;
+      const start = customStart ? new Date(customStart) : null;
+      const end = customEnd ? new Date(customEnd + 'T23:59:59') : null;
+      if (start && date < start) return false;
+      if (end && date > end) return false;
+      return true;
+    }
     return true;
   };
 
   // Memoized time-filtered dataset
   const timeFilteredLeads = useMemo(() => {
     return allLeads.filter(l => filterByTimeframe(l.createdAt));
-  }, [allLeads, timeframe]);
+  }, [allLeads, timeframe, customStart, customEnd]);
 
   const timeFilteredProspects = useMemo(() => {
     return allProspects.filter(p => filterByTimeframe(p.createdAt));
-  }, [allProspects, timeframe]);
+  }, [allProspects, timeframe, customStart, customEnd]);
 
   // Role based filtering (Sales reps can toggle their own telemetry)
   const displayLeads = useMemo(() => {
@@ -390,25 +400,46 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
       {/* Controls Bar */}
       <div className="shrink-0 flex flex-wrap items-center justify-end gap-2 border-b border-[var(--border)] pb-3">
         {/* Timeframe Filter */}
-        <div className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--card-bg)] p-0.5 shadow-[var(--shadow-card)]">
-          {[
-            { key: 'all', label: 'All Time' },
-            { key: 'today', label: 'Today' },
-            { key: '7days', label: '7 Days' },
-            { key: '30days', label: '30 Days' }
-          ].map(tf => (
-            <button
-              key={tf.key}
-              onClick={() => setTimeframe(tf.key as any)}
-              className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all duration-150 border-0 cursor-pointer ${
-                timeframe === tf.key
-                  ? 'bg-[#b89047] text-white shadow-sm'
-                  : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-bg)]'
-              }`}
-            >
-              {tf.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--card-bg)] p-0.5 shadow-[var(--shadow-card)]">
+            {[
+              { key: 'all',    label: 'All Time' },
+              { key: 'today',  label: 'Today' },
+              { key: '7days',  label: '7 Days' },
+              { key: '30days', label: '30 Days' },
+              { key: 'custom', label: 'Custom' },
+            ].map(tf => (
+              <button
+                key={tf.key}
+                onClick={() => setTimeframe(tf.key as any)}
+                className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all duration-150 border-0 cursor-pointer ${
+                  timeframe === tf.key
+                    ? 'bg-[#b89047] text-white shadow-sm'
+                    : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-bg)]'
+                }`}
+              >
+                {tf.label}
+              </button>
+            ))}
+          </div>
+          {timeframe === 'custom' && (
+            <div className="flex items-center gap-1.5">
+              <input
+                type="date"
+                value={customStart}
+                onChange={e => setCustomStart(e.target.value)}
+                className="px-2 py-1 text-[11px] rounded-md border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-primary)] outline-none focus:border-[#b89047] cursor-pointer"
+              />
+              <span className="text-[11px] text-[var(--text-muted)] font-medium">to</span>
+              <input
+                type="date"
+                value={customEnd}
+                min={customStart}
+                onChange={e => setCustomEnd(e.target.value)}
+                className="px-2 py-1 text-[11px] rounded-md border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-primary)] outline-none focus:border-[#b89047] cursor-pointer"
+              />
+            </div>
+          )}
         </div>
 
         {/* Personal vs Team Toggle */}

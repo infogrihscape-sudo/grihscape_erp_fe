@@ -422,7 +422,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
       {/* Edit Brief Modal */}
       {showFormModal && editTarget && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => { setShowFormModal(false); setEditTarget(null); }}>
-          <div className="animate-scale-in w-full max-w-5xl lg:max-w-6xl bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-[rgba(184,144,71,0.3)] flex flex-col h-screen sm:h-auto sm:max-h-[calc(100vh-40px)]" onClick={e => e.stopPropagation()}>
+          <div className="animate-scale-in w-full max-w-5xl lg:max-w-6xl bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-[rgba(184,144,71,0.3)] flex flex-col overflow-hidden h-[100dvh] sm:h-auto sm:max-h-[calc(100svh-40px)]" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 sm:p-5 border-b border-stone-100 shrink-0">
               <h3 className="flex items-center gap-2 text-[14px] sm:text-[16px] font-bold text-stone-900">
                 <ClipboardList size={17} className="text-[#b89047] shrink-0" /> Modify Client Brief
@@ -542,7 +542,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
       {/* Add Service Form Modal */}
       {showAddServiceFormModal && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowAddServiceFormModal(false)}>
-          <div className="animate-scale-in w-full max-w-5xl lg:max-w-6xl bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-[rgba(184,144,71,0.3)] flex flex-col h-screen sm:h-auto sm:max-h-[calc(100vh-40px)]" onClick={e => e.stopPropagation()}>
+          <div className="animate-scale-in w-full max-w-5xl lg:max-w-6xl bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-[rgba(184,144,71,0.3)] flex flex-col overflow-hidden h-[100dvh] sm:h-auto sm:max-h-[calc(100svh-40px)]" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 sm:p-5 border-b border-stone-100 shrink-0">
               <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
                 <UserPlus size={16} className="text-[#b89047]" /> Add New Service — {prefillData?.clientName}

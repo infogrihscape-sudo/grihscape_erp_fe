@@ -117,11 +117,11 @@ const normalizeAndValidatePhone = (phone: string): { isValid: boolean; normalize
 };
 
 /* â”€â”€ Shared tailwind classes â”€â”€ */
-const inputBase = 'w-full bg-white border border-[rgba(184,144,71,0.38)] text-stone-900 text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-amber-100/50 font-[inherit] compact-input';
-const labelBase = 'text-[10px] font-bold uppercase tracking-wide text-stone-500';
+const inputBase = 'w-full bg-[var(--input-bg)] border border-[rgba(184,144,71,0.38)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-amber-100/50 font-[inherit] compact-input';
+const labelBase = 'text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]';
 const btnPrimary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0';
-const btnSecondary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-stone-750 bg-stone-100 border border-[rgba(184,144,71,0.28)] hover:bg-stone-200 hover:text-stone-900 transition-colors duration-150 cursor-pointer';
-const card = 'bg-white border border-[rgba(184,144,71,0.24)] rounded-xl shadow-xs';
+const btnSecondary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-[var(--text-secondary)] bg-[var(--hover-bg)] border border-[rgba(184,144,71,0.28)] hover:opacity-80 hover:text-[var(--text-primary)] transition-colors duration-150 cursor-pointer';
+const card = 'bg-[var(--card-bg)] border border-[rgba(184,144,71,0.24)] rounded-xl shadow-xs';
 
 export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
   const { showToast } = useToast();
@@ -754,8 +754,8 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
       
       {/* Actions Bar */}
       <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(197,168,128,0.15)] pb-3">
-        <span className="text-[11.5px] text-stone-500 font-medium">
-          Operator: <strong className="text-stone-700">{currentUser.name}</strong>
+        <span className="text-[11.5px] text-[var(--text-muted)] font-medium">
+          Operator: <strong className="text-[var(--text-primary)]">{currentUser.name}</strong>
         </span>
 
         <div className="flex items-center gap-2">
@@ -773,7 +773,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
               setActiveTab('bulk');
               handleClearIngestion();
             }}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-stone-750 bg-stone-100 border border-[rgba(184,144,71,0.25)] hover:bg-stone-200 hover:text-stone-900 transition-colors duration-150 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-[var(--text-secondary)] bg-[var(--hover-bg)] border border-[rgba(184,144,71,0.25)] hover:opacity-80 hover:text-[var(--text-primary)] transition-colors duration-150 cursor-pointer"
           >
             <Upload className="w-4 h-4" /> Upload Excel
           </button>
@@ -781,24 +781,24 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-stone-200 shrink-0">
+      <div className="flex border-b border-[var(--border)] shrink-0">
         <button
           onClick={() => setActiveTab('directory')}
           className={`px-5 py-2.5 text-[13px] font-semibold border-b-2 transition-all cursor-pointer ${
             activeTab === 'directory'
               ? 'border-[#b89047] text-[#7e5a20] bg-[#b89047]/5'
-              : 'border-transparent text-stone-500 hover:text-stone-855 hover:bg-stone-50/50'
+              : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-bg)]/50'
           }`}
         >
           Active Leads Directory ({leads.length})
         </button>
-        
+
         <button
           onClick={() => setActiveTab('bulk')}
           className={`px-5 py-2.5 text-[13px] font-semibold border-b-2 transition-all cursor-pointer ${
             activeTab === 'bulk'
               ? 'border-[#b89047] text-[#7e5a20] bg-[#b89047]/5'
-              : 'border-transparent text-stone-500 hover:text-stone-855 hover:bg-stone-50/50'
+              : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-bg)]/50'
           }`}
         >
           Bulk Ingestion Hub
@@ -809,17 +809,17 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
       {activeTab === 'directory' && (
         <div className="flex-grow flex flex-col min-h-0">
           {/* Filtration / Search */}
-          <div className="flex flex-wrap items-end gap-3 mb-4 shrink-0 bg-stone-50/30 p-2.5 rounded-xl border border-[rgba(197,168,128,0.15)] animate-fade-in">
+          <div className="flex flex-wrap items-end gap-3 mb-4 shrink-0 bg-[var(--hover-bg)]/30 p-2.5 rounded-xl border border-[rgba(197,168,128,0.15)] animate-fade-in">
             <div className="flex flex-col gap-1 flex-1 min-w-[220px]">
-              <span className="text-[9px] font-bold text-stone-450 uppercase tracking-wide">Search Query</span>
-              <div className={`${card} flex items-center gap-2.5 px-3.5 py-1.5 compact-search-container bg-white`}>
+              <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Search Query</span>
+              <div className={`${card} flex items-center gap-2.5 px-3.5 py-1.5 compact-search-container`}>
                 <Search size={14} className="text-stone-400 shrink-0" />
                 <input
                   type="text"
                   placeholder="Search leads by name, phone, platform, campaign..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 bg-transparent border-0 outline-none text-[12px] text-stone-850 placeholder:text-stone-400"
+                  className="flex-1 bg-transparent border-0 outline-none text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 />
                 {searchTerm && (
                   <button
@@ -833,7 +833,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             </div>
 
             <div className="flex flex-col gap-1 flex-1 min-w-[140px]">
-              <span className="text-[9px] font-bold text-stone-450 uppercase tracking-wide">Platform</span>
+              <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Platform</span>
               <SearchableSelect
                 options={[
                   { value: 'ALL', label: 'All Platforms' },
@@ -845,7 +845,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             </div>
             
             <div className="flex flex-col gap-1 flex-1 min-w-[140px]">
-              <span className="text-[9px] font-bold text-stone-450 uppercase tracking-wide">Service</span>
+              <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Service</span>
               <SearchableSelect
                 options={[
                   { value: 'ALL', label: 'All Services' },
@@ -857,7 +857,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             </div>
 
             <div className="flex flex-col gap-1 flex-1 min-w-[140px]">
-              <span className="text-[9px] font-bold text-stone-450 uppercase tracking-wide">Source</span>
+              <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Source</span>
               <SearchableSelect
                 options={[
                   { value: 'ALL', label: 'All Sources' },
@@ -870,7 +870,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             </div>
 
             <div className="flex flex-col gap-1 flex-1 min-w-[140px]">
-              <span className="text-[9px] font-bold text-stone-450 uppercase tracking-wide">Timeframe</span>
+              <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Timeframe</span>
               <SearchableSelect
                 options={[
                   { value: 'ALL', label: 'All Time' },
@@ -888,21 +888,21 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             {filterDate === 'CUSTOM' && (
               <>
                 <div className="flex flex-col gap-1 flex-1 min-w-[140px] animate-fade-in">
-                  <span className="text-[9px] font-bold text-stone-450 uppercase tracking-wide">Start Date</span>
+                  <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Start Date</span>
                   <input
                     type="date"
                     value={customStartDate}
                     onChange={(e) => setCustomStartDate(e.target.value)}
-                    className="w-full bg-white border border-[rgba(184,144,71,0.35)] text-stone-900 text-[13px] rounded-lg px-3 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-amber-100/50 font-[inherit] compact-input"
+                    className="w-full bg-[var(--input-bg)] border border-[rgba(184,144,71,0.35)] text-[var(--text-primary)] text-[13px] rounded-lg px-3 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-amber-100/50 font-[inherit] compact-input"
                   />
                 </div>
                 <div className="flex flex-col gap-1 flex-1 min-w-[140px] animate-fade-in">
-                  <span className="text-[9px] font-bold text-stone-450 uppercase tracking-wide">End Date</span>
+                  <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wide">End Date</span>
                   <input
                     type="date"
                     value={customEndDate}
                     onChange={(e) => setCustomEndDate(e.target.value)}
-                    className="w-full bg-white border border-[rgba(184,144,71,0.35)] text-stone-900 text-[13px] rounded-lg px-3 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-amber-100/50 font-[inherit] compact-input"
+                    className="w-full bg-[var(--input-bg)] border border-[rgba(184,144,71,0.35)] text-[var(--text-primary)] text-[13px] rounded-lg px-3 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-amber-100/50 font-[inherit] compact-input"
                   />
                 </div>
               </>
@@ -920,7 +920,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                     setCustomStartDate('');
                     setCustomEndDate('');
                   }}
-                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-100 hover:bg-rose-100 transition-colors cursor-pointer"
+                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-[11px] font-bold text-rose-500 bg-[var(--hover-bg)] border border-rose-500/30 hover:bg-rose-500/10 transition-colors cursor-pointer"
                 >
                   <X size={12} /> Clear Filters
                 </button>
@@ -937,11 +937,11 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                 </div>
               ) : filteredLeads.length === 0 ? (
                 <div className="py-24 text-center">
-                  <div className="w-16 h-16 bg-stone-50 border border-[rgba(197,168,128,0.2)] rounded-full flex items-center justify-center mx-auto text-stone-400 mb-3 shadow-inner">
+                  <div className="w-16 h-16 bg-[var(--hover-bg)] border border-[rgba(197,168,128,0.2)] rounded-full flex items-center justify-center mx-auto text-[var(--text-muted)] mb-3 shadow-inner">
                     <Database size={24} />
                   </div>
-                  <h3 className="text-sm font-bold text-stone-850">No Leads Found</h3>
-                  <p className="text-[12px] text-stone-500 mt-1 max-w-sm mx-auto">
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">No Leads Found</h3>
+                  <p className="text-[12px] text-[var(--text-muted)] mt-1 max-w-sm mx-auto">
                     {searchTerm || filterPlatform !== 'ALL' || filterService !== 'ALL' || filterSource !== 'ALL' || filterDate !== 'ALL'
                       ? 'No leads match the filters. Try adjusting your search query.'
                       : 'Start capturing leads by manual form submission or Excel bulk upload.'}
@@ -950,13 +950,13 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
               ) : (
                 <table className="w-full border-collapse text-left min-w-[700px]">
                   <thead>
-                    <tr className="bg-stone-50/80 sticky top-0 z-10 backdrop-blur-xs">
+                    <tr className="bg-[var(--table-head)]/80 sticky top-0 z-10 backdrop-blur-xs">
                       {['S.No.', 'Full Name', 'Phone Number', 'City', 'Platform', 'Services Requested', 'Campaign Name', 'Adset Name', 'Ad Name', 'Source', 'Date Added', 'Actions'].map((h) => (
-                        <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(197,168,128,0.18)] bg-stone-50 text-center whitespace-nowrap">{h}</th>
+                        <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-[var(--text-muted)] border-b border-[rgba(197,168,128,0.18)] bg-[var(--table-head)] text-center whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-100 text-[12.5px] text-stone-705">
+                  <tbody className="divide-y divide-[var(--border)] text-[12.5px] text-[var(--text-secondary)]">
                     {paginatedLeads.map((lead, index) => {
                       const cleanPhone = lead.phoneNumber.replace(/[^0-9]/g, '').slice(-10);
                       const matchedProspect = prospectMap[cleanPhone];
@@ -966,23 +966,28 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                         : lead.services;
 
                       return (
-                      <tr key={lead.id} className="hover:bg-stone-50/40 transition-colors">
-                        <td className="px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12px] font-medium text-stone-500 text-center">{indexStart + index + 1}</td>
-                        <td className="px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12.5px] font-semibold text-stone-900 text-center whitespace-nowrap">{lead.fullName}</td>
-                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] text-stone-605 font-medium text-center whitespace-nowrap">
+                      <tr key={lead.id} className=”hover:bg-[var(--hover-bg)]/40 transition-colors”>
+                        <td className=”px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12px] font-medium text-[var(--text-muted)] text-center”>{indexStart + index + 1}</td>
+                        <td className=”px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12.5px] font-semibold text-[var(--text-primary)] text-center whitespace-nowrap”>{lead.fullName}</td>
+                        <td className=”px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] text-[var(--text-secondary)] font-medium text-center whitespace-nowrap”>
                           {lead.phoneNumber}
                         </td>
-                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] text-stone-750 font-medium text-center whitespace-nowrap">
-                          {lead.city || <span className="italic text-stone-400">â€”</span>}
+                        <td className=”px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] text-[var(--text-secondary)] font-medium text-center whitespace-nowrap”>
+                          {lead.city || <span className=”italic opacity-40”>-</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
                           <span className={`text-[12.5px] font-semibold ${
                             lead.platform === 'META_FACEBOOK' || lead.platform === 'Meta' ? 'text-blue-700' :
                             lead.platform === 'INSTAGRAM' || lead.platform === 'Instagram' ? 'text-pink-600' :
                             lead.platform === 'WHATSAPP' ? 'text-green-600' :
-                            'text-stone-600'
+                            lead.platform === 'EMAIL' ? 'text-sky-600' :
+                            lead.platform === 'JUST_DIAL' ? 'text-orange-600' :
+                            lead.platform === 'REFERENCE' ? 'text-emerald-600' :
+                            lead.platform === 'WALK_IN' ? 'text-violet-600' :
+                            lead.platform === 'REPEATED_CLIENT' ? 'text-rose-600' :
+                            'text-stone-500'
                           }`}>
-                            {platformLabel[lead.platform || ''] || lead.platform || 'â€”'}
+                            {platformLabel[lead.platform || ''] || lead.platform || '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
@@ -994,14 +999,14 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                             ))}
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-stone-705" title={lead.campaignName || ''}>
-                          {lead.campaignName || <span className="italic text-stone-400">â€”</span>}
+                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-[var(--text-secondary)]" title={lead.campaignName || ''}>
+                          {lead.campaignName || <span className=”italic opacity-40”>-</span>}
                         </td>
-                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-stone-705" title={lead.adsetName || ''}>
-                          {lead.adsetName || <span className="italic text-stone-400">â€”</span>}
+                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-[var(--text-secondary)]" title={lead.adsetName || ''}>
+                          {lead.adsetName || <span className=”italic opacity-40”>-</span>}
                         </td>
-                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-stone-705" title={lead.adName || ''}>
-                          {lead.adName || <span className="italic text-stone-400">â€”</span>}
+                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center max-w-xs truncate text-[12.5px] text-[var(--text-secondary)]" title={lead.adName || ''}>
+                          {lead.adName || <span className=”italic opacity-40”>-</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
                           <span className={`text-[12px] font-bold uppercase tracking-wider ${
@@ -1012,7 +1017,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                             {lead.source}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-stone-550 text-[11.5px] whitespace-nowrap">
+                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-[var(--text-muted)] text-[11.5px] whitespace-nowrap">
                           {new Date(lead.createdAt).toLocaleDateString(undefined, {
                             year: 'numeric',
                             month: 'short',
@@ -1025,7 +1030,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                           {matchedProspect ? (
                             <button
                               onClick={() => navigate(`/prospects/${matchedProspect.id}`)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-stone-750 bg-amber-50 border border-[rgba(184,144,71,0.25)] hover:bg-amber-100 hover:text-amber-900 transition-all cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-amber-700 bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/15 hover:text-amber-600 transition-all cursor-pointer"
                               title="View prospect requirement brief log"
                             >
                               <FileText size={11} /> Req Log
@@ -1039,7 +1044,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                               <ClipboardList size={11} /> Fill Form
                             </button>
                           ) : (
-                            <span className="text-stone-400 italic">N/A</span>
+                            <span className="text-[var(--text-muted)] italic">N/A</span>
                           )}
                         </td>
                       </tr>
@@ -1052,30 +1057,30 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
 
             {/* Directory Pagination */}
             {!loading && filteredLeads.length > 0 && (
-              <div className="p-3 bg-stone-50/70 border-t border-stone-100 flex items-center justify-between shrink-0 select-none">
-                <span className="text-[11.5px] text-stone-550">
-                  Showing <strong className="text-stone-800">{indexStart + 1}</strong> to{' '}
-                  <strong className="text-stone-800">
+              <div className="p-3 bg-[var(--hover-bg)]/70 border-t border-[var(--border)] flex items-center justify-between shrink-0 select-none">
+                <span className="text-[11.5px] text-[var(--text-muted)]">
+                  Showing <strong className="text-[var(--text-primary)]">{indexStart + 1}</strong> to{' '}
+                  <strong className="text-[var(--text-primary)]">
                     {Math.min(indexStart + ITEMS_PER_PAGE, filteredLeads.length)}
                   </strong>{' '}
-                  of <strong className="text-stone-800">{filteredLeads.length}</strong> leads
+                  of <strong className="text-[var(--text-primary)]">{filteredLeads.length}</strong> leads
                 </span>
 
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={handlePrev}
                     disabled={currentPage === 1}
-                    className="p-1 px-2.5 rounded border border-stone-250 bg-white text-stone-600 hover:bg-stone-50 disabled:opacity-40 disabled:hover:bg-transparent text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    className="p-1 px-2.5 rounded border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] disabled:opacity-40 disabled:hover:bg-transparent text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     <ChevronLeft size={12} /> Previous
                   </button>
-                  <span className="text-[11.5px] text-stone-500 font-bold px-2">
+                  <span className="text-[11.5px] text-[var(--text-muted)] font-bold px-2">
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
                     onClick={handleNext}
                     disabled={currentPage === totalPages}
-                    className="p-1 px-2.5 rounded border border-stone-250 bg-white text-stone-600 hover:bg-stone-50 disabled:opacity-40 disabled:hover:bg-transparent text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    className="p-1 px-2.5 rounded border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] disabled:opacity-40 disabled:hover:bg-transparent text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     Next <ChevronRight size={12} />
                   </button>
@@ -1093,7 +1098,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
           {/* Top upload bar & counters */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 shrink-0">
             {/* Drag & Drop Card */}
-            <div className="lg:col-span-3 bg-white border border-[rgba(184,144,71,0.22)] rounded-xl p-4 shadow-xs">
+            <div className="lg:col-span-3 bg-[var(--card-bg)] border border-[rgba(184,144,71,0.22)] rounded-xl p-4 shadow-xs">
               <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -1102,7 +1107,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                 className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 ${
                   isDragging
                     ? 'border-[#b89047] bg-[#b89047]/5'
-                    : 'border-[rgba(184,144,71,0.3)] bg-stone-50/50 hover:bg-stone-50 hover:border-[#b89047]'
+                    : 'border-[rgba(184,144,71,0.3)] bg-[var(--hover-bg)]/50 hover:bg-[var(--hover-bg)] hover:border-[#b89047]'
                 }`}
               >
                 <input
@@ -1115,7 +1120,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                 
                 <Upload className="text-[#b89047] w-8 h-8 mb-2 animate-bounce-subtle" />
                 
-                <span className="text-[13px] font-semibold text-stone-850">
+                <span className="text-[13px] font-semibold text-[var(--text-primary)]">
                   {selectedFileName ? `Selected: ${selectedFileName}` : 'Drag & Drop your spreadsheet here, or click to browse'}
                 </span>
                 <span className="text-[11px] text-stone-400 mt-1">Supports Microsoft Excel (.xlsx/.xls) and CSV (.csv) files.</span>
@@ -1148,16 +1153,16 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             </div>
 
             {/* Counters Box */}
-            <div className="bg-white border border-[rgba(184,144,71,0.22)] rounded-xl p-4 shadow-xs flex flex-col justify-between">
+            <div className="bg-[var(--card-bg)] border border-[rgba(184,144,71,0.22)] rounded-xl p-4 shadow-xs flex flex-col justify-between">
               <div>
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-stone-450 mb-3 border-b border-stone-100 pb-1.5">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3 border-b border-[var(--border)] pb-1.5">
                   Ingestion Stats
                 </h3>
                 
                 <div className="space-y-2.5 text-[12.5px] font-semibold">
-                  <div className="flex justify-between items-center text-stone-800">
+                  <div className="flex justify-between items-center text-[var(--text-primary)]">
                     <span>Total Rows Loaded:</span>
-                    <span className="bg-stone-100 border border-stone-200 px-2 py-0.5 rounded text-[11.5px]">{bulkStats.total}</span>
+                    <span className="bg-[var(--hover-bg)] border border-[var(--border)] px-2 py-0.5 rounded text-[11.5px]">{bulkStats.total}</span>
                   </div>
                   
                   <div className="flex justify-between items-center text-emerald-700">
@@ -1173,11 +1178,11 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
               </div>
 
               {previewLeads.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-stone-100 flex gap-2 shrink-0">
+                <div className="mt-4 pt-3 border-t border-[var(--border)] flex gap-2 shrink-0">
                   {bulkStats.invalid > 0 && (
                     <button
                       onClick={handleDownloadErrorReport}
-                      className="flex-1 bg-stone-100 text-stone-750 border border-stone-250 hover:bg-stone-200 rounded-lg py-2 px-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                      className="flex-1 bg-[var(--hover-bg)] text-[var(--text-secondary)] border border-[var(--border)] hover:opacity-80 rounded-lg py-2 px-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
                     >
                       <AlertTriangle size={12} className="text-amber-600" /> Error Report
                     </button>
@@ -1201,14 +1206,14 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
           </div>
 
           {/* Ingestion Preview Grid */}
-          <div className="flex-1 bg-white border border-[rgba(184,144,71,0.22)] rounded-xl shadow-xs overflow-hidden flex flex-col min-h-0">
-            <div className="p-3 border-b border-stone-100 bg-stone-50/50 flex justify-between items-center shrink-0">
-              <span className="text-[12px] font-bold text-stone-750">
+          <div className="flex-1 bg-[var(--card-bg)] border border-[rgba(184,144,71,0.22)] rounded-xl shadow-xs overflow-hidden flex flex-col min-h-0">
+            <div className="p-3 border-b border-[var(--border)] bg-[var(--hover-bg)]/50 flex justify-between items-center shrink-0">
+              <span className="text-[12px] font-bold text-[var(--text-secondary)]">
                 Sheet Rows Preview Table
               </span>
               
               {previewLeads.length > 0 && (
-                <div className="flex items-center gap-4 text-[11px] font-bold text-stone-500">
+                <div className="flex items-center gap-4 text-[11px] font-bold text-[var(--text-muted)]">
                   <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-emerald-100 border border-emerald-300 inline-block" /> Valid Row</span>
                   <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-rose-50 border border-rose-200 inline-block" /> Invalid Row</span>
                   <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-orange-50 border border-orange-200 inline-block" /> Duplicate Phone</span>
@@ -1230,13 +1235,13 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
               ) : (
                 <table className="w-full border-collapse text-left min-w-[700px]">
                   <thead>
-                    <tr className="bg-stone-50/80 sticky top-0 z-10 backdrop-blur-xs">
+                    <tr className="bg-[var(--table-head)]/80 sticky top-0 z-10 backdrop-blur-xs">
                       {['S.No.', 'Full Name', 'Phone Number', 'City', 'Platform', 'Services', 'Campaign', 'Errors / Warnings'].map((h) => (
-                        <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">{h}</th>
+                        <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-[var(--text-muted)] border-b border-[rgba(184,144,71,0.18)] bg-[var(--table-head)] text-center">{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-100 text-[12px] text-stone-705">
+                  <tbody className="divide-y divide-[var(--border)] text-[12px] text-[var(--text-secondary)]">
                     {previewLeads.map((item, idx) => {
                       const hasErrors = item.errors.length > 0;
                       const isDupe = item.isDbDuplicate || item.isLocalDuplicate;
@@ -1255,7 +1260,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                       return (
                         <tr key={idx} className={`${bgClass} ${borderClass} transition-colors`}>
                           <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] font-medium text-stone-500 text-center border-r border-stone-100/50">{item.srNo}</td>
-                          <td className={`px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] font-bold text-center ${!item.fullName ? 'text-rose-600 bg-rose-50/60' : 'text-stone-900'}`}>
+                          <td className={`px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] font-bold text-center ${!item.fullName ? 'text-rose-600 bg-rose-50/60' : 'text-[var(--text-primary)]'}`}>
                             {item.fullName || <span className="italic font-normal text-rose-500">Missing Name</span>}
                           </td>
                           <td className={`px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-center font-semibold ${
@@ -1265,11 +1270,11 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                           }`}>
                             {item.phoneNumber || <span className="italic font-normal text-rose-500">Missing Phone</span>}
                           </td>
-                          <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-stone-700 font-medium">
-                            {item.city || <span className="italic text-stone-400">â€”</span>}
+                          <td className=”px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-[var(--text-secondary)] font-medium”>
+                            {item.city || <span className=”italic text-[var(--text-muted)]”>—</span>}
                           </td>
                           <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
-                            <span className="text-[12px] uppercase font-bold text-stone-600">
+                            <span className="text-[12px] uppercase font-bold text-[var(--text-secondary)]">
                               {item.platform}
                             </span>
                           </td>
@@ -1288,8 +1293,8 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                               {item.services.length === 0 && <span className="italic text-rose-500">None selected</span>}
                             </div>
                           </td>
-                          <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-stone-550 max-w-xs truncate">{item.campaignName || <span className="italic text-stone-300">â€”</span>}</td>
-                          <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center border-l border-stone-100/50">
+                          <td className=”px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-[var(--text-muted)] max-w-xs truncate”>{item.campaignName || <span className=”italic opacity-40”>-</span>}</td>
+                          <td className=”px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center border-l border-[var(--border)]/50”>
                             {hasErrors ? (
                               <div className="space-y-0.5 flex flex-col items-center">
                                 {item.errors.map((err, eIdx) => (
@@ -1332,23 +1337,23 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
 
         {/* Drawer Panel */}
         <div
-          className={`relative w-full max-w-md h-full bg-[#fbfbf9] shadow-2xl flex flex-col justify-between border-l border-[rgba(197,168,128,0.25)] transition-transform duration-300 ease-out ${
+          className={`relative w-full max-w-md h-full bg-[var(--card-bg)] shadow-2xl flex flex-col justify-between border-l border-[rgba(197,168,128,0.25)] transition-transform duration-300 ease-out ${
             isDrawerOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
           {/* Drawer Header */}
-          <div className="p-4 border-b border-[rgba(197,168,128,0.2)] bg-white flex items-center justify-between shrink-0">
+          <div className="p-4 border-b border-[rgba(197,168,128,0.2)] bg-[var(--card-bg)] flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <PlusCircle className="text-[#c5a880] w-5 h-5" />
               <div>
-                <h3 className="text-[14px] font-extrabold text-stone-900 tracking-tight">Capture New Lead</h3>
-                <p className="text-[10px] text-stone-400 mt-0.5">Input lead details and save to directory.</p>
+                <h3 className="text-[14px] font-extrabold text-[var(--text-primary)] tracking-tight">Capture New Lead</h3>
+                <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Input lead details and save to directory.</p>
               </div>
             </div>
-            
+
             <button
               onClick={handleCloseDrawer}
-              className="p-1.5 rounded-lg text-stone-450 hover:bg-stone-100 focus:outline-none transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-[var(--hover-bg)] focus:outline-none transition-colors cursor-pointer"
             >
               <X size={16} />
             </button>
@@ -1358,7 +1363,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
           <form onSubmit={handleManualSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
             {/* Full Name */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 Full Name <span className="text-rose-500">*</span>
               </label>
               <input
@@ -1370,7 +1375,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                   if (formErrors.fullName) setFormErrors(prev => ({ ...prev, fullName: '' }));
                 }}
                 placeholder="Enter client's full name"
-                className={`w-full bg-white border text-stone-950 text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:ring-2 focus:ring-amber-100/50 ${
+                className={`w-full bg-[var(--input-bg)] border text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:ring-2 focus:ring-amber-100/50 ${
                   formErrors.fullName
                     ? 'border-rose-300 focus:border-rose-500'
                     : 'border-[rgba(197,168,128,0.35)] focus:border-[#c5a880]'
@@ -1390,7 +1395,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
 
             {/* Phone Number */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 Phone Number <span className="text-rose-500">*</span>
               </label>
               <input
@@ -1423,7 +1428,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
 
             {/* City */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 City / Location
               </label>
               <input
@@ -1431,16 +1436,16 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="e.g. Gurgaon"
-                className="w-full bg-white border border-[rgba(197,168,128,0.35)] text-stone-955 text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2 focus:ring-amber-100/50"
+                className="w-full bg-[var(--input-bg)] border border-[rgba(197,168,128,0.35)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2 focus:ring-amber-100/50"
               />
             </div>
 
             {/* Services (Multi-select) */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 Services Requested <span className="text-rose-500">*</span>
               </label>
-              <div className="grid grid-cols-1 gap-2 p-2 rounded-lg bg-white border border-[rgba(197,168,128,0.2)] max-h-48 overflow-y-auto">
+              <div className="grid grid-cols-1 gap-2 p-2 rounded-lg bg-[var(--input-bg)] border border-[rgba(197,168,128,0.2)] max-h-48 overflow-y-auto">
                 {Object.entries(serviceLabels).map(([key, label]) => {
                   const isChecked = selectedServices.includes(key);
                   return (
@@ -1449,7 +1454,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                       className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[12.5px] cursor-pointer transition-all duration-150 ${
                         isChecked
                           ? 'bg-[#c5a880]/10 text-[#7a613d] font-bold border border-[#c5a880]/30'
-                          : 'text-stone-700 hover:bg-stone-50 border border-transparent'
+                          : 'text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] border border-transparent'
                       }`}
                     >
                       <input
@@ -1472,13 +1477,13 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
 
             {/* Platform Dropdown */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 Platform Source
               </label>
               <select
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value)}
-                className="w-full bg-white border border-[rgba(197,168,128,0.35)] text-stone-900 text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2 focus:ring-amber-100/50 cursor-pointer"
+                className="w-full bg-[var(--input-bg)] border border-[rgba(197,168,128,0.35)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2 focus:ring-amber-100/50 cursor-pointer"
               >
                 {PLATFORM_SOURCE_OPTIONS.map((p) => (
                   <option key={p.value} value={p.value}>{p.label}</option>
@@ -1486,55 +1491,55 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
               </select>
             </div>
 
-            <hr className="border-stone-100 my-2" />
+            <hr className="border-[var(--border)] my-2" />
 
-            <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-1">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
               Campaign & Ads Context (Optional)
             </div>
 
             {/* Campaign Name */}
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-stone-500">Campaign Name</label>
+              <label className="text-[10px] font-semibold text-[var(--text-muted)]">Campaign Name</label>
               <input
                 type="text"
                 value={campaignName}
                 onChange={(e) => setCampaignName(e.target.value)}
                 placeholder="e.g. Interior Renovations 2026"
-                className="w-full bg-white border border-[rgba(197,168,128,0.35)] text-stone-950 text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2"
+                className="w-full bg-[var(--input-bg)] border border-[rgba(197,168,128,0.35)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2"
               />
             </div>
 
             {/* Adset Name */}
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-stone-500">Adset Name</label>
+              <label className="text-[10px] font-semibold text-[var(--text-muted)]">Adset Name</label>
               <input
                 type="text"
                 value={adsetName}
                 onChange={(e) => setAdsetName(e.target.value)}
                 placeholder="e.g. Summer Audience"
-                className="w-full bg-white border border-[rgba(197,168,128,0.35)] text-stone-955 text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2"
+                className="w-full bg-[var(--input-bg)] border border-[rgba(197,168,128,0.35)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2"
               />
             </div>
 
             {/* Ad Name */}
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-stone-500">Ad Name</label>
+              <label className="text-[10px] font-semibold text-[var(--text-muted)]">Ad Name</label>
               <input
                 type="text"
                 value={adName}
                 onChange={(e) => setAdName(e.target.value)}
                 placeholder="e.g. Static Image - Living Room"
-                className="w-full bg-white border border-[rgba(197,168,128,0.35)] text-stone-955 text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2"
+                className="w-full bg-[var(--input-bg)] border border-[rgba(197,168,128,0.35)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2"
               />
             </div>
           </form>
 
           {/* Drawer Footer */}
-          <div className="p-4 bg-white border-t border-[rgba(197,168,128,0.2)] flex gap-3 shrink-0">
+          <div className="p-4 bg-[var(--card-bg)] border-t border-[rgba(197,168,128,0.2)] flex gap-3 shrink-0">
             <button
               type="button"
               onClick={handleCloseDrawer}
-              className="flex-1 py-2.5 rounded-lg text-xs font-bold text-stone-750 bg-stone-100 hover:bg-stone-200 hover:text-stone-900 border border-[rgba(197,168,128,0.2)] transition-colors cursor-pointer"
+              className="flex-1 py-2.5 rounded-lg text-xs font-bold text-[var(--text-secondary)] bg-[var(--hover-bg)] hover:opacity-80 hover:text-[var(--text-primary)] border border-[var(--border)] transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -1573,7 +1578,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                   <h3 className="text-[14px] sm:text-[15px] font-bold text-stone-900">Capture Client Brief</h3>
                   <p className="text-[11px] text-stone-500 mt-0.5 truncate">
                     Converting: <span className="font-bold text-stone-700">{convertingLead.fullName}</span>
-                    <span className="hidden sm:inline">{' Â· '}{convertingLead.phoneNumber}</span>
+                    <span className="hidden sm:inline">{' · '}{convertingLead.phoneNumber}</span>
                   </p>
                 </div>
               </div>

@@ -78,6 +78,9 @@ export interface ProspectFormData {
   etoProjectStart: string | null;
   etoHasDocumentation: string | null;
   etoSpecialRequirements: string | null;
+  // General
+  additionalNotes: string | null;
+  budgetComfort: string | null;
 }
 
 export interface ProspectFormProps {
@@ -97,7 +100,7 @@ const AREA_UNITS = [
   { value: 'SQ_FT', label: 'Sq. Ft' },
   { value: 'SQ_MTR', label: 'Sq. Mtr' },
   { value: 'ACRE', label: 'Acre' },
-  { value: 'GUNTHA', label: 'Guntha' },
+  { value: 'YARD', label: 'Yard' },
   { value: 'OTHER', label: 'Other' },
 ];
 
@@ -493,6 +496,11 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
   const [etoHasDocumentation, setEtoHasDocumentation] = useState(init.etoHasDocumentation ?? 'No');
   const [etoSpecialRequirements, setEtoSpecialRequirements] = useState(init.etoSpecialRequirements ?? '');
 
+  const [additionalNotes, setAdditionalNotes] = useState(init.additionalNotes ?? '');
+  const [budgetComfort, setBudgetComfort] = useState(
+    init.budgetComfort ?? (init.budgetAmount ? 'Yes' : 'No')
+  );
+
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // ── Derived ────────────────────────────────────────────────────────────────
@@ -724,6 +732,8 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
       etoProjectStart: selectedServices.includes('END_TO_END') ? (etoProjectStart || null) : null,
       etoHasDocumentation: selectedServices.includes('END_TO_END') ? etoHasDocumentation : null,
       etoSpecialRequirements: selectedServices.includes('END_TO_END') ? (etoSpecialRequirements.trim() || null) : null,
+      additionalNotes: additionalNotes.trim() || null,
+      budgetComfort: budgetComfort || null,
     };
 
     await onSubmit(payload);
@@ -734,10 +744,10 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
     <div className="flex flex-col gap-6">
       {selectedServices.includes('ARCHITECTURAL_CONSULTATION') && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-[rgba(184,144,71,0.2)] pt-3 mt-2 bg-stone-50/20 p-3 sm:p-4 rounded-xl">
-          <div className="col-span-2">
+          <div className="col-span-full">
             <h4 className="text-[12px] font-bold text-[#9e7735] mb-2 uppercase tracking-wide border-b border-stone-100 pb-1">Architectural Consultation</h4>
           </div>
-          <div className="sm:col-span-2">
+          <div className="col-span-full">
             <AreaInput
               label="What is the plot size? *"
               value={plotAreaValue} unit={plotAreaUnit} customUnit={plotAreaCustomUnit}
@@ -772,10 +782,10 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
 
       {selectedServices.includes('INTERIOR_DESIGN') && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-[rgba(184,144,71,0.2)] pt-3 mt-2 bg-stone-50/20 p-3 sm:p-4 rounded-xl">
-          <div className="col-span-2">
+          <div className="col-span-full">
             <h4 className="text-[12px] font-bold text-[#9e7735] mb-2 uppercase tracking-wide border-b border-stone-100 pb-1">Interior Design</h4>
           </div>
-          <div className="sm:col-span-2">
+          <div className="col-span-full">
             <AreaInput
               label="What is the estimated area for interior designing? *"
               value={interiorAreaValue} unit={interiorAreaUnit} customUnit={interiorAreaCustomUnit}
@@ -792,11 +802,11 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
 
       {selectedServices.includes('PMC') && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-[rgba(184,144,71,0.2)] pt-3 mt-2 bg-stone-50/20 p-3 sm:p-4 rounded-xl">
-          <div className="col-span-2">
+          <div className="col-span-full">
             <h4 className="text-[12px] font-bold text-[#9e7735] mb-2 uppercase tracking-wide border-b border-stone-100 pb-1">PMC</h4>
           </div>
           <RadioField label="Have you ever worked with a PMC company before?" value={pmcWorkedBefore} onChange={setPmcWorkedBefore} />
-          <div className="sm:col-span-2">
+          <div className="col-span-full">
             <AreaInput
               label="What is the estimated area for management? *"
               value={mgmtAreaValue} unit={mgmtAreaUnit} customUnit={mgmtAreaCustomUnit}
@@ -853,10 +863,10 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
 
       {selectedServices.includes('TURNKEY_CONSTRUCTION') && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-[rgba(184,144,71,0.2)] pt-3 mt-2 bg-stone-50/20 p-3 sm:p-4 rounded-xl">
-          <div className="col-span-2">
+          <div className="col-span-full">
             <h4 className="text-[12px] font-bold text-[#9e7735] mb-2 uppercase tracking-wide border-b border-stone-100 pb-1">Turnkey Construction</h4>
           </div>
-          <div className="sm:col-span-2">
+          <div className="col-span-full">
             <AreaInput
               label="What is the total area to be constructed? *"
               value={turnkeyAreaValue} unit={turnkeyAreaUnit} customUnit={turnkeyAreaCustomUnit}
@@ -908,10 +918,10 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
 
       {selectedServices.includes('INTERIOR_EXECUTION') && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-[rgba(184,144,71,0.2)] pt-3 mt-2 bg-stone-50/20 p-3 sm:p-4 rounded-xl">
-          <div className="col-span-2">
+          <div className="col-span-full">
             <h4 className="text-[12px] font-bold text-[#9e7735] mb-2 uppercase tracking-wide border-b border-stone-100 pb-1">Interior Execution</h4>
           </div>
-          <div className="sm:col-span-2">
+          <div className="col-span-full">
             <AreaInput
               label="What is the estimated area for interior execution? *"
               value={execAreaValue} unit={execAreaUnit} customUnit={execAreaCustomUnit}
@@ -931,7 +941,7 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
 
       {selectedServices.includes('RENOVATION') && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-[rgba(184,144,71,0.2)] pt-3 mt-2 bg-stone-50/20 p-3 sm:p-4 rounded-xl">
-          <div className="col-span-2">
+          <div className="col-span-full">
             <h4 className="text-[12px] font-bold text-[#9e7735] mb-2 uppercase tracking-wide border-b border-stone-100 pb-1">Renovation</h4>
           </div>
           <div className="flex flex-col gap-1.5">
@@ -965,7 +975,7 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
 
       {selectedServices.includes('END_TO_END') && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-[rgba(184,144,71,0.2)] pt-3 mt-2 bg-stone-50/20 p-3 sm:p-4 rounded-xl">
-          <div className="col-span-2">
+          <div className="col-span-full">
             <h4 className="text-[12px] font-bold text-[#9e7735] mb-2 uppercase tracking-wide border-b border-stone-100 pb-1">End-to-End Solution</h4>
           </div>
 
@@ -1131,6 +1141,18 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
               </div>
             )}
 
+            {/* Additional notes */}
+            <div className="flex flex-col gap-1.5 pt-2 border-t border-stone-100">
+              <label className={labelBase}>Additional Information / Notes <span className="text-stone-400 font-normal">(Optional)</span></label>
+              <textarea
+                rows={3}
+                placeholder="Any extra details, special instructions, or context about this client..."
+                value={additionalNotes}
+                onChange={e => setAdditionalNotes(e.target.value)}
+                className={`${inputBase} resize-none`}
+              />
+            </div>
+
             {/* Lead source */}
             <div className="pt-2 border-t border-stone-100 space-y-3">
               <h4 className="text-[12px] font-bold text-[#9e7735] uppercase tracking-wide">Lead Source</h4>
@@ -1162,12 +1184,21 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
             <div className="bg-stone-50/40 border border-stone-200/80 p-3 sm:p-4 rounded-xl space-y-3">
               <h4 className="text-[12px] font-bold text-[#9e7735] uppercase tracking-wide border-b border-stone-200/50 pb-1.5">Project Overview</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <BudgetInput
-                  label="What is the budget range you are looking to invest?"
-                  amount={budgetAmount} unit={budgetUnit}
-                  onAmountChange={setBudgetAmount} onUnitChange={setBudgetUnit}
-                  error={formErrors.budgetAmount}
-                />
+                <div className="sm:col-span-2">
+                  <RadioField
+                    label="Are you comfortable sharing your budget range?"
+                    value={budgetComfort}
+                    onChange={v => { setBudgetComfort(v); if (v === 'No') { setBudgetAmount(''); setBudgetUnit('LAKH'); } }}
+                  />
+                </div>
+                {budgetComfort === 'Yes' && (
+                  <BudgetInput
+                    label="What is the budget range you are looking to invest?"
+                    amount={budgetAmount} unit={budgetUnit}
+                    onAmountChange={setBudgetAmount} onUnitChange={setBudgetUnit}
+                    error={formErrors.budgetAmount}
+                  />
+                )}
                 <div className="flex flex-col gap-1.5">
                   <label className={labelBase}>When do you expect your work to be completed?</label>
                   <input type="date" min={todayStr} value={expectedCompletion}

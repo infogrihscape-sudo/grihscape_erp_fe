@@ -17,8 +17,8 @@ export interface SidebarItem {
 export const SIDEBAR_ITEMS: SidebarItem[] = [
   { id: 'overview',  route: '/overview',  icon: <LayoutDashboard size={16} />, label: 'Profile Overview' },
   { id: 'users',     route: '/users',     icon: <Users size={16} />,           label: 'User Management' },
-  { id: 'prospects', route: '/prospects', icon: <ClipboardList size={16} />,   label: 'Prospects Form' },
   { id: 'leads',     route: '/leads',     icon: <Database size={16} />,        label: 'Leads Management' },
+  { id: 'prospects', route: '/prospects', icon: <ClipboardList size={16} />,   label: 'Prospects Form' },
   { id: 'contracts', route: '/contracts', icon: <ScrollText size={16} />,      label: 'Contracts' },
   { id: 'tenders',   route: '/tenders',   icon: <Award size={16} />,           label: 'Tender Management' },
 ];
