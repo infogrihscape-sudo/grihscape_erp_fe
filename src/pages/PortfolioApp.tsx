@@ -352,8 +352,8 @@ export const PortfolioApp: React.FC = () => {
             {SERVICES.map(({ icon: Icon, title, desc, img }) => (
               <div key={title}
                 className="group relative rounded-2xl overflow-hidden bg-[#14161a] border border-white/6 hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-900/12 [will-change:transform]">
-                <div className="relative h-52 overflow-hidden [transform:translateZ(0)]">
-                  <img src={img} alt={title} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 [backface-visibility:hidden]" loading="lazy" />
+                <div className="relative h-52 overflow-hidden bg-[#14161a] [transform:translateZ(0)] [backface-visibility:hidden]">
+                  <img src={img} alt={title} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 [backface-visibility:hidden] [transform:translateZ(0)]" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#14161a] to-transparent" />
                   <div className="absolute top-4 left-4 w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-amber-400">
                     <Icon size={20} />
