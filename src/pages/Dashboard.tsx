@@ -1,27 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import { Sidebar } from '../components/Sidebar.js';
-import { useRouter } from '../context/RouterContext.js';
 import { Menu } from 'lucide-react';
 import { AppRouter } from '../components/AppRouter.js';
 
 export const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
-  const { path, navigate } = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   if (!user) return null;
-
-  // Map path to active tab key for Sidebar
-  const getActiveTab = () => {
-    if (path === '/prospects' || path.startsWith('/prospects/')) return 'prospects';
-    if (path === '/leads') return 'leads';
-    if (path === '/users' || path === '/roles' || path === '/logs') return 'users';
-    if (path === '/contracts') return 'contracts';
-    if (path === '/tenders' || path.startsWith('/tenders/')) return 'tenders';
-    return 'overview';
-  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-[var(--page-bg)]">
@@ -35,19 +23,6 @@ export const Dashboard: React.FC = () => {
 
       <Sidebar
         user={user}
-        activeTab={getActiveTab()}
-        setActiveTab={(tab) => {
-          const routes: Record<string, string> = {
-            prospects: '/prospects',
-            leads:     '/leads',
-            users:     '/users',
-            contracts: '/contracts',
-            tenders:   '/tenders',
-            overview:  '/overview',
-          };
-          navigate(routes[tab] || '/overview');
-          setIsMobileSidebarOpen(false);
-        }}
         logout={logout}
         isCollapsed={isSidebarCollapsed}
         setIsCollapsed={setIsSidebarCollapsed}

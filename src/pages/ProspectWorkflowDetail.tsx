@@ -6,6 +6,7 @@ import { SearchableSelect } from '../components/SearchableSelect.js';
 import { PROJECT_PHASES } from '../components/ProspectForm.js';
 import { useToast } from '../context/ToastContext.js';
 import { useRouter } from '../context/RouterContext.js';
+import { ShimmerTable, ShimmerCardGrid } from '../components/Shimmer.js';
 import {
   ClipboardList, RefreshCw, X, ArrowLeft, Loader2,
   MapPin, Phone, Mail, Check, FileText, DollarSign, ShieldCheck,
@@ -891,9 +892,9 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 min-h-[400px] gap-3">
-        <Loader2 className="animate-spin text-amber-600" size={28} />
-        <span className="text-[12px] text-stone-500 font-medium">Loading Workflow Console…</span>
+      <div className="flex flex-col gap-4 p-4 flex-1">
+        <ShimmerCardGrid cards={4} />
+        <ShimmerTable rows={6} cols={4} />
       </div>
     );
   }

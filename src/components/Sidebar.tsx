@@ -1,16 +1,15 @@
 import React from 'react';
 import {
   LayoutDashboard, Users, LogOut, ChevronLeft, ChevronRight,
-  X, ClipboardList, Database, Sun, Moon, ScrollText, Award,
+  X, ClipboardList, Database, Sun, Moon, ScrollText, Award, HardHat,
 } from 'lucide-react';
 import type { User } from '../context/AuthContext.js';
 import { ROLE_ROUTES } from '../config/permissions.js';
 import { useTheme } from '../context/ThemeContext.js';
+import { useRouter } from '../context/RouterContext.js';
 
 interface SidebarProps {
   user: User;
-  activeTab: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders';
-  setActiveTab: (tab: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders') => void;
   logout: () => void;
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
@@ -28,25 +27,25 @@ const roleBadgeClass = (r: string) => roleBadge[r] ?? 'bg-stone-700/50 text-ston
 const roleLabel = (r: string) => r;
 
 interface SidebarItem {
-  id: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders';
   route: string;
   icon: React.ReactNode;
   label: string;
+  /** Routes that should highlight this item (e.g. /users also covers /roles, /logs) */
+  matches?: string[];
 }
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
-  { id: 'overview',  route: '/overview',  icon: <LayoutDashboard size={16} />, label: 'Profile Overview' },
-  { id: 'users',     route: '/users',     icon: <Users size={16} />,           label: 'User Management' },
-  { id: 'prospects', route: '/prospects', icon: <ClipboardList size={16} />,   label: 'Prospects Form' },
-  { id: 'leads',     route: '/leads',     icon: <Database size={16} />,        label: 'Leads Management' },
-  { id: 'contracts', route: '/contracts', icon: <ScrollText size={16} />,      label: 'Contracts' },
-  { id: 'tenders',   route: '/tenders',   icon: <Award size={16} />,           label: 'Tender Management' },
+  { route: '/overview',  icon: <LayoutDashboard size={16} />, label: 'Profile Overview' },
+  { route: '/users',     icon: <Users size={16} />,           label: 'User Management',  matches: ['/users', '/roles', '/logs'] },
+  { route: '/prospects', icon: <ClipboardList size={16} />,   label: 'Prospects Form' },
+  { route: '/leads',     icon: <Database size={16} />,        label: 'Leads Management' },
+  { route: '/contracts', icon: <ScrollText size={16} />,      label: 'Contracts' },
+  { route: '/tenders',   icon: <Award size={16} />,           label: 'Tender Management' },
+  { route: '/projects',  icon: <HardHat size={16} />,         label: 'Projects' },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
   user,
-  activeTab,
-  setActiveTab,
   logout,
   isCollapsed,
   setIsCollapsed,
@@ -54,28 +53,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setIsMobileOpen,
 }) => {
   const { isDark, toggleTheme } = useTheme();
+  const { path, navigate } = useRouter();
 
-  const navItem = (
-    tab: 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders',
-    icon: React.ReactNode,
-    label: string,
-  ) => {
-    const active = activeTab === tab;
+  const isActive = (item: SidebarItem) => {
+    const candidates = item.matches ?? [item.route];
+    return candidates.some(r => path === r || (r !== '/overview' && path.startsWith(r + '/')));
+  };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        setActiveTab(tab);
-      }
+  const navItem = (item: SidebarItem) => {
+    const active = isActive(item);
+
+    const go = () => {
+      navigate(item.route);
+      setIsMobileOpen(false);
     };
 
     return (
       <li
-        onClick={() => setActiveTab(tab)}
-        onKeyDown={handleKeyDown}
+        onClick={go}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }}
         tabIndex={0}
         role="button"
-        aria-label={label}
+        aria-label={item.label}
         aria-current={active ? 'page' : undefined}
         className={[
           'relative flex items-center px-3.5 py-2.5 rounded-lg text-[13px] font-medium cursor-pointer transition-all duration-200 select-none group focus:outline-none focus:ring-2 focus:ring-[#b89047]/30',
@@ -85,9 +84,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             : 'text-stone-400 hover:bg-white/5 hover:text-stone-200 focus:bg-white/5',
         ].join(' ')}
       >
-        <span className="shrink-0">{icon}</span>
+        <span className="shrink-0">{item.icon}</span>
         <span className={`transition-all duration-200 ${isCollapsed ? 'md:hidden' : 'block'}`}>
-          {label}
+          {item.label}
         </span>
 
         {/* Tooltip shown when sidebar is collapsed */}
@@ -96,7 +95,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             role="tooltip"
             className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-[#0d1117] text-white text-[11px] px-2.5 py-1.5 rounded-md shadow-lg pointer-events-none opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100 whitespace-nowrap z-50 border border-[#30363d]"
           >
-            {label}
+            {item.label}
             <div className="absolute right-full top-1/2 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-[#0d1117]" />
           </div>
         )}
@@ -157,8 +156,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           const item = SIDEBAR_ITEMS.find((i) => i.route === route);
           if (!item) return null;
           return (
-            <React.Fragment key={item.id}>
-              {navItem(item.id, item.icon, item.label)}
+            <React.Fragment key={item.route}>
+              {navItem(item)}
             </React.Fragment>
           );
         })}

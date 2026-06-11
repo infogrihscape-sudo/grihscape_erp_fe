@@ -1,7 +1,7 @@
 import React, { useEffect, Suspense } from 'react';
 import { useRouter } from '../context/RouterContext.js';
 import { ROLE_ROUTES } from '../config/permissions.js';
-import { PAGE_INFO, ROUTE_TO_TAB, getProspectDetailId, getTenderDetailId } from '../config/routeConfig.js';
+import { PAGE_INFO, ROUTE_TO_TAB, getProspectDetailId, getTenderDetailId, getProjectDetailId } from '../config/routeConfig.js';
 import type { User } from '../context/AuthContext.js';
 import { ShieldAlert, Loader2, ChevronRight } from 'lucide-react';
 
@@ -26,6 +26,12 @@ const ContractsScreen = React.lazy(() =>
 const TendersManagement = React.lazy(() =>
   import('../pages/TendersManagement.js').then((m) => ({ default: m.TendersManagement }))
 );
+const ProjectsDashboard = React.lazy(() =>
+  import('../pages/ProjectsDashboard.js').then((m) => ({ default: m.ProjectsDashboard }))
+);
+const ProjectDetail = React.lazy(() =>
+  import('../pages/ProjectDetail.js').then((m) => ({ default: m.ProjectDetail }))
+);
 const OverviewPage = React.lazy(() =>
   import('../pages/OverviewPage.js').then((m) => ({ default: m.OverviewPage }))
 );
@@ -34,7 +40,7 @@ interface AppRouterProps {
   user: User;
 }
 
-const VALID_PATHS = ['/overview', '/users', '/roles', '/logs', '/prospects', '/leads', '/contracts', '/tenders'];
+const VALID_PATHS = ['/overview', '/users', '/roles', '/logs', '/prospects', '/leads', '/contracts', '/tenders', '/projects'];
 const roleLabel = (r: string) => r;
 
 const PageLoader: React.FC<{ text: string }> = ({ text }) => (
@@ -49,25 +55,28 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
 
   const prospectId  = getProspectDetailId(path);
   const tenderId    = getTenderDetailId(path);
+  const projectDetailId = getProjectDetailId(path);
   const isUsers     = path === '/users' || path === '/roles' || path === '/logs';
   const isProspects = path === '/prospects';
   const isLeads     = path === '/leads';
   const isContracts = path === '/contracts';
   const isTenders   = path === '/tenders';
+  const isProjects  = path === '/projects';
 
   const isAuthorized =
     (ROLE_ROUTES[user.role]?.includes(path) ?? false) ||
     (!!prospectId && (ROLE_ROUTES[user.role]?.includes('/prospects') ?? false)) ||
-    ((isTenders || !!tenderId) && (ROLE_ROUTES[user.role]?.includes('/tenders') ?? false));
+    ((isTenders || !!tenderId) && (ROLE_ROUTES[user.role]?.includes('/tenders') ?? false)) ||
+    (!!projectDetailId && (ROLE_ROUTES[user.role]?.includes('/projects') ?? false));
 
   useEffect(() => {
-    if (!VALID_PATHS.includes(path) && !getProspectDetailId(path) && !getTenderDetailId(path)) {
+    if (!VALID_PATHS.includes(path) && !getProspectDetailId(path) && !getTenderDetailId(path) && !getProjectDetailId(path)) {
       const allowed = ROLE_ROUTES[user.role] ?? [];
       navigate(allowed[0] || '/contracts');
     }
   }, [path, navigate, user]);
 
-  const pageKey = prospectId ? 'detail' : tenderId ? 'tenders' : (ROUTE_TO_TAB[path] ?? 'overview');
+  const pageKey = prospectId ? 'detail' : tenderId ? 'tenders' : projectDetailId ? 'projectDetail' : (ROUTE_TO_TAB[path] ?? 'overview');
   const info = PAGE_INFO[pageKey];
 
   return (
@@ -146,6 +155,14 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
         ) : (isTenders || !!tenderId) ? (
           <Suspense fallback={<PageLoader text="Loading Tenders Module…" />}>
             <TendersManagement currentUser={user} tenderId={tenderId} />
+          </Suspense>
+        ) : projectDetailId ? (
+          <Suspense fallback={<PageLoader text="Loading Project…" />}>
+            <ProjectDetail currentUser={user} projectId={projectDetailId} />
+          </Suspense>
+        ) : isProjects ? (
+          <Suspense fallback={<PageLoader text="Loading Projects…" />}>
+            <ProjectsDashboard currentUser={user} />
           </Suspense>
         ) : isUsers ? (
           <Suspense fallback={<PageLoader text="Loading Security Console…" />}>

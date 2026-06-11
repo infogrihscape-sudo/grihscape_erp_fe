@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from '../context/RouterContext.js';
-import { userApi, prospectApi, leadApi } from '../services/api.js';
+import { userApi, prospectApi, leadApi, projectApi } from '../services/api.js';
 import type { User } from '../context/AuthContext.js';
 import {
   User as UserIcon, Mail, Phone, FileText, Database, Users,
   Activity, CheckCircle2, Cpu, RefreshCw, Landmark, TrendingUp,
-  BarChart3, MapPin, PlusCircle, Loader2, Target, ClipboardList, Award, Home
+  BarChart3, MapPin, PlusCircle, Target, ClipboardList, Award, Home,
+  HardHat, Clock, Building2, Palette, ArrowRight,
 } from 'lucide-react';
+import { ShimmerCardGrid, ShimmerTable } from '../components/Shimmer.js';
 
 const roleLabel = (r: string) => r;
 
@@ -35,6 +37,248 @@ const serviceLabels: Record<string, string> = {
   END_TO_END: 'End-to-End Solution',
 };
 
+// ─── Project-role dashboard (PM / Arch / Site Engineer) ──────────────────────
+const PROJECT_STAGE_CONFIG = [
+  { key: 'PENDING_ASSIGNMENT', label: 'Pending Assignment', short: 'Pending',  gradient: 'from-amber-400 to-amber-500',   bg: 'bg-amber-50 dark:bg-amber-950/30',    text: 'text-amber-600 dark:text-amber-400',   pill: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
+  { key: 'ASSIGNED',           label: 'Team Assigned',      short: 'Assigned', gradient: 'from-blue-400 to-blue-500',     bg: 'bg-blue-50 dark:bg-blue-950/30',      text: 'text-blue-600 dark:text-blue-400',     pill: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
+  { key: 'SITE_VERIFICATION',  label: 'Site Verification',  short: 'On-Site',  gradient: 'from-purple-400 to-purple-500', bg: 'bg-purple-50 dark:bg-purple-950/30',  text: 'text-purple-600 dark:text-purple-400', pill: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
+  { key: 'CDRF_PENDING',       label: 'CDRF Pending',       short: 'CDRF',     gradient: 'from-orange-400 to-orange-500', bg: 'bg-orange-50 dark:bg-orange-950/30',  text: 'text-orange-600 dark:text-orange-400', pill: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800' },
+  { key: 'DESIGN_REVIEW',      label: 'Design Review',      short: 'Design',   gradient: 'from-indigo-400 to-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-950/30',  text: 'text-indigo-600 dark:text-indigo-400', pill: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
+  { key: 'COMPLETED',          label: 'Completed',          short: 'Done',     gradient: 'from-emerald-400 to-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/30', text: 'text-emerald-600 dark:text-emerald-400', pill: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+];
+
+const SERVICE_SH: Record<string, string> = {
+  ARCHITECTURAL_CONSULTATION: 'Arch. Consult.',
+  INTERIOR_DESIGN:            'Interior Design',
+  PMC:                        'PMC',
+  TURNKEY_CONSTRUCTION:       'Turnkey',
+  INTERIOR_EXECUTION:         'Int. Execution',
+  RENOVATION:                 'Renovation',
+  END_TO_END_SOLUTION:        'End-to-End',
+};
+
+function getStageCount(key: string, kpis: any): number {
+  const assignedOnly = Math.max(0, kpis.active - kpis.siteCheck - kpis.cdrf - kpis.design);
+  switch (key) {
+    case 'PENDING_ASSIGNMENT': return kpis.pending;
+    case 'ASSIGNED':           return assignedOnly;
+    case 'SITE_VERIFICATION':  return kpis.siteCheck;
+    case 'CDRF_PENDING':       return kpis.cdrf;
+    case 'DESIGN_REVIEW':      return kpis.design;
+    case 'COMPLETED':          return kpis.done;
+    default: return 0;
+  }
+}
+
+function ProjectRoleDashboard({ user, projects, kpis, navigate }: {
+  user: User;
+  projects: any[];
+  kpis: { total: number; pending: number; active: number; siteCheck: number; cdrf: number; design: number; done: number };
+  navigate: (path: string) => void;
+}) {
+  const roleCtx = {
+    'Project Manager':   { sub: 'Your project portfolio', stages: ['PENDING_ASSIGNMENT','ASSIGNED','SITE_VERIFICATION','CDRF_PENDING','DESIGN_REVIEW','COMPLETED'] },
+    'Project Architect': { sub: 'Your architecture assignments', stages: ['ASSIGNED','CDRF_PENDING','DESIGN_REVIEW','COMPLETED'] },
+    'Junior Architect':  { sub: 'Your design assignments', stages: ['ASSIGNED','DESIGN_REVIEW','COMPLETED'] },
+    'Site Engineer':     { sub: 'Your site verification work', stages: ['ASSIGNED','SITE_VERIFICATION','COMPLETED'] },
+  }[user.role] ?? { sub: 'Project overview', stages: ['ASSIGNED','COMPLETED'] };
+
+  const visibleStages = PROJECT_STAGE_CONFIG.filter(s => roleCtx.stages.includes(s.key));
+
+  // Show all projects sorted: active first, then completed
+  const sortedProjects = [...projects].sort((a, b) => {
+    const order = ['SITE_VERIFICATION','CDRF_PENDING','DESIGN_REVIEW','ASSIGNED','PENDING_ASSIGNMENT','COMPLETED'];
+    return order.indexOf(a.status) - order.indexOf(b.status);
+  });
+
+  return (
+    <div className="flex flex-col gap-4">
+
+      {/* ── Hero banner ── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#111217] to-[#1a1208] border border-[rgba(184,144,71,0.2)] p-5 flex items-center gap-4">
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #b89047 0%, transparent 60%)' }} />
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#b89047] to-[#7c5e2a] flex items-center justify-center text-white font-black text-[18px] shadow-lg ring-2 ring-[rgba(184,144,71,0.3)] shrink-0">
+          {user.name.charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-[15px] font-bold text-white">Welcome, {user.name.split(' ')[0]}</h2>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-[#c9a45c] bg-[rgba(184,144,71,0.15)] border border-[rgba(184,144,71,0.25)] px-2 py-0.5 rounded-full">
+              {user.role}
+            </span>
+          </div>
+          <p className="text-[11px] text-[rgba(255,255,255,0.45)] mt-0.5">{roleCtx.sub}</p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-[28px] font-black text-[#c9a45c] leading-none">{kpis.total}</p>
+          <p className="text-[10px] text-[rgba(255,255,255,0.4)] mt-0.5">total projects</p>
+        </div>
+      </div>
+
+      {/* ── Stage KPI cards ── */}
+      <div className={`grid gap-3 ${visibleStages.length <= 3 ? 'grid-cols-3' : visibleStages.length === 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'}`}>
+        {visibleStages.map(s => {
+          const count = getStageCount(s.key, kpis);
+          const isUrgent = count > 0 && (s.key === 'SITE_VERIFICATION' || s.key === 'DESIGN_REVIEW' || s.key === 'CDRF_PENDING');
+          return (
+            <button
+              key={s.key}
+              onClick={() => navigate('/projects')}
+              className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-4 relative overflow-hidden text-left cursor-pointer group hover:shadow-md transition-all duration-200"
+              style={{ borderColor: count > 0 ? undefined : undefined }}
+            >
+              <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${s.gradient} transition-opacity ${count > 0 ? 'opacity-100' : 'opacity-30'}`} />
+              <div className={`text-[26px] font-black leading-none mb-1 transition-colors ${count > 0 ? s.text : 'text-[var(--text-muted)]'}`}>
+                {count}
+              </div>
+              <div className="text-[9.5px] font-bold uppercase tracking-wide text-[var(--text-muted)] leading-tight">{s.short}</div>
+              {isUrgent && (
+                <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#b89047] animate-pulse" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Projects list + sidebar ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+        {/* Projects table */}
+        <div className="lg:col-span-3 bg-[var(--card-bg)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+            <h3 className="text-[12.5px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+              <Building2 size={13} className="text-[#b89047]" />
+              My Projects
+            </h3>
+            <button
+              onClick={() => navigate('/projects')}
+              className="text-[10px] text-[#b89047] font-semibold hover:underline bg-transparent border-0 cursor-pointer flex items-center gap-0.5"
+            >
+              View All <ArrowRight size={10} />
+            </button>
+          </div>
+
+          {sortedProjects.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3 text-[var(--text-muted)]">
+              <div className="p-3 rounded-2xl bg-[rgba(184,144,71,0.06)] border border-[rgba(184,144,71,0.12)]">
+                <HardHat size={24} className="text-[#b89047]/40" />
+              </div>
+              <p className="text-[12px] font-medium">No projects assigned yet</p>
+              <p className="text-[10px] text-center max-w-[200px]">Projects will appear here once the admin assigns you to one</p>
+            </div>
+          ) : (
+            <div>
+              {sortedProjects.slice(0, 8).map((p: any) => {
+                const stage = PROJECT_STAGE_CONFIG.find(s => s.key === p.status);
+                const isCompleted = p.status === 'COMPLETED';
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => navigate(`/projects/${p.id}`)}
+                    className={`flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] last:border-0 cursor-pointer transition-colors group hover:bg-[rgba(184,144,71,0.04)] ${isCompleted ? 'opacity-60' : ''}`}
+                  >
+                    {/* Status dot */}
+                    <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${stage?.bg ?? 'bg-stone-100'}`} style={{ boxShadow: `0 0 0 2px var(--border)` }} />
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12.5px] font-semibold text-[var(--text-primary)] truncate group-hover:text-[#b89047] transition-colors">
+                        {p.prospect?.client?.clientName ?? '—'}
+                      </p>
+                      <p className="text-[10px] text-[var(--text-muted)] truncate mt-0.5">
+                        {SERVICE_SH[p.prospect?.serviceType] ?? (p.prospect?.serviceType ?? '—')}
+                        {p.prospect?.client?.locality ? <span> · {p.prospect.client.locality}</span> : null}
+                        {p.prospect?.client?.state ? <span>, {p.prospect.client.state}</span> : null}
+                      </p>
+                    </div>
+
+                    {/* Team */}
+                    {p.assignment?.projectManager && (
+                      <div className="hidden sm:block text-right shrink-0">
+                        <p className="text-[10px] font-medium text-[var(--text-secondary)]">{p.assignment.projectManager.name}</p>
+                        <p className="text-[9px] text-[var(--text-muted)]">PM</p>
+                      </div>
+                    )}
+
+                    {/* Status badge */}
+                    <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${stage?.pill ?? 'bg-stone-50 text-stone-500 border-stone-200'}`}>
+                      {stage?.short ?? p.status}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Right panel */}
+        <div className="lg:col-span-2 flex flex-col gap-3">
+
+          {/* Stage breakdown */}
+          <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-4 shadow-[var(--shadow-card)]">
+            <h3 className="text-[11px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-3 pb-2 border-b border-[var(--border)]">
+              Stage Breakdown
+            </h3>
+            <div className="space-y-3">
+              {visibleStages.map(s => {
+                const cnt = getStageCount(s.key, kpis);
+                const pct = kpis.total > 0 ? (cnt / kpis.total) * 100 : 0;
+                return (
+                  <div key={s.key}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className={`text-[10.5px] font-semibold ${cnt > 0 ? s.text : 'text-[var(--text-muted)]'}`}>{s.label}</span>
+                      <span className="text-[11px] font-bold text-[var(--text-primary)]">{cnt}</span>
+                    </div>
+                    <div className="h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full bg-gradient-to-r ${s.gradient} rounded-full transition-all duration-700`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Quick info card */}
+          <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-4 shadow-[var(--shadow-card)]">
+            <h3 className="text-[11px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-3 pb-2 border-b border-[var(--border)]">
+              At a Glance
+            </h3>
+            <div className="space-y-2.5 text-[12px]">
+              <div className="flex justify-between">
+                <span className="text-[var(--text-muted)]">In Progress</span>
+                <span className="font-bold text-[var(--text-primary)]">{kpis.active}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--text-muted)]">Completed</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">{kpis.done}</span>
+              </div>
+              {kpis.total > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-[var(--text-muted)]">Completion Rate</span>
+                  <span className="font-bold text-[#b89047]">{Math.round((kpis.done / kpis.total) * 100)}%</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={() => navigate('/projects')}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[12px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-lg transition-all duration-200 cursor-pointer border-0"
+          >
+            <HardHat size={14} />
+            Open Projects Dashboard
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 interface OverviewPageProps {
   user: User;
 }
@@ -59,23 +303,28 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [allRoles, setAllRoles] = useState<any[]>([]);
   const [allLogs, setAllLogs] = useState<any[]>([]);
-  
+  const [allProjects, setAllProjects] = useState<any[]>([]);
+  const [projectStatusCounts, setProjectStatusCounts] = useState<Record<string, number>>({});
+
   const [dataLoading, setDataLoading] = useState(true);
   const [latency, setLatency] = useState(12);
+
+  const isProjectRole = ['Project Manager', 'Project Architect', 'Junior Architect', 'Site Engineer'].includes(user.role);
 
   const fetchDashboardData = async () => {
     if (!user) return;
     setDataLoading(true);
     const startTime = Date.now();
     try {
-      const promises: Promise<any>[] = [
-        leadApi.getLeads().catch(() => ({ data: { leads: [] } })),
-        prospectApi.getProspects().catch(() => ({ data: { prospects: [] } }))
-      ];
-      
       const isAdmin = user.role === 'Super Admin' || user.role === 'Admin';
       const isSuperAdmin = user.role === 'Super Admin';
-      
+      const hasProjectAccess = isAdmin || isProjectRole;
+
+      const promises: Promise<any>[] = [
+        leadApi.getLeads().catch(() => ({ data: { leads: [] } })),
+        prospectApi.getProspects().catch(() => ({ data: { prospects: [] } })),
+      ];
+
       if (isAdmin) {
         promises.push(userApi.getUsers().catch(() => ({ data: { users: [] } })));
         promises.push(userApi.getRoles().catch(() => ({ data: { roles: [] } })));
@@ -83,23 +332,30 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
       if (isSuperAdmin) {
         promises.push(userApi.getLogs().catch(() => ({ data: { logs: [] } })));
       }
-      
+      if (hasProjectAccess) {
+        promises.push(projectApi.getProjects({ limit: 50 }).catch(() => ({ data: { projects: [], statusCounts: {} } })));
+      }
+
       const results = await Promise.all(promises);
-      
+
       setAllLeads(results[0]?.data?.leads || []);
       setAllProspects(results[1]?.data?.prospects || []);
-      
+
       let index = 2;
       if (isAdmin) {
         setAllUsers(results[index]?.data?.users || []);
-        setAllRoles(results[index+1]?.data?.roles || []);
+        setAllRoles(results[index + 1]?.data?.roles || []);
         index += 2;
       }
       if (isSuperAdmin) {
         setAllLogs(results[index]?.data?.logs || []);
+        index++;
       }
-      
-      // Calculate realistic API response latency
+      if (hasProjectAccess) {
+        setAllProjects(results[index]?.data?.projects || []);
+        setProjectStatusCounts(results[index]?.data?.statusCounts || {});
+      }
+
       setLatency(Math.max(5, Date.now() - startTime));
     } catch (error) {
       console.error('Failed to fetch dashboard data', error);
@@ -387,6 +643,24 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
       .slice(0, 5);
   }, [displayProspects]);
 
+  // Project-role KPIs
+  const projectKpis = useMemo(() => {
+    const total  = Object.values(projectStatusCounts).reduce((a, b) => a + b, 0);
+    const active = (projectStatusCounts['ASSIGNED'] ?? 0)
+                 + (projectStatusCounts['SITE_VERIFICATION'] ?? 0)
+                 + (projectStatusCounts['CDRF_PENDING'] ?? 0)
+                 + (projectStatusCounts['DESIGN_REVIEW'] ?? 0);
+    return {
+      total,
+      pending:   projectStatusCounts['PENDING_ASSIGNMENT'] ?? 0,
+      active,
+      siteCheck: projectStatusCounts['SITE_VERIFICATION'] ?? 0,
+      cdrf:      projectStatusCounts['CDRF_PENDING'] ?? 0,
+      design:    projectStatusCounts['DESIGN_REVIEW'] ?? 0,
+      done:      projectStatusCounts['COMPLETED'] ?? 0,
+    };
+  }, [projectStatusCounts]);
+
   const handleConvertAction = (phone: string) => {
     const cleanPhone = phone.replace(/^\+91/, '').replace(/[^0-9]/g, '').slice(-10);
     localStorage.setItem('leads-search', cleanPhone);
@@ -394,6 +668,28 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
   };
 
   const showAdminTab = user.role === 'Super Admin' || user.role === 'Admin';
+  const isAdmin      = user.role === 'Super Admin' || user.role === 'Admin';
+
+  // For project roles, render the dedicated dashboard immediately
+  if (isProjectRole) {
+    return (
+      <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-y-auto">
+        {dataLoading ? (
+          <div className="flex-1 flex flex-col gap-4 py-1">
+            <ShimmerCardGrid cards={6} />
+            <ShimmerTable rows={8} cols={4} />
+          </div>
+        ) : (
+          <ProjectRoleDashboard
+            user={user}
+            projects={allProjects}
+            kpis={projectKpis}
+            navigate={navigate}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-y-auto">
@@ -489,11 +785,11 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
         </div>
       )}
 
-      {/* Loader overlay */}
+      {/* Loader skeleton */}
       {dataLoading ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="animate-spin text-amber-600" size={32} />
-          <span className="text-[12px] text-[var(--text-muted)] font-medium">Aggregating telemetryâ€¦</span>
+        <div className="flex-1 flex flex-col gap-4 py-1">
+          <ShimmerCardGrid cards={8} />
+          <ShimmerTable rows={6} cols={4} />
         </div>
       ) : activeSubTab === 'insights' && (user.role === 'Super Admin' || user.role === 'Admin' || user.role === 'Sales & Marketing') ? (
         /* INSIGHTS SUB TAB */
@@ -565,6 +861,38 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
             </div>
 
           </div>
+
+          {/* PROJECT KPIs (Admin sees full pipeline) */}
+          {isAdmin && kpis.totalProspects > 0 && (
+            <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-4 shadow-[var(--shadow-card)]">
+              <div className="flex items-center justify-between border-b border-[var(--border)] pb-2 mb-3">
+                <h3 className="text-[13px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                  <HardHat size={14} className="text-[#b89047]" />
+                  Project Pipeline
+                </h3>
+                <button onClick={() => navigate('/projects')} className="text-[10px] text-[#b89047] font-semibold hover:underline bg-transparent border-0 cursor-pointer flex items-center gap-1">
+                  Manage <ArrowRight size={10} />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {PROJECT_STAGE_CONFIG.map(s => {
+                  const cnt = allProjects.filter((p: any) => p.status === s.key).length;
+                  return (
+                    <button key={s.key} onClick={() => navigate('/projects')} className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-[rgba(184,144,71,0.06)] transition-colors cursor-pointer border-0 bg-transparent">
+                      <span className={`text-[20px] font-black ${cnt > 0 ? s.text : 'text-[var(--text-muted)]'}`}>{cnt}</span>
+                      <span className="text-[8.5px] font-semibold text-[var(--text-muted)] uppercase tracking-wide text-center leading-tight">{s.short}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {projectKpis.pending > 0 && (
+                <div className="mt-3 flex items-center gap-2 text-[11px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+                  <Clock size={12} className="shrink-0" />
+                  <span><strong>{projectKpis.pending}</strong> project{projectKpis.pending > 1 ? 's' : ''} pending team assignment</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* FUNNEL & SERVICE TYPE BREAKDOWN */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

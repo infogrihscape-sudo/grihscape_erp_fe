@@ -12,25 +12,28 @@ NProgress.configure({
 });
 
 // Track pending requests so the bar stays visible until ALL are done
-let pendingRequests = 0;
+let pendingRequests = 0;   // all requests — drives NProgress bar
+let pendingMutations = 0;  // POST/PUT/PATCH/DELETE only — drives overlay
 
 const dispatchLoadingEvent = (active: boolean) => {
   window.dispatchEvent(new CustomEvent('api-loading', { detail: { active } }));
 };
 
-const startProgress = () => {
-  if (pendingRequests === 0) {
-    NProgress.start();
-    dispatchLoadingEvent(true);
-  }
+const startProgress = (isMutation: boolean) => {
+  if (pendingRequests === 0) NProgress.start();
   pendingRequests++;
+  if (isMutation) {
+    if (pendingMutations === 0) dispatchLoadingEvent(true);
+    pendingMutations++;
+  }
 };
 
-const stopProgress = () => {
+const stopProgress = (isMutation: boolean) => {
   pendingRequests = Math.max(0, pendingRequests - 1);
-  if (pendingRequests === 0) {
-    NProgress.done();
-    dispatchLoadingEvent(false);
+  if (pendingRequests === 0) NProgress.done();
+  if (isMutation) {
+    pendingMutations = Math.max(0, pendingMutations - 1);
+    if (pendingMutations === 0) dispatchLoadingEvent(false);
   }
 };
 
@@ -55,17 +58,22 @@ export const getAccessToken = () => {
   return accessToken;
 };
 
+const MUTATION_METHODS = new Set(['post', 'put', 'patch', 'delete']);
+
 // ── Request interceptor — attach token + start progress bar ──────────────────
 api.interceptors.request.use(
   (config) => {
-    startProgress();
+    const isMutation = MUTATION_METHODS.has((config.method ?? '').toLowerCase());
+    (config as any)._isMutation = isMutation;
+    startProgress(isMutation);
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
   (error: unknown) => {
-    stopProgress();
+    const isMutation = MUTATION_METHODS.has(((error as any)?.config?.method ?? '').toLowerCase());
+    stopProgress(isMutation);
     return Promise.reject(error);
   }
 );
@@ -83,11 +91,12 @@ const onRefreshed = (token: string) => {
 // ── Response interceptor — stop progress bar + handle 401 ────────────────────
 api.interceptors.response.use(
   (response: any) => {
-    stopProgress();
+    stopProgress((response.config as any)._isMutation ?? false);
     return response;
   },
   async (error: any) => {
     const originalRequest = error.config;
+    const isMutation: boolean = originalRequest?._isMutation ?? false;
 
     // Avoid infinite loop on /auth/refresh or /auth/verify-otp
     if (
@@ -99,7 +108,7 @@ api.interceptors.response.use(
         '| data:', error.response?.data,
         '| network error:', error.message,
       );
-      stopProgress();
+      stopProgress(isMutation);
       return Promise.reject(error);
     }
 
@@ -136,7 +145,7 @@ api.interceptors.response.use(
         onRefreshed(newAccessToken);
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        stopProgress();
+        stopProgress(isMutation);
         return api(originalRequest);
       } catch (refreshError: any) {
         console.error(
@@ -147,14 +156,14 @@ api.interceptors.response.use(
         );
         isRefreshing = false;
         setAccessToken(null);
-        stopProgress();
+        stopProgress(isMutation);
         // Clear active session in window if refresh token expired
         window.dispatchEvent(new Event('auth-session-expired'));
         return Promise.reject(refreshError);
       }
     }
 
-    stopProgress();
+    stopProgress(isMutation);
     return Promise.reject(error);
   }
 );
@@ -258,6 +267,69 @@ export const contractApi = {
   approve: (id: string) => api.post(`/contracts/${id}/approve`),
   sendContract: (id: string, data: { clientEmail: string; clientName: string }) =>
     api.post(`/contracts/${id}/send`, data),
+};
+
+export const projectApi = {
+  // Core
+  getProjects: (params?: { status?: string; search?: string; page?: number; limit?: number }) =>
+    api.get('/projects', { params }),
+  getProjectById: (id: string) => api.get(`/projects/${id}`),
+  getProjectByProspectId: (prospectId: string) => api.get(`/projects/by-prospect/${prospectId}`),
+  getAssignableUsers: () => api.get('/projects/assignable-users'),
+  assignTeam: (id: string, data: {
+    projectManagerId: string;
+    projectArchitectId: string;
+    juniorArchitectId?: string | null;
+    notes?: string;
+  }) => api.post(`/projects/${id}/assign`, data),
+
+  // Site verification
+  assignSiteEngineer: (projectId: string, siteEngineerId: string) =>
+    api.post(`/projects/${projectId}/site-verification/assign-engineer`, { siteEngineerId }),
+  getSiteVerification: (projectId: string) =>
+    api.get(`/projects/${projectId}/site-verification`),
+  submitSiteVerification: (projectId: string, data: any) =>
+    api.post(`/projects/${projectId}/site-verification`, data),
+  reviewSiteVerification: (projectId: string) =>
+    api.post(`/projects/${projectId}/site-verification/review`),
+
+  // CDRF meetings
+  getCdrfMeetings: (projectId: string) =>
+    api.get(`/projects/${projectId}/cdrf-meetings`),
+  createCdrfMeeting: (projectId: string, data: { meetingType: string; scheduledAt: string; notes?: string; meetingLink?: string }) =>
+    api.post(`/projects/${projectId}/cdrf-meetings`, data),
+  updateCdrfMeeting: (projectId: string, meetingId: string, data: any) =>
+    api.put(`/projects/${projectId}/cdrf-meetings/${meetingId}`, data),
+
+  // CDRF follow-up logs
+  getCdrfFollowUps: (projectId: string) =>
+    api.get(`/projects/${projectId}/cdrf-followups`),
+  logCdrfFollowUp: (projectId: string, data: { type: string; notes: string; meetingId?: string }) =>
+    api.post(`/projects/${projectId}/cdrf-followups`, data),
+
+  // CDRF form
+  getCdrfForm: (projectId: string) =>
+    api.get(`/projects/${projectId}/cdrf`),
+  saveCdrfForm: (projectId: string, sections: Record<string, any>) =>
+    api.put(`/projects/${projectId}/cdrf`, { sections }),
+  submitCdrfForm: (projectId: string, sections?: Record<string, any>) =>
+    api.post(`/projects/${projectId}/cdrf/submit`, { sections }),
+
+  // Designs
+  getDesigns: (projectId: string) =>
+    api.get(`/projects/${projectId}/designs`),
+  uploadDesign: (projectId: string, data: { fileUrl: string; fileName: string }) =>
+    api.post(`/projects/${projectId}/designs`, data),
+  reviewDesign: (projectId: string, draftId: string, data: { status: 'APPROVED' | 'REJECTED'; reviewNotes?: string }) =>
+    api.post(`/projects/${projectId}/designs/${draftId}/review`, data),
+  sendDesignToClient: (projectId: string, draftId: string, data: { notes?: string; clientMeetingDate?: string; clientMeetingNotes?: string }) =>
+    api.post(`/projects/${projectId}/designs/${draftId}/send-to-client`, data),
+
+  // File upload (reuse existing upload endpoint)
+  uploadFile: (formData: FormData) =>
+    api.post('/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data', 'x-file-type': 'design' },
+    }),
 };
 
 export const tenderApi = {
