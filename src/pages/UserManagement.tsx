@@ -5,6 +5,7 @@ import type { User } from '../context/AuthContext.js';
 import { useRouter } from '../context/RouterContext.js';
 import { SearchableSelect } from '../components/SearchableSelect.js';
 import { useToast } from '../context/ToastContext.js';
+import { canWrite } from '../config/permissions.js';
 import {
   UserPlus, Ban, Unlock, RefreshCw,
   Search, ShieldCheck, Mail, Phone, Calendar,
@@ -77,6 +78,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const { path, navigate } = useRouter();
   const activeSubTab = path === '/roles' ? 'roles' : path === '/logs' ? 'logs' : 'users';
+
+  const userCanWrite = canWrite(currentUser.role);
 
   const availableRoles = useMemo(() =>
     currentUser.role === 'Admin'
@@ -540,14 +543,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
         <button onClick={() => fetchData(true)} className={btnSecondary} title="Refresh">
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
         </button>
-        {activeSubTab === 'roles' ? (
-          <button onClick={() => { setEditingRoleId(null); setNewRoleName(''); setNewRoleDesc(''); setShowRoleModal(true); }} className={btnPrimary}>
-            <Plus size={14} /><span>Add Role</span>
-          </button>
-        ) : (
-          <button onClick={() => setShowUserModal(true)} className={btnPrimary}>
-            <UserPlus size={14} /><span>Add User</span>
-          </button>
+        {userCanWrite && (
+          activeSubTab === 'roles' ? (
+            <button onClick={() => { setEditingRoleId(null); setNewRoleName(''); setNewRoleDesc(''); setShowRoleModal(true); }} className={btnPrimary}>
+              <Plus size={14} /><span>Add Role</span>
+            </button>
+          ) : (
+            <button onClick={() => setShowUserModal(true)} className={btnPrimary}>
+              <UserPlus size={14} /><span>Add User</span>
+            </button>
+          )
         )}
       </div>
 
@@ -793,8 +798,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                     <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
                       {u.id === currentUser.id
                         ? <span className="text-[11px] italic text-stone-400 font-medium">You</span>
-                        : currentUser.role === 'Admin' && (u.role === 'Super Admin' || u.role === 'Admin')
-                          ? <span className="text-[11px] text-stone-400">Protected</span>
+                        : !userCanWrite
+                          ? <span className="text-[11px] italic text-stone-400 font-medium">View Only</span>
                           : <div className="inline-flex items-center gap-1">
                               <button onClick={() => handleOpenEditUser(u)} className={btnEdit} title="Edit user">
                                 <Edit2 size={10} />Edit
@@ -861,9 +866,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                   <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
                     {['Super Admin', 'Admin'].includes(role.name)
                       ? <span className="inline-flex items-center gap-1 text-[11px] text-stone-400 font-medium"><Settings size={10} />System</span>
-                      : <button onClick={() => handleOpenEditRole(role)} className={btnSecondary} style={{padding:'5px 10px', fontSize:'11px'}}>
-                          <Edit2 size={10} />Edit
-                        </button>}
+                      : !userCanWrite
+                        ? <span className="text-[11px] italic text-stone-400 font-medium">View Only</span>
+                        : <button onClick={() => handleOpenEditRole(role)} className={btnSecondary} style={{padding:'5px 10px', fontSize:'11px'}}>
+                            <Edit2 size={10} />Edit
+                          </button>}
                   </td>
                 </tr>
               ))}

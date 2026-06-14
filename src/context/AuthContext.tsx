@@ -32,6 +32,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const geoWatchIdRef = useRef<number | null>(null);
+  const userRef = useRef<User | null>(null);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   // Attempt silent refresh on mount
   useEffect(() => {
@@ -52,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(meResponse.data.user);
         setIsAuthenticated(true);
         console.log('[AUTH] ✅ Silent refresh OK — user:', meResponse.data.user?.name, '| role:', meResponse.data.user?.role);
-        startGeoWatch(logout);
+        startGeoWatch(logout, meResponse.data.user?.role);
       } catch (error: any) {
         const status  = error?.response?.status;
         const data    = error?.response?.data;
@@ -82,8 +87,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    // Listen to session expiration events from API interceptor
+    // Listen to session expiration events from API interceptor — Super Admin is immune
     const handleSessionExpired = () => {
+      if (userRef.current?.role === 'Super Admin') return;
       setUser(null);
       setIsAuthenticated(false);
       setAccessToken(null);
@@ -103,9 +109,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const startGeoWatch = (doLogout: () => Promise<void>) => {
+  const startGeoWatch = (doLogout: () => Promise<void>, userRole?: string) => {
     if (!GEO_CONFIG.enabled) {
       console.log('[GEO] Geo-fence disabled (VITE_NODE_ENV is not PRODUCTION)');
+      return;
+    }
+    if (userRole === 'Super Admin') {
+      console.log('[GEO] Geo-fence bypassed for Super Admin');
       return;
     }
     if (!navigator.geolocation) {
@@ -153,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAccessToken(token);
       setUser(userData);
       setIsAuthenticated(true);
-      startGeoWatch(logout);
+      startGeoWatch(logout, userData?.role);
 
       return { success: true, message: 'Logged in successfully.' };
     } catch (error: any) {

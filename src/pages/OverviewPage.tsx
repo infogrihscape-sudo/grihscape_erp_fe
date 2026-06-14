@@ -976,7 +976,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <div className="text-[9.5px] text-[var(--text-muted)] mt-0.5">{formatBudget(svc.value)} Â· {svc.count} projects</div>
+                      <div className="text-[9.5px] text-[var(--text-muted)] mt-0.5">{formatBudget(svc.value)} &middot; {svc.count} projects</div>
                     </div>
                   );
                 })}
@@ -1006,7 +1006,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                   <div key={plat.platform} className="py-2.5 flex items-center justify-between text-[12px]">
                     <div>
                       <span className="font-semibold text-[var(--text-primary)]">{plat.platform}</span>
-                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{plat.leads} ingested Â· {plat.converted} converted</p>
+                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{plat.leads} ingested &middot; {plat.converted} converted</p>
                     </div>
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
                       plat.conversionRate >= 50
@@ -1084,7 +1084,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                       <div key={l.id} className="py-2.5 flex items-center justify-between text-[11.5px]">
                         <div>
                           <span className="font-semibold text-[var(--text-primary)]">{l.fullName}</span>
-                          <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{l.phoneNumber} Â· {l.platform}</p>
+                          <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{l.phoneNumber} &middot; {l.platform}</p>
                         </div>
                         <button
                           onClick={() => handleConvertAction(l.phoneNumber)}
@@ -1095,7 +1095,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                       </div>
                     ))}
                     {unconvertedLeads.length === 0 && (
-                      <div className="text-center py-10 text-[var(--text-muted)] italic text-[11px]">All leads converted! ðŸŽ‰</div>
+                      <div className="text-center py-10 text-[var(--text-muted)] italic text-[11px]">All leads converted!</div>
                     )}
                   </div>
                 </div>
@@ -1127,7 +1127,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                       >
                         <div>
                           <span className="font-semibold text-[var(--text-primary)] text-[12px] block">{p.clientName}</span>
-                          <span className="text-[10px] text-[var(--text-muted)]">{p.locality} Â· {p.mobileNo}</span>
+                          <span className="text-[10px] text-[var(--text-muted)]">{p.locality} &middot; {p.mobileNo}</span>
                         </div>
                         <span className="text-[10.5px] font-bold text-[#b89047] shrink-0 ml-2">
                           {formatBudget(getBudgetInLakhs(p.budgetAmount, p.budgetUnit))}
@@ -1335,7 +1335,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
             </div>
 
             <div className="bg-[var(--hover-bg)] rounded-lg p-2 border border-[rgba(197,168,128,0.15)] text-[10px] text-[var(--text-muted)]">
-              Redis Cache active on port 6379 Â· Uptime diagnostics stable.
+              Redis Cache active on port 6379 &middot; Uptime diagnostics stable.
             </div>
           </div>
 

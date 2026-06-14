@@ -680,8 +680,8 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
     const isRejected = selectedTender.status === 'REJECTED';
     
     const isOwner = selectedTender.createdBy === currentUser.id;
-    const canEdit = isRejected || isAdmin;
-    const canDelete = isRejected || isAdmin;
+    const canEdit = isRejected || isSuperAdmin;
+    const canDelete = isRejected || isSuperAdmin;
 
     return (
       <div className="animate-fade-in w-full h-full flex flex-col min-h-0 overflow-y-auto px-5 py-4 gap-4">
@@ -704,8 +704,8 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Approval controls for Admin */}
-            {isUnderApproval && isAdmin && (
+            {/* Approval controls for Super Admin only */}
+            {isUnderApproval && isSuperAdmin && (
               <>
                 <button
                   onClick={() => handleApproveTender(selectedTender.id)}
@@ -723,7 +723,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
             )}
 
             {/* Edit */}
-            {canEdit && (isOwner || isAdmin) && (
+            {canEdit && (isOwner || isSuperAdmin) && (
               <button
                 onClick={() => navigate(`/tenders/${selectedTender.id}/edit`)}
                 className="inline-flex items-center gap-1 px-3 py-1.5 border border-[var(--border)] rounded-lg text-[11px] font-semibold bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] text-[var(--text-secondary)] shadow-sm transition-colors cursor-pointer"
@@ -733,7 +733,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
             )}
 
             {/* Delete */}
-            {canDelete && (isOwner || isAdmin) && (
+            {canDelete && (isOwner || isSuperAdmin) && (
               <button
                 onClick={() => handleSoftDelete(selectedTender.id)}
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-rose-600 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 cursor-pointer"
@@ -960,13 +960,15 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           </button>
 
-          {/* Create Button */}
-          <button
-            onClick={() => navigate('/tenders/new')}
-            className="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-[11.5px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:opacity-95 transition-all border-0 shadow-sm cursor-pointer"
-          >
-            <Plus size={14} /> Create Tender
-          </button>
+          {/* Create Button — hidden for Admin (view-only) */}
+          {!isAdmin || isSuperAdmin ? (
+            <button
+              onClick={() => navigate('/tenders/new')}
+              className="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-[11.5px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:opacity-95 transition-all border-0 shadow-sm cursor-pointer"
+            >
+              <Plus size={14} /> Create Tender
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -1035,7 +1037,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
                         </button>
                         
                         {/* Edit button */}
-                        {(tender.status === 'REJECTED' || isAdmin) && (tender.createdBy === currentUser.id || isAdmin) && !tender.isDeleted && (
+                        {(tender.status === 'REJECTED' || isSuperAdmin) && (tender.createdBy === currentUser.id || isSuperAdmin) && !tender.isDeleted && (
                           <button
                             onClick={() => navigate(`/tenders/${tender.id}/edit`)}
                             className="p-1 border border-[var(--border)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] rounded-md text-[#b89047] transition shadow-xs cursor-pointer"
@@ -1045,8 +1047,8 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
                           </button>
                         )}
 
-                        {/* Admin approval shortcut */}
-                        {tender.status === 'UNDER_APPROVAL' && isAdmin && !tender.isDeleted && (
+                        {/* Super Admin approval shortcut */}
+                        {tender.status === 'UNDER_APPROVAL' && isSuperAdmin && !tender.isDeleted && (
                           <button
                             onClick={() => handleApproveTender(tender.id)}
                             className="p-1 border border-[var(--border)] bg-[var(--card-bg)] hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-md text-emerald-500 transition shadow-xs cursor-pointer"
@@ -1057,7 +1059,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
                         )}
 
                         {/* Restore button */}
-                        {tender.isDeleted && isAdmin && (
+                        {tender.isDeleted && isSuperAdmin && (
                           <button
                             onClick={() => handleRestoreTender(tender.id)}
                             className="p-1 border border-[var(--border)] bg-[var(--card-bg)] hover:bg-amber-50 dark:hover:bg-amber-950/20 rounded-md text-[#b89047] transition shadow-xs cursor-pointer"
@@ -1068,7 +1070,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
                         )}
 
                         {/* Delete button */}
-                        {!tender.isDeleted && (tender.createdBy === currentUser.id || isAdmin) && (tender.status === 'REJECTED' || isAdmin) && (
+                        {!tender.isDeleted && (tender.createdBy === currentUser.id || isSuperAdmin) && (tender.status === 'REJECTED' || isSuperAdmin) && (
                           <button
                             onClick={() => handleSoftDelete(tender.id)}
                             className="p-1 border border-[var(--border)] bg-[var(--card-bg)] hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-md text-rose-500 transition shadow-xs cursor-pointer"

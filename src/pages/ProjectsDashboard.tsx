@@ -374,8 +374,9 @@ function ProjectRow({ project, isAdmin, onAssign, onClick }: {
 export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
   const { showToast } = useToast();
   const { navigate } = useRouter();
-  const isAdmin = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
-  const isPM    = currentUser.role === 'Project Manager';
+  const isAdmin      = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
+  const isSuperAdmin = currentUser.role === 'Super Admin';
+  const isPM         = currentUser.role === 'Project Manager';
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -596,7 +597,7 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
               <ProjectRow
                 key={p.id}
                 project={p}
-                isAdmin={isAdmin}
+                isAdmin={isSuperAdmin}
                 onAssign={() => setAssignTarget(p)}
                 onClick={() => navigate(`/projects/${p.id}`)}
               />

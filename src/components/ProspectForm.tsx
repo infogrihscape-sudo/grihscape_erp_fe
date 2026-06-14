@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SearchableSelect } from './SearchableSelect.js';
-import { RefreshCw, Check, Copy } from 'lucide-react';
+import { RefreshCw, Check, Copy, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -409,7 +409,7 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
 
   // ── Prospect-level master fields ───────────────────────────────────────────
   const [projectStage, setProjectStage] = useState(
-    init.projectStage ?? init.archCurrentStage ?? init.intCurrentStage ?? init.renovationCurrentStage ?? ''
+    init.projectStage ?? init.archCurrentStage ?? init.intCurrentStage ?? init.renovationCurrentStage ?? PROJECT_PHASES[0].label
   );
   const [budgetAmount, setBudgetAmount] = useState(init.budgetAmount ? String(init.budgetAmount) : '');
   const [budgetUnit, setBudgetUnit] = useState(init.budgetUnit ?? 'LAKH');
@@ -502,6 +502,8 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
   );
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<ProspectFormData | null>(null);
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const selectedServices = serviceType ? serviceType.split(',').filter((s: string): s is string => !!s) : [];
@@ -736,7 +738,15 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
       budgetComfort: budgetComfort || null,
     };
 
-    await onSubmit(payload);
+    setPendingPayload(payload);
+    setShowConfirm(true);
+  };
+
+  const handleConfirmedSubmit = async () => {
+    if (!pendingPayload) return;
+    await onSubmit(pendingPayload);
+    setShowConfirm(false);
+    setPendingPayload(null);
   };
 
   // ── Service questionnaires ─────────────────────────────────────────────────
@@ -1281,6 +1291,87 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
           {isSubmitting ? (mode === 'create' ? 'Capturing…' : 'Updating…') : (mode === 'create' ? 'Capture Brief' : 'Update Brief')}
         </button>
       </div>
+
+      {/* ── Confirmation Dialog ─────────────────────────────────────────────── */}
+      {showConfirm && pendingPayload && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 w-full max-w-md animate-scale-in">
+            {/* Header */}
+            <div className="flex items-center gap-3 p-5 border-b border-stone-100">
+              <div className="w-9 h-9 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+                <AlertTriangle size={16} className="text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-[14px] font-bold text-stone-900">Confirm Details</h3>
+                <p className="text-[11px] text-stone-500 mt-0.5">Please verify before submitting</p>
+              </div>
+            </div>
+
+            {/* Summary */}
+            <div className="p-5 space-y-3">
+              <p className="text-[12.5px] text-stone-600 leading-relaxed">
+                Please make sure the following details are correct. Once submitted, the client brief will be created and shared with the team.
+              </p>
+              <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 space-y-2 text-[12.5px]">
+                <div className="flex justify-between">
+                  <span className="text-stone-500 font-medium">Client Name</span>
+                  <span className="font-bold text-stone-800">{pendingPayload.clientName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-stone-500 font-medium">Mobile No.</span>
+                  <span className="font-bold text-stone-800">{pendingPayload.mobileNo}</span>
+                </div>
+                {pendingPayload.email && (
+                  <div className="flex justify-between">
+                    <span className="text-stone-500 font-medium">Email</span>
+                    <span className="font-bold text-stone-800 truncate ml-4 text-right">{pendingPayload.email}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-stone-500 font-medium">Locality</span>
+                  <span className="font-bold text-stone-800">{pendingPayload.locality}</span>
+                </div>
+                <div className="flex justify-between items-start gap-2">
+                  <span className="text-stone-500 font-medium shrink-0">Services</span>
+                  <span className="font-bold text-amber-700 text-right">
+                    {pendingPayload.serviceType.split(',').map(s => SERVICE_LABELS[s] || s).join(', ')}
+                  </span>
+                </div>
+                {pendingPayload.projectStage && (
+                  <div className="flex justify-between">
+                    <span className="text-stone-500 font-medium">Stage</span>
+                    <span className="font-bold text-stone-800">{pendingPayload.projectStage}</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-[11px] text-stone-400 italic">
+                If anything looks incorrect, click "Go Back" to edit before submitting.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 p-5 pt-0">
+              <button
+                type="button"
+                onClick={() => { setShowConfirm(false); setPendingPayload(null); }}
+                disabled={isSubmitting}
+                className="flex-1 py-2.5 rounded-lg text-[12px] font-bold text-stone-600 bg-stone-100 border border-stone-200 hover:bg-stone-200 transition-colors cursor-pointer disabled:opacity-40"
+              >
+                Go Back & Edit
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmedSubmit}
+                disabled={isSubmitting}
+                className="flex-1 py-2.5 rounded-lg text-[12px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:opacity-95 transition-all cursor-pointer border-0 shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-40"
+              >
+                {isSubmitting ? <RefreshCw size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+                {isSubmitting ? 'Submitting…' : 'Yes, Details are Correct'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 };

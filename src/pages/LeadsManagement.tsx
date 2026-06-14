@@ -1044,7 +1044,9 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                               <ClipboardList size={11} /> Fill Form
                             </button>
                           ) : (
-                            <span className="text-[var(--text-muted)] italic">N/A</span>
+                            <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-[var(--text-muted)] bg-[var(--hover-bg)] border border-[var(--border)] px-2.5 py-1 rounded-md italic">
+                              Not Filled Yet
+                            </span>
                           )}
                         </td>
                       </tr>

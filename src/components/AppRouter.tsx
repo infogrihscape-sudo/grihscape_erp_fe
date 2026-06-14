@@ -4,6 +4,7 @@ import { ROLE_ROUTES } from '../config/permissions.js';
 import { PAGE_INFO, ROUTE_TO_TAB, getProspectDetailId, getTenderDetailId, getProjectDetailId } from '../config/routeConfig.js';
 import type { User } from '../context/AuthContext.js';
 import { ShieldAlert, Loader2, ChevronRight } from 'lucide-react';
+import { NotificationBell } from './NotificationBell.js';
 
 const UserManagement = React.lazy(() =>
   import('../pages/UserManagement.js').then((m) => ({ default: m.UserManagement }))
@@ -100,10 +101,13 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-            <span className="font-semibold">Grihscape</span>
-            <ChevronRight size={11} className="shrink-0" />
-            <span className="text-[var(--text-secondary)] font-bold">{info.title}</span>
+          <div className="flex items-center gap-3">
+            <NotificationBell />
+            <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+              <span className="font-semibold">Grihscape</span>
+              <ChevronRight size={11} className="shrink-0" />
+              <span className="text-[var(--text-secondary)] font-bold">{info.title}</span>
+            </div>
           </div>
         </div>
       )}

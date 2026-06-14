@@ -559,7 +559,7 @@ export const PortfolioApp: React.FC = () => {
               </div>
               <div>
                 <p className="text-[10.5px] font-bold text-white/30 uppercase tracking-wider">WhatsApp</p>
-                <p className="text-[14px] font-semibold text-white/80 mt-0.5 group-hover:text-amber-400 transition-colors">+91 76785 76257</p>
+                <p className="text-[14px] font-semibold text-white/80 mt-0.5 group-hover:text-amber-400 transition-colors">+91 8527 995007</p>
               </div>
             </a>
 
@@ -594,7 +594,7 @@ export const PortfolioApp: React.FC = () => {
             </div>
             <WaBtn label="Open WhatsApp Chat"
               className="w-full justify-center py-3.5 rounded-xl text-[14px] font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/25" />
-            <p className="text-white/25 text-[12px]">+91 76785 76257</p>
+            <p className="text-white/25 text-[12px]">+91 8527 995007</p>
           </div>
         </div>
       </section>

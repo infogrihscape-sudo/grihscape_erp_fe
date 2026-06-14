@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from '../context/RouterContext.js';
 import { ShimmerList } from '../components/Shimmer.js';
+import { canWrite } from '../config/permissions.js';
 
 interface Props { currentUser: User; }
 
@@ -80,8 +81,10 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
   const [sendEmail,  setSendEmail]  = useState('');
   const [sending,    setSending]    = useState(false);
 
-  const isAdmin    = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
-  const isAccounts = currentUser.role === 'Accounts';
+  const isAdmin     = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
+  const isSuperAdmin = currentUser.role === 'Super Admin';
+  const isAccounts  = currentUser.role === 'Accounts';
+  const userCanWrite = canWrite(currentUser.role);
 
   const [verifying, setVerifying] = useState<string | null>(null); // contract id being verified
   // Per-contract: editable revised payment amount for accounts verification
@@ -293,9 +296,11 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
           <button onClick={fetchAll} className={btnSecondary} disabled={loading}>
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
           </button>
-          <button onClick={() => { setShowDraftModal(true); setSelectedProspectId(''); }} className={btnPrimary}>
-            <Plus size={14} /> New Contract
-          </button>
+          {userCanWrite && (
+            <button onClick={() => { setShowDraftModal(true); setSelectedProspectId(''); }} className={btnPrimary}>
+              <Plus size={14} /> New Contract
+            </button>
+          )}
         </div>
       </div>
 
@@ -388,8 +393,8 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
                   {/* ── Actions ── */}
                   <div className="border-t border-[var(--border-subtle)] pt-2 space-y-2">
 
-                    {/* Upload Draft PDF — PENDING only */}
-                    {!isApproved && (
+                    {/* Upload Draft PDF — PENDING only, write roles only */}
+                    {!isApproved && userCanWrite && (
                       <button
                         onClick={() => triggerUpload(c.id, 'draft')}
                         disabled={(uploading && uploadFor === c.id) || hasDraftPdf}
@@ -403,8 +408,8 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
                       </button>
                     )}
 
-                    {/* Approve — Admin only, PENDING only */}
-                    {isAdmin && !isApproved && (
+                    {/* Approve — Super Admin only, PENDING only */}
+                    {isSuperAdmin && !isApproved && (
                       <button
                         onClick={() => handleApprove(c.id)}
                         disabled={!hasDraftPdf}
@@ -414,13 +419,13 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
                         <CheckCircle2 size={13} /> Approve Contract
                       </button>
                     )}
-                    {isAdmin && !isApproved && !hasDraftPdf && (
+                    {isSuperAdmin && !isApproved && !hasDraftPdf && (
                       <p className="text-[10px] text-[var(--text-muted)] text-center">Upload draft PDF to enable approval</p>
                     )}
 
                     {/* APPROVED actions */}
                     {/* Send email — disabled once signed PDF is received */}
-                    {isApproved && !c.signedPdfUrl && (
+                    {isApproved && !c.signedPdfUrl && userCanWrite && (
                       <button
                         onClick={() => { setSendModal(c); setSendEmail(c.prospect?.email || ''); }}
                         className={`${btnPrimary} w-full justify-center`}
@@ -430,7 +435,7 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
                     )}
 
                     {/* Upload signed PDF — locked after upload */}
-                    {isApproved && (
+                    {isApproved && userCanWrite && (
                       <button
                         onClick={() => triggerUpload(c.id, 'signed')}
                         disabled={(uploading && uploadFor === c.id) || !!c.signedPdfUrl}

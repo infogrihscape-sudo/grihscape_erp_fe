@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { clientApi } from '../services/api.js';
 import { ShimmerTable } from '../components/Shimmer.js';
+import { canWrite } from '../config/permissions.js';
 
 interface Props { currentUser: User; }
 
@@ -54,6 +55,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
   const { showToast } = useToast();
   const { navigate } = useRouter();
   const isAdminOrSuperAdmin = _currentUser.role === 'Admin' || _currentUser.role === 'Super Admin';
+  const userCanWrite = canWrite(_currentUser.role);
 
   const [prospects, setProspects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -272,9 +274,11 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
         <button onClick={fetchProspects} className={btnSecondary}>
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
         </button>
-        <button onClick={() => { setLookupPhone(''); setLookupResult(null); setLookupError(null); setShowAddServiceModal(true); }} className={btnSecondary}>
-          <UserPlus size={14} /><span>Add New Service</span>
-        </button>
+        {userCanWrite && (
+          <button onClick={() => { setLookupPhone(''); setLookupResult(null); setLookupError(null); setShowAddServiceModal(true); }} className={btnSecondary}>
+            <UserPlus size={14} /><span>Add New Service</span>
+          </button>
+        )}
       </div>
 
       {success && (
@@ -369,7 +373,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                       </td>
                       <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
                         <div className="inline-flex gap-1 justify-center">
-                          {isAdminOrSuperAdmin && p.status === 'PENDING_DELETE' && (
+                          {userCanWrite && p.status === 'PENDING_DELETE' && (
                             <>
                               <button onClick={() => handleApproveStatus(p.id, 'DELETED')} className={`${btnSecondary} text-rose-600 border-rose-100 hover:bg-rose-50`} style={{ padding: '5px 8px' }} title="Approve deletion">
                                 <Check size={11} />
@@ -379,7 +383,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                               </button>
                             </>
                           )}
-                          {isAdminOrSuperAdmin && p.status === 'DELETED' && (
+                          {userCanWrite && p.status === 'DELETED' && (
                             <button onClick={() => handleApproveStatus(p.id, 'ACTIVE')} className={`${btnSecondary} text-emerald-600 border-emerald-100 hover:bg-emerald-50`} style={{ padding: '5px 8px' }} title="Restore">
                               <RefreshCw size={11} />
                             </button>
@@ -387,7 +391,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                           <button onClick={() => navigate(`/prospects/${p.id}`)} className={btnSecondary} style={{ padding: '5px 8px' }} title="View pipeline">
                             <Eye size={11} />
                           </button>
-                          {isAdminOrSuperAdmin && p.status !== 'PENDING_DELETE' && p.status !== 'DELETED' && (
+                          {userCanWrite && p.status !== 'PENDING_DELETE' && p.status !== 'DELETED' && (
                             <button onClick={() => { setEditTarget(p); setShowFormModal(true); }} className={btnSecondary} style={{ padding: '5px 8px' }} title="Edit brief">
                               <Edit2 size={11} />
                             </button>

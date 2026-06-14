@@ -330,6 +330,46 @@ export const projectApi = {
     api.post('/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data', 'x-file-type': 'design' },
     }),
+
+  // Layout client response
+  recordClientResponse: (projectId: string, draftId: string, data: { response: 'APPROVED' | 'REVISION_REQUIRED'; notes?: string }) =>
+    api.post(`/projects/${projectId}/designs/${draftId}/client-response`, data),
+  getLayoutFeedback: (projectId: string, draftId: string) =>
+    api.get(`/projects/${projectId}/designs/${draftId}/feedback`),
+
+  // Design Pipeline
+  getDesignPipeline: (projectId: string) =>
+    api.get(`/projects/${projectId}/pipeline`),
+  getDrawingMaster: (projectId: string) =>
+    api.get(`/projects/${projectId}/pipeline/drawing-master`),
+  addDrawing: (projectId: string, data: { drawingMasterId: string; roomName?: string; wallDirection?: string; assignedArchitectId?: string | null; juniorArchitectId?: string | null }) =>
+    api.post(`/projects/${projectId}/pipeline/drawings`, data),
+  addDrawingsBulk: (projectId: string, drawingMasterIds: string[], assignedArchitectId?: string | null, juniorArchitectId?: string | null) =>
+    api.post(`/projects/${projectId}/pipeline/drawings/bulk`, { drawingMasterIds, assignedArchitectId, juniorArchitectId }),
+  removeDrawingsBulk: (projectId: string, drawingIds: string[]) =>
+    api.post(`/projects/${projectId}/pipeline/drawings/bulk-delete`, { drawingIds }),
+  removeDrawing: (projectId: string, drawingId: string) =>
+    api.delete(`/projects/${projectId}/pipeline/drawings/${drawingId}`),
+  assignDrawingTeam: (projectId: string, drawingId: string, data: { assignedArchitectId?: string | null; juniorArchitectId?: string | null; notes?: string }) =>
+    api.put(`/projects/${projectId}/pipeline/drawings/${drawingId}/team`, data),
+  updateDrawing: (projectId: string, drawingId: string, data: { status?: string; notes?: string }) =>
+    api.put(`/projects/${projectId}/pipeline/drawings/${drawingId}`, data),
+  approveByPM: (projectId: string) =>
+    api.post(`/projects/${projectId}/pipeline/approve-pm`),
+  approveByAdmin: (projectId: string) =>
+    api.post(`/projects/${projectId}/pipeline/approve-admin`),
+
+  // Drawing files
+  listDrawingFiles: (projectId: string, drawingId: string) =>
+    api.get(`/projects/${projectId}/pipeline/drawings/${drawingId}/files`),
+  addDrawingFile: (projectId: string, drawingId: string, data: { fileType: 'CAD' | 'PDF' | 'IMAGE'; fileUrl: string; fileName: string }) =>
+    api.post(`/projects/${projectId}/pipeline/drawings/${drawingId}/files`, data),
+
+  // Transmittal logs
+  getTransmittals: (projectId: string) =>
+    api.get(`/projects/${projectId}/transmittals`),
+  sendTransmittal: (projectId: string, data: { fileType: 'SINGLE' | 'FULL_PROJECT' | 'LAYOUT'; projectDrawingId?: string; message?: string; fileUrls: string[] }) =>
+    api.post(`/projects/${projectId}/transmittals`, data),
 };
 
 export const tenderApi = {
@@ -352,3 +392,9 @@ export const tenderApi = {
     }),
 };
 
+export const notificationApi = {
+  list: (limit?: number) => api.get('/notifications', { params: limit ? { limit } : {} }),
+  unreadCount: () => api.get('/notifications/unread-count'),
+  markRead: (id: string) => api.put(`/notifications/${id}/read`),
+  markAllRead: () => api.put('/notifications/read-all'),
+};

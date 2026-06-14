@@ -10,7 +10,7 @@ import { ShimmerTable, ShimmerCardGrid } from '../components/Shimmer.js';
 import {
   ClipboardList, RefreshCw, X, ArrowLeft, Loader2,
   MapPin, Phone, Mail, Check, FileText, DollarSign, ShieldCheck,
-  FilePlus, Send, Upload, BadgeCheck
+  FilePlus, Send, Upload, BadgeCheck, Video, Users
 } from 'lucide-react';
 
 interface Props {
@@ -1324,8 +1324,8 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                     <ShieldCheck size={13} /> Admin Actions
                   </h4>
 
-                  {/* Approve contract — Admin/SuperAdmin only */}
-                  {currentUser.role !== 'Accounts' && contract && contract.status === 'PENDING' && contract.draftPdfUrl && (
+                  {/* Approve contract — Super Admin only */}
+                  {currentUser.role === 'Super Admin' && contract && contract.status === 'PENDING' && contract.draftPdfUrl && (
                     <button type="button" onClick={handleApproveContract}
                       className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer border-0">
                       <BadgeCheck size={12} /> Approve Contract
@@ -1338,8 +1338,8 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                     </div>
                   )}
 
-                  {/* Send contract email — Admin/SuperAdmin only; once only; locked after payment */}
-                  {currentUser.role !== 'Accounts' && contract?.status === 'APPROVED' && stageRank(prospect.workflowStage) < stageRank('CONTRACT_EMAILED') && stageRank(prospect.workflowStage) < stageRank('INITIAL_PAYMENT_RECEIVED') && (
+                  {/* Send contract email — Super Admin only; once only; locked after payment */}
+                  {currentUser.role === 'Super Admin' && contract?.status === 'APPROVED' && stageRank(prospect.workflowStage) < stageRank('CONTRACT_EMAILED') && stageRank(prospect.workflowStage) < stageRank('INITIAL_PAYMENT_RECEIVED') && (
                     <button type="button" disabled={submittingContract || !prospect.email} onClick={handleSendContractEmail}
                       className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-violet-600 hover:bg-violet-700 transition-colors cursor-pointer border-0 disabled:opacity-50"
                       title={!prospect.email ? 'Client has no email.' : 'Send approved contract to client'}>
@@ -1353,8 +1353,8 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                     </div>
                   )}
 
-                  {/* Verify by accounts → WON */}
-                  {stageRank(prospect.workflowStage) >= stageRank('INITIAL_PAYMENT_RECEIVED') && (
+                  {/* Verify by accounts → WON — Super Admin and Accounts only */}
+                  {(currentUser.role === 'Super Admin' || currentUser.role === 'Accounts') && stageRank(prospect.workflowStage) >= stageRank('INITIAL_PAYMENT_RECEIVED') && (
                     <div className="space-y-2 border border-emerald-200 rounded-xl p-3 bg-emerald-50/50">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">Payment Verification</p>
                       {prospect.initialPaymentAmount ? (
@@ -1586,7 +1586,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
 
               <div className="flex gap-2.5 pt-2">
                 <button type="button" onClick={() => setShowSendProposalModal(false)} className={`${btnSecondary} flex-1 justify-center`}>Cancel</button>
-                <button type="submit" disabled={sendingProposal || !prospect.email || !proposalFileUrl} className={`${btnPrimary} flex-1 justify-center`}>
+                <button type="submit" disabled={sendingProposal || !prospect.email || !proposalFileUrl} className={`${btnPrimary} flex-1 justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none`}>
                   {sendingProposal ? <RefreshCw size={13} className="animate-spin" /> : <Mail size={13} />}
                   {sendingProposal ? 'Sending…' : 'Send Proposal'}
                 </button>
@@ -1726,7 +1726,10 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                   {(['ONLINE', 'OFFLINE'] as const).map(type => (
                     <button key={type} type="button" onClick={() => setMeetingType(type)}
                       className={`flex-1 py-2.5 rounded-lg border text-[12px] font-bold transition-all cursor-pointer ${meetingType === type ? 'bg-[#b89047] border-[#b89047] text-white shadow-sm' : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'}`}>
-                      {type === 'ONLINE' ? '📹 Online (Video Call)' : '🤝 Offline (In-Person)'}
+                      <span className="inline-flex items-center gap-1.5">
+                        {type === 'ONLINE' ? <Video size={13} /> : <Users size={13} />}
+                        {type === 'ONLINE' ? 'Online (Video Call)' : 'Offline (In-Person)'}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -1735,6 +1738,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
               <div className="flex flex-col gap-1.5">
                 <label className={labelBase}>Meeting Date & Time *</label>
                 <input type="datetime-local" required value={meetingDate} onChange={e => setMeetingDate(e.target.value)}
+                  min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
                   className={inputBase} />
               </div>
 
@@ -1858,7 +1862,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
 
               <div className="flex gap-2.5 pt-2">
                 <button type="button" onClick={() => setShowInitialPaymentModal(false)} className={`${btnSecondary} flex-1 justify-center`}>Cancel</button>
-                <button type="submit" disabled={submitting || !paymentNotes.trim()} className={`${btnPrimary} flex-1 justify-center`}>
+                <button type="submit" disabled={submitting || !paymentNotes.trim() || !paymentDocUrl} className={`${btnPrimary} flex-1 justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none`}>
                   {submitting ? <RefreshCw size={13} className="animate-spin" /> : <DollarSign size={13} />}
                   {submitting ? 'Recording…' : 'Record Payment'}
                 </button>
