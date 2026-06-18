@@ -16,6 +16,28 @@ import {
 } from 'lucide-react';
 import { ShimmerTable } from '../components/Shimmer.js';
 
+const LEAD_RESPONSE_OPTIONS = [
+  { value: 'NOT_ANSWERED',   label: 'Not Answered' },
+  { value: 'NOT_INTERESTED', label: 'Not Interested' },
+  { value: 'INVALID_NUMBER', label: 'Invalid Number' },
+  { value: 'VENDOR',         label: 'Vendor' },
+  { value: 'JOB_CANDIDATE',  label: 'Job Candidate' },
+  { value: 'CONTRACTOR',     label: 'Contractor' },
+];
+
+const leadResponseLabel: Record<string, string> = Object.fromEntries(
+  LEAD_RESPONSE_OPTIONS.map(o => [o.value, o.label])
+);
+
+const leadResponseColor: Record<string, string> = {
+  NOT_ANSWERED:   'text-amber-600',
+  NOT_INTERESTED: 'text-rose-600',
+  INVALID_NUMBER: 'text-red-700',
+  VENDOR:         'text-violet-600',
+  JOB_CANDIDATE:  'text-sky-600',
+  CONTRACTOR:     'text-teal-600',
+};
+
 interface Lead {
   id: string;
   adsetName?: string | null;
@@ -27,6 +49,8 @@ interface Lead {
   phoneNumber: string;
   city?: string | null;
   source: 'manual' | 'bulk';
+  leadResponse?: string | null;
+  isDuplicate30Days?: boolean;
   createdAt: string;
 }
 
@@ -164,6 +188,30 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
+  // Real-time duplicate detection for manual form
+  const [manualFormDuplicateWarning, setManualFormDuplicateWarning] = useState(false);
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
+
+  useEffect(() => {
+    const check = normalizeAndValidatePhone(phoneNumber);
+    if (!check.isValid) {
+      setManualFormDuplicateWarning(false);
+      return;
+    }
+    const timeout = setTimeout(async () => {
+      setCheckingDuplicate(true);
+      try {
+        const res = await leadApi.validateLeads([check.normalized]);
+        setManualFormDuplicateWarning((res.data?.duplicates || []).length > 0);
+      } catch {
+        setManualFormDuplicateWarning(false);
+      } finally {
+        setCheckingDuplicate(false);
+      }
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [phoneNumber]);
+
   // Real-time validation & helper states
   const isFormValid = useMemo(() => {
     const isNameValid = fullName.trim().length >= 2;
@@ -224,6 +272,21 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
       throw err;
     } finally {
       setConvertSubmitting(false);
+    }
+  };
+
+  // Lead response update
+  const [updatingResponseId, setUpdatingResponseId] = useState<string | null>(null);
+
+  const handleUpdateLeadResponse = async (leadId: string, response: string | null) => {
+    setUpdatingResponseId(leadId);
+    try {
+      await leadApi.updateLeadResponse(leadId, response);
+      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, leadResponse: response } : l));
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to update lead response.', 'error');
+    } finally {
+      setUpdatingResponseId(null);
     }
   };
 
@@ -857,11 +920,11 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             </div>
 
             <div className="flex flex-col gap-1 flex-1 min-w-[140px]">
-              <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Source</span>
+              <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Feed Type</span>
               <SearchableSelect
                 options={[
-                  { value: 'ALL', label: 'All Sources' },
-                  { value: 'manual', label: 'Manual Ingest' },
+                  { value: 'ALL', label: 'All Feed Types' },
+                  { value: 'manual', label: 'Manual' },
                   { value: 'bulk', label: 'Bulk Upload' }
                 ]}
                 value={filterSource}
@@ -943,7 +1006,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                   <h3 className="text-sm font-bold text-[var(--text-primary)]">No Leads Found</h3>
                   <p className="text-[12px] text-[var(--text-muted)] mt-1 max-w-sm mx-auto">
                     {searchTerm || filterPlatform !== 'ALL' || filterService !== 'ALL' || filterSource !== 'ALL' || filterDate !== 'ALL'
-                      ? 'No leads match the filters. Try adjusting your search query.'
+                      ? 'No leads match the active filters. Try adjusting your search or filter criteria.'
                       : 'Start capturing leads by manual form submission or Excel bulk upload.'}
                   </p>
                 </div>
@@ -951,7 +1014,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                 <table className="w-full border-collapse text-left min-w-[700px]">
                   <thead>
                     <tr className="bg-[var(--table-head)]/80 sticky top-0 z-10 backdrop-blur-xs">
-                      {['S.No.', 'Full Name', 'Phone Number', 'City', 'Platform', 'Services Requested', 'Campaign Name', 'Adset Name', 'Ad Name', 'Source', 'Date Added', 'Actions'].map((h) => (
+                      {['S.No.', 'Full Name', 'Phone Number', 'City', 'Platform', 'Services Requested', 'Campaign Name', 'Adset Name', 'Ad Name', 'Feed Type', 'Lead Response', 'Date Added', 'Actions'].map((h) => (
                         <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-[var(--text-muted)] border-b border-[rgba(197,168,128,0.18)] bg-[var(--table-head)] text-center whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -966,9 +1029,18 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                         : lead.services;
 
                       return (
-                      <tr key={lead.id} className="hover:bg-[var(--hover-bg)]/40 transition-colors">
+                      <tr key={lead.id} className={`transition-colors ${lead.isDuplicate30Days ? 'bg-rose-50/30 hover:bg-rose-50/50' : 'hover:bg-[var(--hover-bg)]/40'}`}>
                         <td className="px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12px] font-medium text-[var(--text-muted)] text-center">{indexStart + index + 1}</td>
-                        <td className="px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12.5px] font-semibold text-[var(--text-primary)] text-center whitespace-nowrap">{lead.fullName}</td>
+                        <td className="px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12.5px] font-semibold text-[var(--text-primary)] text-center whitespace-nowrap">
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span>{lead.fullName}</span>
+                            {lead.isDuplicate30Days && (
+                              <span className="text-[9.5px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                <AlertCircle size={8} /> Duplicate (30d)
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] text-[var(--text-secondary)] font-medium text-center whitespace-nowrap">
                           {lead.phoneNumber}
                         </td>
@@ -1009,13 +1081,28 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                           {lead.adName || <span className="italic opacity-40">-</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
-                          <span className={`text-[12px] font-bold uppercase tracking-wider ${
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
                             lead.source === 'manual'
-                              ? 'text-emerald-700'
-                              : 'text-indigo-700'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
                           }`}>
-                            {lead.source}
+                            {lead.source === 'manual' ? 'Manual' : 'Bulk Upload'}
                           </span>
+                        </td>
+                        <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
+                          <select
+                            value={lead.leadResponse || ''}
+                            onChange={(e) => handleUpdateLeadResponse(lead.id, e.target.value || null)}
+                            disabled={updatingResponseId === lead.id}
+                            className={`text-[11.5px] font-semibold rounded-lg border px-2 py-1 outline-none cursor-pointer transition-all bg-[var(--input-bg)] border-[rgba(184,144,71,0.3)] focus:border-[#b89047] ${
+                              lead.leadResponse ? leadResponseColor[lead.leadResponse] || 'text-[var(--text-secondary)]' : 'text-[var(--text-muted)] italic'
+                            } ${updatingResponseId === lead.id ? 'opacity-50' : ''}`}
+                          >
+                            <option value="">— Set Response —</option>
+                            {LEAD_RESPONSE_OPTIONS.map(opt => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-[var(--text-muted)] text-[11.5px] whitespace-nowrap">
                           {new Date(lead.createdAt).toLocaleDateString(undefined, {
@@ -1238,7 +1325,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                 <table className="w-full border-collapse text-left min-w-[700px]">
                   <thead>
                     <tr className="bg-[var(--table-head)]/80 sticky top-0 z-10 backdrop-blur-xs">
-                      {['S.No.', 'Full Name', 'Phone Number', 'City', 'Platform', 'Services', 'Campaign', 'Errors / Warnings'].map((h) => (
+                      {['S.No.', 'Full Name', 'Phone Number', 'City', 'Platform Source', 'Services', 'Campaign', 'Errors / Warnings'].map((h) => (
                         <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-[var(--text-muted)] border-b border-[rgba(184,144,71,0.18)] bg-[var(--table-head)] text-center">{h}</th>
                       ))}
                     </tr>
@@ -1276,8 +1363,8 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                             {item.city || <span className="italic text-[var(--text-muted)]">—</span>}
                           </td>
                           <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
-                            <span className="text-[12px] uppercase font-bold text-[var(--text-secondary)]">
-                              {item.platform}
+                            <span className="text-[12px] font-semibold text-[var(--text-secondary)]">
+                              {platformLabel[item.platform] || item.platform || <span className="italic text-[var(--text-muted)]">—</span>}
                             </span>
                           </td>
                           <td className={`px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center ${item.services.length === 0 ? 'bg-rose-50/60' : ''}`}>
@@ -1424,6 +1511,16 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
               {!formErrors.phoneNumber && phoneHint && (
                 <p className="text-[11px] text-amber-600 flex items-center gap-1 font-medium mt-0.5 animate-fade-in">
                   <AlertTriangle size={10} /> {phoneHint}
+                </p>
+              )}
+              {!formErrors.phoneNumber && !phoneHint && manualFormDuplicateWarning && (
+                <p className="text-[11px] text-rose-600 flex items-center gap-1 font-medium mt-0.5 animate-fade-in">
+                  <AlertCircle size={10} /> Duplicate: This phone was already captured as a lead in the last 30 days.
+                </p>
+              )}
+              {!formErrors.phoneNumber && !phoneHint && checkingDuplicate && (
+                <p className="text-[11px] text-stone-400 flex items-center gap-1 font-medium mt-0.5 animate-fade-in">
+                  <RefreshCw size={10} className="animate-spin" /> Checking for duplicates...
                 </p>
               )}
             </div>

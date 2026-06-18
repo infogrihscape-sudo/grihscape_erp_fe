@@ -1,7 +1,11 @@
 import React, { useEffect, Suspense } from 'react';
 import { useRouter } from '../context/RouterContext.js';
 import { ROLE_ROUTES } from '../config/permissions.js';
-import { PAGE_INFO, ROUTE_TO_TAB, getProspectDetailId, getTenderDetailId, getProjectDetailId } from '../config/routeConfig.js';
+import {
+  PAGE_INFO, ROUTE_TO_TAB,
+  getProspectDetailId, getTenderDetailId, getProjectDetailId,
+  getInflowDetailId, getOutflowDetailId,
+} from '../config/routeConfig.js';
 import type { User } from '../context/AuthContext.js';
 import { ShieldAlert, Loader2, ChevronRight } from 'lucide-react';
 import { NotificationBell } from './NotificationBell.js';
@@ -36,12 +40,35 @@ const ProjectDetail = React.lazy(() =>
 const OverviewPage = React.lazy(() =>
   import('../pages/OverviewPage.js').then((m) => ({ default: m.OverviewPage }))
 );
+const InflowList = React.lazy(() =>
+  import('../pages/accounts/InflowList.js').then((m) => ({ default: m.InflowList }))
+);
+const InflowDetail = React.lazy(() =>
+  import('../pages/accounts/InflowDetail.js').then((m) => ({ default: m.InflowDetail }))
+);
+const OutflowList = React.lazy(() =>
+  import('../pages/accounts/OutflowList.js').then((m) => ({ default: m.OutflowList }))
+);
+const OutflowDetail = React.lazy(() =>
+  import('../pages/accounts/OutflowDetail.js').then((m) => ({ default: m.OutflowDetail }))
+);
+const AccountsMasters = React.lazy(() =>
+  import('../pages/accounts/AccountsMasters.js').then((m) => ({ default: m.AccountsMasters }))
+);
 
 interface AppRouterProps {
   user: User;
 }
 
-const VALID_PATHS = ['/overview', '/users', '/roles', '/logs', '/prospects', '/leads', '/contracts', '/tenders', '/projects'];
+const VALID_PATHS = [
+  '/overview', '/users', '/roles', '/logs', '/prospects', '/leads',
+  '/contracts', '/tenders', '/projects',
+  '/accounts/inflow', '/accounts/outflow', '/accounts/masters',
+];
+
+// Accounts sub-routes covered by the __accounts_payments__ group key in ROLE_ROUTES
+const ACCOUNTS_PAYMENT_ROUTES = new Set(['/accounts/inflow', '/accounts/outflow']);
+
 const roleLabel = (r: string) => r;
 
 const PageLoader: React.FC<{ text: string }> = ({ text }) => (
@@ -54,30 +81,60 @@ const PageLoader: React.FC<{ text: string }> = ({ text }) => (
 export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
   const { path, navigate } = useRouter();
 
-  const prospectId  = getProspectDetailId(path);
-  const tenderId    = getTenderDetailId(path);
+  const prospectId      = getProspectDetailId(path);
+  const tenderId        = getTenderDetailId(path);
   const projectDetailId = getProjectDetailId(path);
-  const isUsers     = path === '/users' || path === '/roles' || path === '/logs';
-  const isProspects = path === '/prospects';
-  const isLeads     = path === '/leads';
-  const isContracts = path === '/contracts';
-  const isTenders   = path === '/tenders';
-  const isProjects  = path === '/projects';
+  const inflowId        = getInflowDetailId(path);
+  const outflowId       = getOutflowDetailId(path);
+
+  const isUsers        = path === '/users' || path === '/roles' || path === '/logs';
+  const isProspects    = path === '/prospects';
+  const isLeads        = path === '/leads';
+  const isContracts    = path === '/contracts';
+  const isTenders      = path === '/tenders';
+  const isProjects     = path === '/projects';
+  const isInflowList   = path === '/accounts/inflow';
+  const isOutflowList  = path === '/accounts/outflow';
+  const isAccMasters   = path === '/accounts/masters';
+
+  const userRoutes = ROLE_ROUTES[user.role] ?? [];
 
   const isAuthorized =
-    (ROLE_ROUTES[user.role]?.includes(path) ?? false) ||
-    (!!prospectId && (ROLE_ROUTES[user.role]?.includes('/prospects') ?? false)) ||
-    ((isTenders || !!tenderId) && (ROLE_ROUTES[user.role]?.includes('/tenders') ?? false)) ||
-    (!!projectDetailId && (ROLE_ROUTES[user.role]?.includes('/projects') ?? false));
+    userRoutes.includes(path) ||
+    // Group children — covered by the __accounts_payments__ key
+    (ACCOUNTS_PAYMENT_ROUTES.has(path) && userRoutes.includes('__accounts_payments__')) ||
+    (!!prospectId && userRoutes.includes('/prospects')) ||
+    ((isTenders || !!tenderId) && userRoutes.includes('/tenders')) ||
+    (!!projectDetailId && userRoutes.includes('/projects')) ||
+    (!!inflowId && (userRoutes.includes('/accounts/inflow') || userRoutes.includes('__accounts_payments__'))) ||
+    (!!outflowId && (userRoutes.includes('/accounts/outflow') || userRoutes.includes('__accounts_payments__')));
 
   useEffect(() => {
-    if (!VALID_PATHS.includes(path) && !getProspectDetailId(path) && !getTenderDetailId(path) && !getProjectDetailId(path)) {
-      const allowed = ROLE_ROUTES[user.role] ?? [];
-      navigate(allowed[0] || '/contracts');
-    }
-  }, [path, navigate, user]);
+    const isKnown =
+      VALID_PATHS.includes(path) ||
+      getProspectDetailId(path) ||
+      getTenderDetailId(path) ||
+      getProjectDetailId(path) ||
+      getInflowDetailId(path) ||
+      getOutflowDetailId(path);
 
-  const pageKey = prospectId ? 'detail' : tenderId ? 'tenders' : projectDetailId ? 'projectDetail' : (ROUTE_TO_TAB[path] ?? 'overview');
+    if (!isKnown) {
+      const allowed = userRoutes.filter(r => !r.startsWith('__'));
+      navigate(allowed[0] || '/overview');
+    }
+  }, [path, navigate, userRoutes]);
+
+  const pageKey = prospectId
+    ? 'detail'
+    : tenderId
+    ? 'tenders'
+    : projectDetailId
+    ? 'projectDetail'
+    : inflowId
+    ? 'inflow'
+    : outflowId
+    ? 'outflow'
+    : (ROUTE_TO_TAB[path] ?? 'overview');
   const info = PAGE_INFO[pageKey];
 
   return (
@@ -93,10 +150,10 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
               {info.icon}
             </div>
             <div>
-              <h1 className="text-[14.5px] font-bold text-[var(--text-primary)] leading-tight tracking-tight">
+              <h1 className="text-[13px] font-bold text-[var(--text-primary)] leading-tight tracking-tight">
                 {info.title}
               </h1>
-              <p className="text-[11px] text-[var(--text-muted)] mt-0.5 leading-tight">
+              <p className="text-[10px] text-[var(--text-muted)] mt-0.5 leading-tight">
                 {info.subtitle}
               </p>
             </div>
@@ -171,6 +228,26 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
         ) : isUsers ? (
           <Suspense fallback={<PageLoader text="Loading Security Console…" />}>
             <UserManagement currentUser={user} />
+          </Suspense>
+        ) : inflowId ? (
+          <Suspense fallback={<PageLoader text="Loading Challan…" />}>
+            <InflowDetail currentUser={user} challanId={inflowId} />
+          </Suspense>
+        ) : isInflowList ? (
+          <Suspense fallback={<PageLoader text="Loading Inflow…" />}>
+            <InflowList currentUser={user} />
+          </Suspense>
+        ) : outflowId ? (
+          <Suspense fallback={<PageLoader text="Loading Expense…" />}>
+            <OutflowDetail currentUser={user} expenseId={outflowId} />
+          </Suspense>
+        ) : isOutflowList ? (
+          <Suspense fallback={<PageLoader text="Loading Outflow…" />}>
+            <OutflowList currentUser={user} />
+          </Suspense>
+        ) : isAccMasters ? (
+          <Suspense fallback={<PageLoader text="Loading Masters…" />}>
+            <AccountsMasters currentUser={user} />
           </Suspense>
         ) : (
           <Suspense fallback={<PageLoader text="Loading Operations Console…" />}>

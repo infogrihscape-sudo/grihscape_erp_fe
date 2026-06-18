@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from '../context/RouterContext.js';
 import { userApi, prospectApi, leadApi, projectApi } from '../services/api.js';
+import { accountsDashboardApi } from '../services/accounts.api.js';
 import type { User } from '../context/AuthContext.js';
 import {
   User as UserIcon, Mail, Phone, FileText, Database, Users,
   Activity, CheckCircle2, Cpu, RefreshCw, Landmark, TrendingUp,
   BarChart3, MapPin, PlusCircle, Target, ClipboardList, Award, Home,
   HardHat, Clock, Building2, Palette, ArrowRight,
+  ArrowDownLeft, ArrowUpRight, CreditCard,
 } from 'lucide-react';
 import { ShimmerCardGrid, ShimmerTable } from '../components/Shimmer.js';
 
@@ -26,6 +28,11 @@ const formatBudget = (valueInLakhs: number): string => {
   }
   return `₹${valueInLakhs.toFixed(0)} L`;
 };
+
+const fmtAcc = (n: number): string =>
+  n >= 1e7 ? `₹${(n / 1e7).toFixed(2)} Cr`
+  : n >= 1e5 ? `₹${(n / 1e5).toFixed(1)} L`
+  : `₹${n.toLocaleString('en-IN')}`;
 
 const serviceLabels: Record<string, string> = {
   ARCHITECTURAL_CONSULTATION: 'Architectural Consultation',
@@ -279,6 +286,85 @@ function ProjectRoleDashboard({ user, projects, kpis, navigate }: {
   );
 }
 
+// ─── Accounts-role dashboard ──────────────────────────────────────────────────
+function AccountsRoleDashboard({ user, stats, navigate }: {
+  user: User;
+  stats: { inflow: any; outflow: any } | null;
+  navigate: (path: string) => void;
+}) {
+  const inf = stats?.inflow;
+  const out = stats?.outflow;
+  const totalPending = (inf?.pendingApprovals ?? 0) + (out?.pendingApprovals ?? 0);
+
+  const cards = [
+    { label: 'Total Inflow',        value: fmtAcc(Number(inf?.totalInflow      ?? 0)), sub: 'Approved challans',                               grad: 'from-emerald-400 to-emerald-500', text: 'text-emerald-400' },
+    { label: 'This Month Inflow',   value: fmtAcc(Number(inf?.thisMonthInflow  ?? 0)), sub: new Date().toLocaleString('en-IN', { month: 'long' }), grad: 'from-teal-400 to-teal-500',    text: 'text-teal-400'    },
+    { label: 'Total Outflow',       value: fmtAcc(Number(out?.totalOutflow     ?? 0)), sub: 'Approved expenses',                                grad: 'from-red-400 to-red-500',         text: 'text-red-400'     },
+    { label: 'This Month Outflow',  value: fmtAcc(Number(out?.thisMonthOutflow ?? 0)), sub: new Date().toLocaleString('en-IN', { month: 'long' }), grad: 'from-orange-400 to-orange-500', text: 'text-orange-400'  },
+  ];
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#111217] to-[#0f1a16] border border-[rgba(16,185,129,0.2)] p-5 flex items-center gap-4">
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #10b981 0%, transparent 60%)' }} />
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-black text-[18px] shadow-lg ring-2 ring-emerald-500/30 shrink-0">
+          {user.name.charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-[15px] font-bold text-white">Welcome, {user.name.split(' ')[0]}</h2>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-blue-300 bg-blue-500/15 border border-blue-500/25 px-2 py-0.5 rounded-full">Accounts</span>
+          </div>
+          <p className="text-[11px] text-[rgba(255,255,255,0.45)] mt-0.5">Financial management — inflow &amp; outflow</p>
+        </div>
+        {totalPending > 0 && (
+          <div className="text-right shrink-0">
+            <p className="text-[28px] font-black text-amber-400 leading-none">{totalPending}</p>
+            <p className="text-[10px] text-[rgba(255,255,255,0.4)] mt-0.5">pending approvals</p>
+          </div>
+        )}
+      </div>
+
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {cards.map(c => (
+          <div key={c.label} className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-4 relative overflow-hidden shadow-[var(--shadow-card)]">
+            <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${c.grad}`} />
+            <p className="text-[9.5px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-2 pt-1">{c.label}</p>
+            <p className={`text-[22px] font-black leading-none ${c.text}`}>{c.value}</p>
+            <p className="text-[10px] text-[var(--text-muted)] mt-1">{c.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Pending alert */}
+      {totalPending > 0 && (
+        <div className="flex items-center gap-2 text-[11px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3">
+          <Clock size={13} className="shrink-0" />
+          <span><strong>{totalPending}</strong> payment{totalPending > 1 ? 's' : ''} awaiting Super Admin approval</span>
+        </div>
+      )}
+
+      {/* Quick navigation */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => navigate('/accounts/inflow')}
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[12px] font-bold border border-emerald-500/25 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+        >
+          <ArrowDownLeft size={14} /> View Inflow Challans
+        </button>
+        <button
+          onClick={() => navigate('/accounts/outflow')}
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[12px] font-bold border border-red-500/25 bg-red-500/5 text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+        >
+          <ArrowUpRight size={14} /> View Outflow Expenses
+        </button>
+      </div>
+    </div>
+  );
+}
+
 interface OverviewPageProps {
   user: User;
 }
@@ -306,10 +392,12 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
   const [allProjects, setAllProjects] = useState<any[]>([]);
   const [projectStatusCounts, setProjectStatusCounts] = useState<Record<string, number>>({});
 
+  const [accountsStats, setAccountsStats] = useState<{ inflow: any; outflow: any } | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [latency, setLatency] = useState(12);
 
-  const isProjectRole = ['Project Manager', 'Project Architect', 'Junior Architect', 'Site Engineer'].includes(user.role);
+  const isProjectRole  = ['Project Manager', 'Project Architect', 'Junior Architect', 'Site Engineer'].includes(user.role);
+  const isAccountsRole = user.role === 'Accounts';
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -318,7 +406,8 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
     try {
       const isAdmin = user.role === 'Super Admin' || user.role === 'Admin';
       const isSuperAdmin = user.role === 'Super Admin';
-      const hasProjectAccess = isAdmin || isProjectRole;
+      const hasProjectAccess  = isAdmin || isProjectRole;
+      const hasAccountsAccess = isAdmin || isAccountsRole;
 
       const promises: Promise<any>[] = [
         leadApi.getLeads().catch(() => ({ data: { leads: [] } })),
@@ -334,6 +423,9 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
       }
       if (hasProjectAccess) {
         promises.push(projectApi.getProjects({ limit: 50 }).catch(() => ({ data: { projects: [], statusCounts: {} } })));
+      }
+      if (hasAccountsAccess) {
+        promises.push(accountsDashboardApi.stats().catch(() => ({ data: { data: null } })));
       }
 
       const results = await Promise.all(promises);
@@ -354,6 +446,10 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
       if (hasProjectAccess) {
         setAllProjects(results[index]?.data?.projects || []);
         setProjectStatusCounts(results[index]?.data?.statusCounts || {});
+        index++;
+      }
+      if (hasAccountsAccess) {
+        setAccountsStats(results[index]?.data?.data ?? null);
       }
 
       setLatency(Math.max(5, Date.now() - startTime));
@@ -670,7 +766,6 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
   const showAdminTab = user.role === 'Super Admin' || user.role === 'Admin';
   const isAdmin      = user.role === 'Super Admin' || user.role === 'Admin';
 
-  // For project roles, render the dedicated dashboard immediately
   if (isProjectRole) {
     return (
       <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-y-auto">
@@ -686,6 +781,20 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
             kpis={projectKpis}
             navigate={navigate}
           />
+        )}
+      </div>
+    );
+  }
+
+  if (isAccountsRole) {
+    return (
+      <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-y-auto">
+        {dataLoading ? (
+          <div className="flex-1 flex flex-col gap-4 py-1">
+            <ShimmerCardGrid cards={4} />
+          </div>
+        ) : (
+          <AccountsRoleDashboard user={user} stats={accountsStats} navigate={navigate} />
         )}
       </div>
     );
@@ -889,6 +998,43 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                 <div className="mt-3 flex items-center gap-2 text-[11px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
                   <Clock size={12} className="shrink-0" />
                   <span><strong>{projectKpis.pending}</strong> project{projectKpis.pending > 1 ? 's' : ''} pending team assignment</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ACCOUNTS SUMMARY (Admin / Super Admin) */}
+          {accountsStats && (
+            <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-4 shadow-[var(--shadow-card)]">
+              <div className="flex items-center justify-between border-b border-[var(--border)] pb-2 mb-3">
+                <h3 className="text-[13px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                  <CreditCard size={14} className="text-emerald-500" />
+                  Accounts Summary
+                </h3>
+                <button onClick={() => navigate('/accounts/inflow')} className="text-[10px] text-[#b89047] font-semibold hover:underline bg-transparent border-0 cursor-pointer flex items-center gap-1">
+                  View <ArrowRight size={10} />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Total Inflow',       value: fmtAcc(Number(accountsStats.inflow?.totalInflow      ?? 0)), text: 'text-emerald-400', grad: 'from-emerald-400 to-emerald-500' },
+                  { label: 'This Month Inflow',  value: fmtAcc(Number(accountsStats.inflow?.thisMonthInflow  ?? 0)), text: 'text-teal-400',    grad: 'from-teal-400 to-teal-500'    },
+                  { label: 'Total Outflow',      value: fmtAcc(Number(accountsStats.outflow?.totalOutflow    ?? 0)), text: 'text-red-400',     grad: 'from-red-400 to-red-500'      },
+                  { label: 'This Month Outflow', value: fmtAcc(Number(accountsStats.outflow?.thisMonthOutflow ?? 0)), text: 'text-orange-400',  grad: 'from-orange-400 to-orange-500' },
+                ].map(c => (
+                  <div key={c.label} className="rounded-xl bg-[var(--bg)] border border-[var(--border)] p-3 relative overflow-hidden">
+                    <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${c.grad}`} />
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1 pt-0.5">{c.label}</p>
+                    <p className={`text-[18px] font-black leading-none ${c.text}`}>{c.value}</p>
+                  </div>
+                ))}
+              </div>
+              {((accountsStats.inflow?.pendingApprovals ?? 0) + (accountsStats.outflow?.pendingApprovals ?? 0)) > 0 && (
+                <div className="mt-3 flex items-center gap-2 text-[11px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+                  <Clock size={12} className="shrink-0" />
+                  <span>
+                    <strong>{(accountsStats.inflow?.pendingApprovals ?? 0) + (accountsStats.outflow?.pendingApprovals ?? 0)}</strong> payment{((accountsStats.inflow?.pendingApprovals ?? 0) + (accountsStats.outflow?.pendingApprovals ?? 0)) > 1 ? 's' : ''} awaiting your approval
+                  </span>
                 </div>
               )}
             </div>

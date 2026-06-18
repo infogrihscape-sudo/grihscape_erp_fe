@@ -318,7 +318,11 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
       });
 
       if (res.data.success) {
-        showToast('Meeting invite sent and logged successfully.', 'success');
+        const generatedLink = res.data.meetingLink;
+        const msg = generatedLink
+          ? `Meeting invite sent. Auto-generated link: ${generatedLink}`
+          : 'Meeting invite sent and logged successfully.';
+        showToast(msg, 'success');
         setMeetingDate('');
         setMeetingNotes('');
         setMeetingLink('');
@@ -1746,8 +1750,11 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                 <div className="flex flex-col gap-1.5">
                   <label className={labelBase}>Meeting Link</label>
                   <input type="url" value={meetingLink} onChange={e => setMeetingLink(e.target.value)}
-                    placeholder="https://meet.google.com/... or paste any video call link"
+                    placeholder="Leave blank to auto-generate a Jitsi link"
                     className={inputBase} />
+                  <p className="text-[10.5px] text-[var(--text-muted)] italic">
+                    A meeting link will be auto-generated and sent to the client if left blank.
+                  </p>
                   {meetingLink && (
                     <a href={meetingLink} target="_blank" rel="noopener noreferrer"
                       className="text-[11px] font-bold text-[#b89047] hover:underline self-start">

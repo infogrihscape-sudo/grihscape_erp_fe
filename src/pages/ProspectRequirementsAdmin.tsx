@@ -10,7 +10,7 @@ import { useRouter } from '../context/RouterContext.js';
 import {
   ClipboardList, Search, RefreshCw, ChevronLeft, ChevronRight, X,
   Edit2, Eye, Phone, Mail, Check, XCircle, ShieldCheck, Ban, FileText,
-  UserPlus, Loader2, Plus,
+  UserPlus, Loader2, Plus, Clock, AlertTriangle,
 } from 'lucide-react';
 import { clientApi } from '../services/api.js';
 import { ShimmerTable } from '../components/Shimmer.js';
@@ -90,6 +90,35 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
   const [selectedBudgetService, setSelectedBudgetService] = useState('ARCHITECTURAL_CONSULTATION');
   const [tempBudgetInput, setTempBudgetInput] = useState('');
 
+  // Edit requests panel
+  const [editRequests, setEditRequests] = useState<any[]>([]);
+  const [editRequestsLoading, setEditRequestsLoading] = useState(false);
+  const [showEditRequestsPanel, setShowEditRequestsPanel] = useState(false);
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const [editRequestNotes, setEditRequestNotes] = useState<Record<string, string>>({});
+
+  const fetchEditRequests = async () => {
+    if (!isAdminOrSuperAdmin) return;
+    setEditRequestsLoading(true);
+    try {
+      const res = await prospectApi.getAllEditRequests('PENDING');
+      setEditRequests(res.data.requests || []);
+    } catch { /* non-critical */ }
+    finally { setEditRequestsLoading(false); }
+  };
+
+  const handleResolveEditRequest = async (requestId: string, action: 'approve' | 'reject') => {
+    setResolvingId(requestId);
+    try {
+      await prospectApi.resolveEditRequest(requestId, action, editRequestNotes[requestId]);
+      showToast(`Request ${action === 'approve' ? 'approved' : 'rejected'} successfully.`, 'success');
+      setEditRequestNotes(n => { const c = { ...n }; delete c[requestId]; return c; });
+      fetchEditRequests();
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to resolve request.', 'error');
+    } finally { setResolvingId(null); }
+  };
+
   const fetchProspects = async () => {
     setLoading(true); setError(null);
     try {
@@ -108,7 +137,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
     } catch { /* non-critical */ }
   };
 
-  useEffect(() => { fetchProspects(); fetchBudgets(); }, []);
+  useEffect(() => { fetchProspects(); fetchBudgets(); fetchEditRequests(); }, []);
 
   const handleApproveStatus = async (id: string, newStatus: string) => {
     setError(null); setSuccess(null);
@@ -268,6 +297,20 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
     <div className="animate-fade-in flex flex-col h-full min-h-0">
       {/* Actions Bar */}
       <div className="flex flex-wrap items-center justify-end gap-2 mb-4 shrink-0">
+        {isAdminOrSuperAdmin && (
+          <button
+            onClick={() => { setShowEditRequestsPanel(true); fetchEditRequests(); }}
+            className={`${btnSecondary} relative`}
+          >
+            <Clock size={14} />
+            <span>Edit Requests</span>
+            {editRequests.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center px-1">
+                {editRequests.length}
+              </span>
+            )}
+          </button>
+        )}
         <button onClick={handleExportCSV} className={btnSecondary} disabled={filteredProspects.length === 0}>
           <FileText size={14} /><span>Export Report</span>
         </button>
@@ -538,6 +581,87 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                 </button>
               </div>
             )}
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Edit Requests Review Panel */}
+      {showEditRequestsPanel && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowEditRequestsPanel(false)}>
+          <div className="animate-scale-in w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-amber-200 flex flex-col overflow-hidden max-h-[calc(100svh-48px)]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 shrink-0">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+                <Clock size={16} className="text-amber-600 shrink-0" />
+                Capture Brief Edit Requests
+                {editRequests.length > 0 && (
+                  <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-bold">{editRequests.length} pending</span>
+                )}
+              </h3>
+              <button onClick={() => setShowEditRequestsPanel(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin">
+              {editRequestsLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 size={22} className="animate-spin text-amber-500" />
+                </div>
+              ) : editRequests.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-stone-400 gap-3">
+                  <ShieldCheck size={32} className="text-emerald-300" />
+                  <p className="text-[13px] font-medium">No pending edit requests</p>
+                </div>
+              ) : editRequests.map(req => (
+                <div key={req.id} className="border border-amber-100 rounded-xl p-4 bg-amber-50/30">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div>
+                      <p className="text-[13px] font-bold text-stone-900">{req.prospect?.clientName || '—'}</p>
+                      <p className="text-[11px] text-stone-500 mt-0.5">{req.prospect?.mobileNo} · {req.prospect?.serviceType?.split(',')[0]}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[11px] font-semibold text-stone-700">{req.requestedBy?.name || req.requestedBy?.email || '—'}</p>
+                      <p className="text-[10px] text-stone-400 mt-0.5">{new Date(req.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+
+                  {req.reason && (
+                    <div className="flex items-start gap-2 p-2.5 rounded-lg bg-white border border-amber-100 mb-3">
+                      <AlertTriangle size={12} className="text-amber-500 shrink-0 mt-0.5" />
+                      <p className="text-[12px] text-stone-600 leading-snug">{req.reason}</p>
+                    </div>
+                  )}
+
+                  <textarea
+                    placeholder="Optional: add notes for the requester..."
+                    value={editRequestNotes[req.id] || ''}
+                    onChange={e => setEditRequestNotes(n => ({ ...n, [req.id]: e.target.value }))}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-stone-200 rounded-lg text-[12px] outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300/40 resize-none text-stone-700 placeholder-stone-400 mb-3"
+                  />
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleResolveEditRequest(req.id, 'reject')}
+                      disabled={resolvingId === req.id}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 disabled:opacity-50 cursor-pointer transition-colors"
+                    >
+                      {resolvingId === req.id ? <Loader2 size={12} className="animate-spin" /> : <XCircle size={12} />}
+                      Reject
+                    </button>
+                    <button
+                      onClick={() => handleResolveEditRequest(req.id, 'approve')}
+                      disabled={resolvingId === req.id}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 disabled:opacity-50 cursor-pointer transition-colors"
+                    >
+                      {resolvingId === req.id ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                      Approve
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>,
         document.body

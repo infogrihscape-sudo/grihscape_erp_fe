@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   LayoutDashboard, Users, LogOut, ChevronLeft, ChevronRight,
   X, ClipboardList, Database, Sun, Moon, ScrollText, Award, HardHat,
+  CreditCard, ArrowDownLeft, ArrowUpRight, Settings, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import type { User } from '../context/AuthContext.js';
 import { ROLE_ROUTES } from '../config/permissions.js';
@@ -26,22 +27,42 @@ const roleBadge: Record<string, string> = {
 const roleBadgeClass = (r: string) => roleBadge[r] ?? 'bg-stone-700/50 text-stone-400 border border-stone-700';
 const roleLabel = (r: string) => r;
 
+interface SidebarChildItem {
+  route: string;
+  icon: React.ReactNode;
+  label: string;
+}
+
 interface SidebarItem {
   route: string;
   icon: React.ReactNode;
   label: string;
-  /** Routes that should highlight this item (e.g. /users also covers /roles, /logs) */
   matches?: string[];
+  // If subItems is set, this renders as an expandable group
+  subItems?: SidebarChildItem[];
 }
 
+// Routes that are sub-items of groups — sidebar skips them in the main loop
+const GROUP_CHILD_ROUTES = new Set(['/accounts/inflow', '/accounts/outflow']);
+
 const SIDEBAR_ITEMS: SidebarItem[] = [
-  { route: '/overview',  icon: <LayoutDashboard size={16} />, label: 'Profile Overview' },
-  { route: '/users',     icon: <Users size={16} />,           label: 'User Management',  matches: ['/users', '/roles', '/logs'] },
-  { route: '/prospects', icon: <ClipboardList size={16} />,   label: 'Prospects Form' },
-  { route: '/leads',     icon: <Database size={16} />,        label: 'Leads Management' },
-  { route: '/contracts', icon: <ScrollText size={16} />,      label: 'Contracts' },
-  { route: '/tenders',   icon: <Award size={16} />,           label: 'Tender Management' },
-  { route: '/projects',  icon: <HardHat size={16} />,         label: 'Projects' },
+  { route: '/overview',          icon: <LayoutDashboard size={16} />, label: 'Profile Overview' },
+  { route: '/users',             icon: <Users size={16} />,           label: 'User Management',  matches: ['/users', '/roles', '/logs'] },
+  { route: '/prospects',         icon: <ClipboardList size={16} />,   label: 'Prospects Form' },
+  { route: '/leads',             icon: <Database size={16} />,        label: 'Leads Management' },
+  { route: '/contracts',         icon: <ScrollText size={16} />,      label: 'Contracts' },
+  { route: '/tenders',           icon: <Award size={16} />,           label: 'Tender Management' },
+  { route: '/projects',          icon: <HardHat size={16} />,         label: 'Projects' },
+  {
+    route: '__accounts_payments__',
+    icon: <CreditCard size={16} />,
+    label: 'Payments',
+    subItems: [
+      { route: '/accounts/inflow',  icon: <ArrowDownLeft size={14} />,  label: 'Inflow' },
+      { route: '/accounts/outflow', icon: <ArrowUpRight size={14} />,   label: 'Outflow' },
+    ],
+  },
+  { route: '/accounts/masters',  icon: <Settings size={16} />,        label: 'Masters' },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -54,30 +75,118 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { isDark, toggleTheme } = useTheme();
   const { path, navigate } = useRouter();
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['__accounts_payments__']));
 
-  const isActive = (item: SidebarItem) => {
-    const candidates = item.matches ?? [item.route];
+  const isPathActive = (route: string, matches?: string[]) => {
+    const candidates = matches ?? [route];
     return candidates.some(r => path === r || (r !== '/overview' && path.startsWith(r + '/')));
   };
 
+  const isGroupActive = (item: SidebarItem) =>
+    item.subItems?.some(c => path === c.route || path.startsWith(c.route + '/')) ?? false;
+
+  const toggleGroup = (route: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      next.has(route) ? next.delete(route) : next.add(route);
+      return next;
+    });
+  };
+
+  const go = (route: string) => {
+    navigate(route);
+    setIsMobileOpen(false);
+  };
+
   const navItem = (item: SidebarItem) => {
-    const active = isActive(item);
+    // Expandable group
+    if (item.subItems) {
+      const active = isGroupActive(item);
+      const expanded = expandedGroups.has(item.route);
 
-    const go = () => {
-      navigate(item.route);
-      setIsMobileOpen(false);
-    };
+      return (
+        <li key={item.route}>
+          <div
+            onClick={() => {
+              if (isCollapsed) {
+                setIsCollapsed(false);
+              } else {
+                toggleGroup(item.route);
+              }
+            }}
+            className={[
+              'relative flex items-center px-3.5 py-2.5 rounded-lg text-[12px] font-medium cursor-pointer transition-all duration-200 select-none group focus:outline-none',
+              isCollapsed ? 'md:justify-center md:px-0 md:h-10 md:w-10 md:mx-auto' : 'gap-2.5',
+              active
+                ? 'bg-[#b89047]/15 text-[#c9a45c] font-bold'
+                : 'text-stone-400 hover:bg-white/5 hover:text-stone-200',
+            ].join(' ')}
+          >
+            <span className="shrink-0">{item.icon}</span>
+            <span className={`flex-1 transition-all duration-200 ${isCollapsed ? 'md:hidden' : 'block'}`}>
+              {item.label}
+            </span>
+            {!isCollapsed && (
+              <span className="shrink-0 text-stone-500">
+                {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              </span>
+            )}
 
+            {isCollapsed && (
+              <div
+                role="tooltip"
+                className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-[#0d1117] text-white text-[11px] px-2.5 py-1.5 rounded-md shadow-lg pointer-events-none opacity-0 transition-opacity duration-150 group-hover:opacity-100 whitespace-nowrap z-50 border border-[#30363d]"
+              >
+                {item.label}
+                <div className="absolute right-full top-1/2 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-[#0d1117]" />
+              </div>
+            )}
+          </div>
+
+          {expanded && !isCollapsed && (
+            <ul className="mt-0.5 ml-4 flex flex-col gap-0.5 border-l border-[#2a2d3a] pl-2.5">
+              {item.subItems.map(child => {
+                const childActive = path === child.route || path.startsWith(child.route + '/');
+                return (
+                  <li
+                    key={child.route}
+                    onClick={() => go(child.route)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(child.route); } }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={child.label}
+                    aria-current={childActive ? 'page' : undefined}
+                    className={[
+                      'flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer transition-all duration-200 select-none focus:outline-none',
+                      childActive
+                        ? 'bg-[#b89047]/15 text-[#c9a45c] font-bold'
+                        : 'text-stone-400 hover:bg-white/5 hover:text-stone-200',
+                    ].join(' ')}
+                  >
+                    <span className="shrink-0">{child.icon}</span>
+                    <span>{child.label}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </li>
+      );
+    }
+
+    // Regular link
+    const active = isPathActive(item.route, item.matches);
     return (
       <li
-        onClick={go}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }}
+        key={item.route}
+        onClick={() => go(item.route)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(item.route); } }}
         tabIndex={0}
         role="button"
         aria-label={item.label}
         aria-current={active ? 'page' : undefined}
         className={[
-          'relative flex items-center px-3.5 py-2.5 rounded-lg text-[13px] font-medium cursor-pointer transition-all duration-200 select-none group focus:outline-none focus:ring-2 focus:ring-[#b89047]/30',
+          'relative flex items-center px-3.5 py-2.5 rounded-lg text-[12px] font-medium cursor-pointer transition-all duration-200 select-none group focus:outline-none focus:ring-2 focus:ring-[#b89047]/30',
           isCollapsed ? 'md:justify-center md:px-0 md:h-10 md:w-10 md:mx-auto' : 'gap-2.5',
           active
             ? 'bg-[#b89047]/15 text-[#c9a45c] font-bold border-l-[3px] border-[#b89047] rounded-l-none pl-3'
@@ -89,7 +198,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {item.label}
         </span>
 
-        {/* Tooltip shown when sidebar is collapsed */}
         {isCollapsed && (
           <div
             role="tooltip"
@@ -130,7 +238,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className="flex items-center gap-1">
-          {/* Mobile close */}
           <button
             onClick={() => setIsMobileOpen(false)}
             className="md:hidden p-1.5 rounded-lg text-stone-400 hover:bg-white/8 hover:text-stone-100 focus:outline-none cursor-pointer transition-colors"
@@ -138,8 +245,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <X size={18} />
           </button>
-
-          {/* Desktop collapse toggle */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="hidden md:flex p-1.5 rounded-lg text-stone-400 hover:bg-white/8 hover:text-stone-100 focus:outline-none cursor-pointer transition-colors"
@@ -151,8 +256,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* ── Nav items ── */}
-      <ul className="flex flex-col gap-0.5 flex-1 list-none">
+      <ul className="flex flex-col gap-0.5 flex-1 list-none overflow-y-auto">
         {ROLE_ROUTES[user.role]?.map((route) => {
+          // Skip routes that are rendered inside a group
+          if (GROUP_CHILD_ROUTES.has(route)) return null;
           const item = SIDEBAR_ITEMS.find((i) => i.route === route);
           if (!item) return null;
           return (

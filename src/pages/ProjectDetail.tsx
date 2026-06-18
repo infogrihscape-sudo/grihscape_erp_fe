@@ -11,6 +11,7 @@ import {
   Upload, CheckCircle2, XCircle, Loader2, X, Plus,
   Send, Eye, SquarePen, Building2, AlertTriangle,
   MapPin, HardHat, Users, Clock, Palette, Check, Lock,
+  Trash2, MessageSquare, Download, ImageIcon,
 } from 'lucide-react';
 
 interface Props { currentUser: User; projectId: string; }
@@ -49,8 +50,8 @@ type TabId = 'overview' | 'site' | 'cdrf-meetings' | 'cdrf-form' | 'design' | 'p
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'overview',      label: 'Overview',          icon: <Building2 size={13} /> },
   { id: 'site',          label: 'Site Verification',  icon: <MapPin size={13} /> },
-  { id: 'cdrf-meetings', label: 'CDRF Meetings',      icon: <CalendarDays size={13} /> },
-  { id: 'cdrf-form',     label: 'CDRF Form',          icon: <ClipboardCheck size={13} /> },
+  { id: 'cdrf-meetings', label: 'Client Meetings',     icon: <CalendarDays size={13} /> },
+  { id: 'cdrf-form',     label: 'Client Brief',        icon: <ClipboardCheck size={13} /> },
   { id: 'design',        label: 'Layout & Approval',  icon: <Upload size={13} /> },
   { id: 'pipeline',      label: 'Design Pipeline',    icon: <FileText size={13} /> },
   { id: 'transmittals',  label: 'Transmittals',       icon: <Send size={13} /> },
@@ -900,8 +901,10 @@ function CdrfMeetingsTab({ project, currentUser }: { project: any; currentUser: 
               <input type="datetime-local" className={inputBase} value={meetForm.scheduledAt} onChange={e => setMeetForm(f => ({ ...f, scheduledAt: e.target.value }))} min={new Date(Date.now() + 60000).toISOString().slice(0, 16)} />
             </div>
             {meetForm.meetingType === 'ONLINE' && (
-              <div><label className={label}>Meeting Link</label>
-                <input className={inputBase} value={meetForm.meetingLink} onChange={e => setMeetForm(f => ({ ...f, meetingLink: e.target.value }))} placeholder="https://…" />
+              <div>
+                <label className={label}>Meeting Link</label>
+                <input className={inputBase} value={meetForm.meetingLink} onChange={e => setMeetForm(f => ({ ...f, meetingLink: e.target.value }))} placeholder="Leave blank to auto-generate a Jitsi link" />
+                <p className="text-[10.5px] text-stone-400 italic mt-1">A meeting link will be auto-generated and emailed to the client if left blank.</p>
               </div>
             )}
             <div><label className={label}>Notes</label>
@@ -1098,6 +1101,8 @@ function DesignTab({ project, currentUser, onRefresh }: { project: any; currentU
   const [showSend, setShowSend] = useState<any>(null);
   const [showReview, setShowReview] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [docViewer, setDocViewer] = useState<{ url: string; fileName: string; draft?: any } | null>(null);
+  const [feedbackUploading, setFeedbackUploading] = useState(false);
 
   const isAdmin      = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
   const isSuperAdmin = currentUser.role === 'Super Admin';
@@ -1192,7 +1197,7 @@ function DesignTab({ project, currentUser, onRefresh }: { project: any; currentU
   };
 
   const [showClientResponse, setShowClientResponse] = useState<any>(null);
-  const [clientResponseForm, setClientResponseForm] = useState<{ response: 'APPROVED' | 'REVISION_REQUIRED'; notes: string }>({ response: 'APPROVED', notes: '' });
+  const [clientResponseForm, setClientResponseForm] = useState<{ response: 'APPROVED' | 'REVISION_REQUIRED'; notes: string; fileUrl?: string; fileName?: string }>({ response: 'APPROVED', notes: '' });
 
   const handleClientResponse = async (draftId: string) => {
     if (clientResponseForm.response === 'REVISION_REQUIRED' && !clientResponseForm.notes.trim()) {
@@ -1200,7 +1205,12 @@ function DesignTab({ project, currentUser, onRefresh }: { project: any; currentU
     }
     setSubmitting(true);
     try {
-      await projectApi.recordClientResponse(project.id, draftId, clientResponseForm);
+      await projectApi.recordClientResponse(project.id, draftId, {
+        response: clientResponseForm.response,
+        notes: clientResponseForm.notes,
+        fileUrl: clientResponseForm.fileUrl,
+        fileName: clientResponseForm.fileName,
+      });
       showToast(clientResponseForm.response === 'APPROVED' ? 'Layout approved by client. Design pipeline initialized.' : 'Revision request recorded.', 'success');
       setShowClientResponse(null);
       fetchDrafts();
@@ -1405,23 +1415,45 @@ function DesignTab({ project, currentUser, onRefresh }: { project: any; currentU
 
                         {/* Client response status */}
                         {d.clientStatus && (
-                          <div className="flex items-center gap-2 text-[11.5px]">
+                          <div className="flex items-center gap-2 text-[11.5px] flex-wrap">
                             <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${d.clientStatus === 'CLIENT_APPROVED' ? 'bg-teal-500' : d.clientStatus === 'REVISION_REQUESTED' ? 'bg-orange-500' : 'bg-blue-400'}`} />
                             <span className={`font-semibold px-1.5 py-0.5 rounded-full text-[10px] border ${CLIENT_STATUS_COLORS[d.clientStatus] ?? ''}`}>
                               {CLIENT_STATUS_LABELS[d.clientStatus] ?? d.clientStatus}
                             </span>
                           </div>
                         )}
+
+                        {/* Client feedback notes + file (from layoutFeedback) */}
+                        {d.layoutFeedback?.length > 0 && (() => {
+                          const latest = d.layoutFeedback[0];
+                          return latest.notes || latest.fileUrl ? (
+                            <div className={`mt-1 p-2.5 rounded-lg border text-[11.5px] ${latest.response === 'REVISION_REQUIRED' ? 'bg-orange-50 border-orange-200' : 'bg-teal-50 border-teal-200'}`}>
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <MessageSquare size={10} className={latest.response === 'REVISION_REQUIRED' ? 'text-orange-500' : 'text-teal-500'} />
+                                <span className={`font-semibold text-[10px] ${latest.response === 'REVISION_REQUIRED' ? 'text-orange-700' : 'text-teal-700'}`}>
+                                  Client Feedback — {latest.createdBy?.name}
+                                </span>
+                              </div>
+                              {latest.notes && <p className="text-stone-700 leading-snug">{latest.notes}</p>}
+                              {latest.fileUrl && (
+                                <button onClick={() => setDocViewer({ url: `${BACKEND_BASE}${latest.fileUrl}`, fileName: latest.fileName || 'Feedback file' })}
+                                  className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-[#b89047] hover:underline cursor-pointer border-0 bg-transparent p-0">
+                                  <Eye size={9} /> View Attached Feedback
+                                </button>
+                              )}
+                            </div>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
 
                     {/* Action buttons */}
                     <div className="flex flex-col gap-1.5 shrink-0">
-                      <a href={`${BACKEND_BASE}${d.fileUrl}`} target="_blank" rel="noreferrer" className={btnSecondary}>
+                      <button onClick={() => setDocViewer({ url: `${BACKEND_BASE}${d.fileUrl}`, fileName: d.fileName, draft: d })} className={btnSecondary}>
                         <Eye size={11} /> View
-                      </a>
+                      </button>
                       {canReview && d.status === 'PENDING_REVIEW' && (
-                        <button onClick={() => { setShowReview(d); setReviewForm({ status: 'APPROVED', reviewNotes: '' }); }} className={btnPrimary}>
+                        <button onClick={() => setDocViewer({ url: `${BACKEND_BASE}${d.fileUrl}`, fileName: d.fileName, draft: d })} className={btnPrimary}>
                           <CheckCircle2 size={11} /> Review
                         </button>
                       )}
@@ -1432,7 +1464,7 @@ function DesignTab({ project, currentUser, onRefresh }: { project: any; currentU
                       )}
                       {canRecordClientResp && d.clientStatus === 'PENDING_CLIENT' && (
                         <button onClick={() => { setShowClientResponse(d); setClientResponseForm({ response: 'APPROVED', notes: '' }); }} className={btnPrimary}>
-                          <CheckCircle2 size={11} /> Client Response
+                          <MessageSquare size={11} /> Client Response
                         </button>
                       )}
                     </div>
@@ -1513,6 +1545,22 @@ function DesignTab({ project, currentUser, onRefresh }: { project: any; currentU
               <label className={label}>Client Feedback / Notes {clientResponseForm.response === 'REVISION_REQUIRED' && <span className="text-rose-500">*</span>}</label>
               <textarea className={`${inputBase} resize-none`} rows={3} value={clientResponseForm.notes} onChange={e => setClientResponseForm(f => ({ ...f, notes: e.target.value }))} placeholder={clientResponseForm.response === 'REVISION_REQUIRED' ? 'Required: what changes did the client request?' : 'Optional approval notes…'} />
             </div>
+            <div>
+              <label className={label}>Attach Client Feedback File <span className="font-normal text-[var(--text-muted)]">(optional — photo, annotated PDF, etc.)</span></label>
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={async e => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setFeedbackUploading(true);
+                try {
+                  const fd = new FormData(); fd.append('file', file);
+                  const res = await projectApi.uploadFile(fd);
+                  setClientResponseForm(f => ({ ...f, fileUrl: res.data.url ?? res.data.fileUrl, fileName: file.name }));
+                } catch { showToast('File upload failed.', 'error'); }
+                finally { setFeedbackUploading(false); }
+              }} className="w-full text-[12px] text-[var(--text-secondary)] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-[rgba(184,144,71,0.1)] file:text-[#b89047] hover:file:bg-[rgba(184,144,71,0.2)] cursor-pointer" />
+              {feedbackUploading && <p className="text-[11px] text-[var(--text-muted)] mt-1 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Uploading…</p>}
+              {clientResponseForm.fileName && !feedbackUploading && <p className="text-[11px] text-emerald-600 mt-1">✓ {clientResponseForm.fileName}</p>}
+            </div>
             {clientResponseForm.response === 'APPROVED' && (
               <div className="flex items-start gap-2 px-3 py-2.5 bg-teal-50 border border-teal-200 rounded-lg text-[11px] text-teal-700">
                 <CheckCircle2 size={13} className="mt-0.5 shrink-0" />
@@ -1521,7 +1569,7 @@ function DesignTab({ project, currentUser, onRefresh }: { project: any; currentU
             )}
             <div className="flex justify-end gap-2">
               <button onClick={() => setShowClientResponse(null)} className={btnSecondary}>Cancel</button>
-              <button onClick={() => handleClientResponse(showClientResponse.id)} disabled={submitting} className={clientResponseForm.response === 'APPROVED' ? btnPrimary : btnDanger}>
+              <button onClick={() => handleClientResponse(showClientResponse.id)} disabled={submitting || feedbackUploading} className={clientResponseForm.response === 'APPROVED' ? btnPrimary : btnDanger}>
                 {submitting ? <Loader2 size={12} className="animate-spin" /> : clientResponseForm.response === 'APPROVED' ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                 {clientResponseForm.response === 'APPROVED' ? 'Confirm Approval' : 'Record Revision Request'}
               </button>
@@ -1544,7 +1592,7 @@ function DesignTab({ project, currentUser, onRefresh }: { project: any; currentU
             )}
             <div className="flex items-start gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-[11px] text-blue-700">
               <AlertTriangle size={12} className="mt-0.5 shrink-0" />
-              <span>To schedule a client meeting, use the <strong>CDRF Meetings</strong> tab before or after sending this draft.</span>
+              <span>To schedule a client meeting, use the <strong>Client Meetings</strong> tab before or after sending this draft.</span>
             </div>
             <div><label className={label}>Notes / Message</label>
               <textarea className={`${inputBase} resize-none`} rows={3} value={sendForm.notes} onChange={e => setSendForm(f => ({ ...f, notes: e.target.value }))} placeholder="Additional message to the client…" />
@@ -1557,6 +1605,74 @@ function DesignTab({ project, currentUser, onRefresh }: { project: any; currentU
             </div>
           </div>
         </Modal>
+      )}
+      {/* Inline Document Viewer */}
+      {docViewer && createPortal(
+        <div className="fixed inset-0 z-[9999] flex flex-col bg-stone-950">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 bg-stone-900 border-b border-stone-700 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <FileText size={15} className="text-stone-400 shrink-0" />
+              <span className="text-[13px] font-semibold text-stone-200 truncate">{docViewer.fileName}</span>
+              {docViewer.draft && (
+                <span className="text-[11px] text-stone-400">v{docViewer.draft.version}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <a href={docViewer.url} download className={`${btnSecondary} border-stone-600 text-stone-300 hover:border-stone-400`}>
+                <Download size={11} /> Download
+              </a>
+              <button onClick={() => setDocViewer(null)} className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 cursor-pointer border-0 bg-transparent transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Body: viewer + optional review panel */}
+          <div className="flex flex-1 min-h-0">
+            {/* Document preview */}
+            <div className="flex-1 min-w-0 bg-stone-900 flex items-center justify-center overflow-hidden">
+              {/\.(jpg|jpeg|png|gif|webp)$/i.test(docViewer.fileName) ? (
+                <img src={docViewer.url} alt={docViewer.fileName} className="max-w-full max-h-full object-contain" />
+              ) : /\.pdf$/i.test(docViewer.fileName) ? (
+                <iframe src={docViewer.url} title={docViewer.fileName} className="w-full h-full border-0" />
+              ) : (
+                <div className="text-center text-stone-400 space-y-3">
+                  <FileText size={40} className="mx-auto text-stone-600" />
+                  <p className="text-[13px]">Preview not available for this file type</p>
+                  <a href={docViewer.url} target="_blank" rel="noreferrer" className="text-[#b89047] hover:underline text-[12px]">Open in new tab</a>
+                </div>
+              )}
+            </div>
+
+            {/* Review action panel — shown when admin can review a PENDING_REVIEW draft */}
+            {docViewer.draft && canReview && docViewer.draft.status === 'PENDING_REVIEW' && (
+              <div className="w-72 shrink-0 bg-white border-l border-stone-200 flex flex-col overflow-y-auto p-5 space-y-4">
+                <p className="text-[13px] font-bold text-stone-900">Review Design</p>
+                <div className="flex flex-col gap-2">
+                  {(['APPROVED', 'REJECTED'] as const).map(s => (
+                    <button key={s} onClick={() => setReviewForm(f => ({ ...f, status: s }))}
+                      className={`py-2.5 rounded-lg text-[12px] font-bold border transition-all cursor-pointer
+                        ${reviewForm.status === s
+                          ? s === 'APPROVED' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-rose-600 text-white border-rose-600'
+                          : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-stone-400'}`}>
+                      {s === 'APPROVED' ? '✓ Approve' : '✗ Reject'}
+                    </button>
+                  ))}
+                </div>
+                <div>
+                  <label className={label}>Comments {reviewForm.status === 'REJECTED' && <span className="text-rose-500">*</span>}</label>
+                  <textarea className={`${inputBase} resize-none`} rows={4} value={reviewForm.reviewNotes} onChange={e => setReviewForm(f => ({ ...f, reviewNotes: e.target.value }))} placeholder={reviewForm.status === 'REJECTED' ? 'Required: reason for rejection…' : 'Optional notes…'} />
+                </div>
+                <button onClick={() => handleReview(docViewer.draft.id).then(() => setDocViewer(null))} disabled={submitting} className={reviewForm.status === 'APPROVED' ? btnPrimary : btnDanger}>
+                  {submitting ? <Loader2 size={12} className="animate-spin" /> : reviewForm.status === 'APPROVED' ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                  {reviewForm.status}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -1595,6 +1711,11 @@ function PipelineTab({ project, currentUser, onRefresh }: { project: any; curren
   const [fileForm, setFileForm] = useState({ fileType: 'PDF' as 'CAD' | 'PDF' | 'IMAGE', fileUrl: '', fileName: '' });
   const [uploading, setUploading] = useState(false);
   const [architects, setArchitects] = useState<any[]>([]);
+  const [drawingDocViewer, setDrawingDocViewer] = useState<{ url: string; fileName: string } | null>(null);
+  // Custom drawing creation
+  const [customDrawingName, setCustomDrawingName] = useState('');
+  const [customDrawingCategory, setCustomDrawingCategory] = useState('ARCHITECTURAL');
+  const [addingCustom, setAddingCustom] = useState(false);
 
   const isAdmin      = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
   const isSuperAdmin = currentUser.role === 'Super Admin';
@@ -1658,6 +1779,53 @@ function PipelineTab({ project, currentUser, onRefresh }: { project: any; curren
       fetchPipeline();
     } catch (err: any) { showToast(err.response?.data?.message ?? 'Failed to delete.', 'error'); }
     finally { setSubmitting(false); }
+  };
+
+  const handleRequestDelete = async (drawingId: string) => {
+    try {
+      await projectApi.requestDrawingDelete(project.id, drawingId);
+      showToast('Deletion request submitted. Awaiting Super Admin approval.', 'success');
+      fetchPipeline();
+    } catch (err: any) { showToast(err.response?.data?.message ?? 'Failed.', 'error'); }
+  };
+
+  const handleApproveDelete = async (drawingId: string) => {
+    setSubmitting(true);
+    try {
+      await projectApi.approveDrawingDelete(project.id, drawingId);
+      showToast('Drawing deleted.', 'success');
+      fetchPipeline();
+    } catch (err: any) { showToast(err.response?.data?.message ?? 'Failed.', 'error'); }
+    finally { setSubmitting(false); }
+  };
+
+  const handleRejectDelete = async (drawingId: string) => {
+    try {
+      await projectApi.rejectDrawingDelete(project.id, drawingId);
+      showToast('Deletion request rejected.', 'success');
+      fetchPipeline();
+    } catch (err: any) { showToast(err.response?.data?.message ?? 'Failed.', 'error'); }
+  };
+
+  const handleAddCustomDrawing = async () => {
+    if (!customDrawingName.trim()) return;
+    setAddingCustom(true);
+    try {
+      const res = await projectApi.createDrawingMaster(project.id, { name: customDrawingName.trim(), category: customDrawingCategory });
+      showToast(`"${res.data.drawing.name}" added to the master list.`, 'success');
+      // Refresh drawing master so the new item appears in the list
+      const masterRes = await projectApi.getDrawingMaster(project.id);
+      setDrawingMaster(masterRes.data.drawings ?? []);
+      setCustomDrawingName('');
+    } catch (err: any) {
+      const msg = err.response?.data?.message ?? 'Failed to add custom drawing.';
+      showToast(msg, 'error');
+      // If it already exists (409), still refresh master to surface it
+      if (err.response?.status === 409) {
+        const masterRes = await projectApi.getDrawingMaster(project.id);
+        setDrawingMaster(masterRes.data.drawings ?? []);
+      }
+    } finally { setAddingCustom(false); }
   };
 
   const handleAddDrawings = async () => {
@@ -1905,7 +2073,15 @@ function PipelineTab({ project, currentUser, onRefresh }: { project: any; curren
             </div>
             <div className="divide-y divide-[var(--border)]">
               {drawings.map((d: any) => (
-                <div key={d.id} className="p-3.5">
+                <div key={d.id} className={`p-3.5 ${d.pendingDelete ? 'bg-rose-50/40' : ''}`}>
+                  {/* Pending delete banner */}
+                  {d.pendingDelete && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 mb-2.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px]">
+                      <Trash2 size={11} className="text-rose-500 shrink-0" />
+                      <span className="text-rose-700 font-semibold">Pending Deletion</span>
+                      {d.pendingDeleteRequestedBy && <span className="text-rose-500">— requested by {d.pendingDeleteRequestedBy.name}</span>}
+                    </div>
+                  )}
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -1925,26 +2101,50 @@ function PipelineTab({ project, currentUser, onRefresh }: { project: any; curren
                       </div>
                       {d.notes && <p className="text-[11px] text-[var(--text-muted)] mt-1 italic">{d.notes}</p>}
 
-                      {/* Files */}
+                      {/* Files — thumbnails for images, styled chips for others */}
                       {d.files?.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {d.files.map((f: any) => (
-                            <a key={f.id} href={`${BACKEND_BASE}${f.fileUrl}`} target="_blank" rel="noreferrer"
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold text-[#b89047] bg-[rgba(184,144,71,0.06)] border-[rgba(184,144,71,0.25)] hover:bg-[rgba(184,144,71,0.12)] transition-colors">
-                              <Eye size={9} /> {f.fileType} — {f.fileName}
-                            </a>
-                          ))}
+                        <div className="mt-2 flex flex-wrap gap-2 items-end">
+                          {d.files.map((f: any) => {
+                            const fileUrl = `${BACKEND_BASE}${f.fileUrl}`;
+                            const isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(f.fileName);
+                            return isImg ? (
+                              <button key={f.id} type="button" onClick={() => setDrawingDocViewer({ url: fileUrl, fileName: f.fileName })}
+                                className="group relative w-14 h-14 rounded-lg overflow-hidden border border-[rgba(184,144,71,0.3)] hover:border-[#b89047] transition-colors cursor-pointer bg-transparent p-0 shrink-0">
+                                <img src={fileUrl} alt={f.fileName} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <Eye size={12} className="text-white" />
+                                </div>
+                              </button>
+                            ) : (
+                              <button key={f.id} type="button" onClick={() => setDrawingDocViewer({ url: fileUrl, fileName: f.fileName })}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold text-[#b89047] bg-[rgba(184,144,71,0.06)] border-[rgba(184,144,71,0.25)] hover:bg-[rgba(184,144,71,0.12)] transition-colors cursor-pointer">
+                                {f.fileType === 'IMAGE' ? <ImageIcon size={9} /> : <FileText size={9} />}
+                                {f.fileType} — {f.fileName}
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
 
                     {/* Actions */}
                     <div className="flex flex-col gap-1.5 shrink-0 items-end">
-                      {/* Delete checkbox (PM only, before approval, NOT_STARTED) */}
-                      {canManage && !bothApproved && d.status === 'NOT_STARTED' && (
-                        <button type="button" onClick={() => setDeleteSelectedIds(prev => { const n = new Set(prev); n.has(d.id) ? n.delete(d.id) : n.add(d.id); return n; })}
-                          className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${deleteSelectedIds.has(d.id) ? 'bg-rose-500 border-rose-500' : 'border-[var(--border)] hover:border-rose-400'}`}>
-                          {deleteSelectedIds.has(d.id) && <Check size={9} className="text-white" />}
+                      {/* Super Admin: approve / reject pending delete */}
+                      {isSuperAdmin && d.pendingDelete && (
+                        <>
+                          <button onClick={() => handleApproveDelete(d.id)} disabled={submitting} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 cursor-pointer transition-colors">
+                            <Check size={10} /> Delete
+                          </button>
+                          <button onClick={() => handleRejectDelete(d.id)} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 cursor-pointer transition-colors">
+                            <XCircle size={10} /> Keep
+                          </button>
+                        </>
+                      )}
+                      {/* PM / Project Architect: request delete */}
+                      {(canManage || isArch) && !d.pendingDelete && !isSuperAdmin && (
+                        <button onClick={() => handleRequestDelete(d.id)} title="Request deletion approval"
+                          className="p-1.5 rounded-lg text-[10px] text-rose-500 border border-rose-200 bg-rose-50 hover:bg-rose-100 cursor-pointer transition-colors">
+                          <Trash2 size={11} />
                         </button>
                       )}
                       {canManage && (
@@ -2030,6 +2230,28 @@ function PipelineTab({ project, currentUser, onRefresh }: { project: any; curren
                 {drawingMaster.length === 0 && (
                   <p className="text-[12px] text-[var(--text-muted)] text-center py-6">Loading drawings…</p>
                 )}
+
+                {/* Add custom drawing type */}
+                <div className="border-t border-[var(--border)] pt-3 mt-1">
+                  <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide mb-2">Can't find it? Add a custom drawing type</p>
+                  <div className="flex gap-2 flex-wrap">
+                    <input
+                      type="text"
+                      placeholder="Drawing name…"
+                      value={customDrawingName}
+                      onChange={e => setCustomDrawingName(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && customDrawingName.trim() && handleAddCustomDrawing()}
+                      className={`${inputBase} flex-1 min-w-[160px] text-[12px]`}
+                    />
+                    <select value={customDrawingCategory} onChange={e => setCustomDrawingCategory(e.target.value)}
+                      className="text-[12px] bg-[var(--card-bg)] border border-[var(--border)] rounded-lg px-2 py-1.5 outline-none focus:border-[#b89047] text-[var(--text-secondary)]">
+                      {Object.entries(CATEGORY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                    <button onClick={handleAddCustomDrawing} disabled={addingCustom || !customDrawingName.trim()} className={btnSecondary}>
+                      {addingCustom ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />} Add
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="flex justify-between items-center gap-2 px-4 py-3 border-t border-[var(--border)] shrink-0">
                 <span className="text-[11.5px] text-[var(--text-muted)]">
@@ -2106,6 +2328,40 @@ function PipelineTab({ project, currentUser, onRefresh }: { project: any; curren
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Drawing file inline viewer */}
+      {drawingDocViewer && createPortal(
+        <div className="fixed inset-0 z-[9999] flex flex-col bg-stone-950">
+          <div className="flex items-center justify-between px-4 py-3 bg-stone-900 border-b border-stone-700 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <FileText size={15} className="text-stone-400 shrink-0" />
+              <span className="text-[13px] font-semibold text-stone-200 truncate">{drawingDocViewer.fileName}</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <a href={drawingDocViewer.url} download className={`${btnSecondary} border-stone-600 text-stone-300 hover:border-stone-400`}>
+                <Download size={11} /> Download
+              </a>
+              <button onClick={() => setDrawingDocViewer(null)} className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 cursor-pointer border-0 bg-transparent transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 bg-stone-900 flex items-center justify-center overflow-hidden">
+            {/\.(jpg|jpeg|png|gif|webp)$/i.test(drawingDocViewer.fileName) ? (
+              <img src={drawingDocViewer.url} alt={drawingDocViewer.fileName} className="max-w-full max-h-full object-contain" />
+            ) : /\.pdf$/i.test(drawingDocViewer.fileName) ? (
+              <iframe src={drawingDocViewer.url} title={drawingDocViewer.fileName} className="w-full h-full border-0" />
+            ) : (
+              <div className="text-center text-stone-400 space-y-3">
+                <FileText size={40} className="mx-auto text-stone-600" />
+                <p className="text-[13px]">Preview not available for this file type</p>
+                <a href={drawingDocViewer.url} target="_blank" rel="noreferrer" className="text-[#b89047] hover:underline text-[12px]">Open in new tab</a>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

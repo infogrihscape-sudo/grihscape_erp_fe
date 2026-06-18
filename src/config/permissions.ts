@@ -1,12 +1,20 @@
 export const ROLE_ROUTES: Record<string, string[]> = {
-  'Super Admin':       ['/overview', '/users', '/roles', '/logs', '/leads', '/prospects', '/contracts', '/tenders', '/projects'],
-  'Admin':             ['/overview', '/users', '/roles', '/logs', '/leads', '/prospects', '/contracts', '/tenders', '/projects'],
+  'Super Admin': [
+    '/overview', '/users', '/roles', '/logs', '/leads', '/prospects',
+    '/contracts', '/tenders', '/projects',
+    '__accounts_payments__', '/accounts/inflow', '/accounts/outflow', '/accounts/masters',
+  ],
+  'Admin': [
+    '/overview', '/users', '/roles', '/logs', '/leads', '/prospects',
+    '/contracts', '/tenders', '/projects',
+    '__accounts_payments__', '/accounts/inflow', '/accounts/outflow', '/accounts/masters',
+  ],
   'Sales & Marketing': ['/overview', '/leads', '/prospects', '/contracts', '/tenders'],
   'Project Manager':   ['/overview', '/projects'],
   'Project Architect': ['/overview', '/projects'],
   'Junior Architect':  ['/overview', '/projects'],
   'Site Engineer':     ['/overview', '/projects'],
-  'Accounts':          ['/contracts', '/prospects'],
+  'Accounts':          ['/overview', '__accounts_payments__', '/accounts/inflow', '/accounts/outflow'],
 };
 
 /** Roles restricted to read-only access — no create/edit/delete/workflow actions. */

@@ -223,6 +223,16 @@ export const prospectApi = {
     api.post(`/prospects/${id}/initial-payment`, data),
   verifyByAccounts: (id: string, data?: { notes?: string; revisedAmount?: number | null; revisedUnit?: string }) =>
     api.post(`/prospects/${id}/accounts-verify`, data || {}),
+
+  // Edit-request workflow
+  requestEdit: (id: string, reason?: string) =>
+    api.post(`/prospects/${id}/edit-request`, { reason }),
+  getEditRequest: (id: string) =>
+    api.get(`/prospects/${id}/edit-request`),
+  getAllEditRequests: (status?: string) =>
+    api.get('/prospects/edit-requests/all', { params: status ? { status } : {} }),
+  resolveEditRequest: (requestId: string, action: 'approve' | 'reject', adminNotes?: string) =>
+    api.patch(`/prospects/edit-requests/${requestId}/resolve`, { action, adminNotes }),
 };
 
 export const leadApi = {
@@ -230,6 +240,8 @@ export const leadApi = {
   createLead: (data: any) => api.post('/leads', data),
   bulkUploadLeads: (leads: any[]) => api.post('/leads/bulk', { leads }),
   validateLeads: (phones: string[]) => api.post('/leads/validate', { phones }),
+  updateLeadResponse: (id: string, leadResponse: string | null) =>
+    api.patch(`/leads/${id}/response`, { leadResponse }),
 };
 
 // Client master-data APIs
@@ -332,7 +344,7 @@ export const projectApi = {
     }),
 
   // Layout client response
-  recordClientResponse: (projectId: string, draftId: string, data: { response: 'APPROVED' | 'REVISION_REQUIRED'; notes?: string }) =>
+  recordClientResponse: (projectId: string, draftId: string, data: { response: 'APPROVED' | 'REVISION_REQUIRED'; notes?: string; fileUrl?: string; fileName?: string }) =>
     api.post(`/projects/${projectId}/designs/${draftId}/client-response`, data),
   getLayoutFeedback: (projectId: string, draftId: string) =>
     api.get(`/projects/${projectId}/designs/${draftId}/feedback`),
@@ -342,6 +354,8 @@ export const projectApi = {
     api.get(`/projects/${projectId}/pipeline`),
   getDrawingMaster: (projectId: string) =>
     api.get(`/projects/${projectId}/pipeline/drawing-master`),
+  createDrawingMaster: (projectId: string, data: { name: string; category: string }) =>
+    api.post(`/projects/${projectId}/pipeline/drawing-master`, data),
   addDrawing: (projectId: string, data: { drawingMasterId: string; roomName?: string; wallDirection?: string; assignedArchitectId?: string | null; juniorArchitectId?: string | null }) =>
     api.post(`/projects/${projectId}/pipeline/drawings`, data),
   addDrawingsBulk: (projectId: string, drawingMasterIds: string[], assignedArchitectId?: string | null, juniorArchitectId?: string | null) =>
@@ -350,6 +364,12 @@ export const projectApi = {
     api.post(`/projects/${projectId}/pipeline/drawings/bulk-delete`, { drawingIds }),
   removeDrawing: (projectId: string, drawingId: string) =>
     api.delete(`/projects/${projectId}/pipeline/drawings/${drawingId}`),
+  requestDrawingDelete: (projectId: string, drawingId: string) =>
+    api.post(`/projects/${projectId}/pipeline/drawings/${drawingId}/request-delete`),
+  approveDrawingDelete: (projectId: string, drawingId: string) =>
+    api.post(`/projects/${projectId}/pipeline/drawings/${drawingId}/approve-delete`),
+  rejectDrawingDelete: (projectId: string, drawingId: string) =>
+    api.post(`/projects/${projectId}/pipeline/drawings/${drawingId}/reject-delete`),
   assignDrawingTeam: (projectId: string, drawingId: string, data: { assignedArchitectId?: string | null; juniorArchitectId?: string | null; notes?: string }) =>
     api.put(`/projects/${projectId}/pipeline/drawings/${drawingId}/team`, data),
   updateDrawing: (projectId: string, drawingId: string, data: { status?: string; notes?: string }) =>

@@ -10,6 +10,7 @@ import { useRouter } from '../context/RouterContext.js';
 import {
   ClipboardList, Search, RefreshCw, ChevronLeft, ChevronRight, X,
   Plus, Trash2, Eye, Phone, Mail, Check, FileText, UserPlus, Loader2,
+  Edit2, AlertTriangle, Clock,
 } from 'lucide-react';
 import { clientApi } from '../services/api.js';
 import { ShimmerTable } from '../components/Shimmer.js';
@@ -66,6 +67,62 @@ export const ProspectRequirementsSales: React.FC<Props> = (_props) => {
   const [submitting, setSubmitting] = useState(false);
   const [serviceBudgets, setServiceBudgets] = useState<Record<string, string[]>>({});
   const [formKey, setFormKey] = useState(0);
+
+  // Edit-request workflow
+  const [editRequestProspect, setEditRequestProspect] = useState<any | null>(null);
+  const [editReason, setEditReason] = useState('');
+  const [submittingEditRequest, setSubmittingEditRequest] = useState(false);
+  const [editingProspect, setEditingProspect] = useState<any | null>(null); // prospect with approved edit
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  const handleRequestEdit = async () => {
+    if (!editRequestProspect) return;
+    setSubmittingEditRequest(true);
+    try {
+      await prospectApi.requestEdit(editRequestProspect.id, editReason.trim() || undefined);
+      showToast('Edit request submitted. Awaiting admin approval.', 'success');
+      setEditRequestProspect(null);
+      setEditReason('');
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to submit edit request.', 'error');
+    } finally {
+      setSubmittingEditRequest(false);
+    }
+  };
+
+  const handleEditProspectSubmit = async (data: ProspectFormData) => {
+    if (!editingProspect) return;
+    setEditSubmitting(true);
+    try {
+      await prospectApi.updateProspect(editingProspect.id, data);
+      showToast('Prospect updated successfully.', 'success');
+      setEditingProspect(null);
+      fetchProspects();
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to update prospect.', 'error');
+      throw err;
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const handleOpenEditWithApproval = async (prospect: any) => {
+    try {
+      const res = await prospectApi.getEditRequest(prospect.id);
+      const req = res.data?.editRequest;
+      if (req?.status === 'APPROVED') {
+        setEditingProspect(prospect);
+      } else if (req?.status === 'PENDING') {
+        showToast('Edit request already submitted and is pending admin approval.', 'info');
+      } else {
+        setEditReason('');
+        setEditRequestProspect(prospect);
+      }
+    } catch {
+      setEditReason('');
+      setEditRequestProspect(prospect);
+    }
+  };
 
   // Add New Service for Existing Client
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
@@ -343,10 +400,20 @@ export const ProspectRequirementsSales: React.FC<Props> = (_props) => {
                         ) : <span className="text-[12px] text-stone-400">—</span>}
                       </td>
                       <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
-                        <div className="inline-flex gap-1 justify-center">
+                        <div className="inline-flex gap-1 justify-center flex-wrap">
                           <button onClick={() => navigate(`/prospects/${p.id}`)} className={btnSecondary} style={{ padding: '5px 8px' }} title="View pipeline">
                             <Eye size={11} />
                           </button>
+                          {p.status !== 'PENDING_DELETE' && p.status !== 'DELETED' && (
+                            <button
+                              onClick={() => handleOpenEditWithApproval(p)}
+                              className={`${btnSecondary} text-amber-700 border-amber-200 hover:bg-amber-50`}
+                              style={{ padding: '5px 8px' }}
+                              title="Request edit approval"
+                            >
+                              <Edit2 size={11} />
+                            </button>
+                          )}
                           {p.status !== 'PENDING_DELETE' && p.status !== 'DELETED' && (
                             <button onClick={() => setShowDeleteModal(p.id)} className={`${btnSecondary} text-rose-600 border-rose-100 hover:bg-rose-50`} style={{ padding: '5px 8px' }} title="Request deletion">
                               <Trash2 size={11} />
@@ -479,6 +546,78 @@ export const ProspectRequirementsSales: React.FC<Props> = (_props) => {
                 </button>
               </div>
             )}
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Request Edit Approval Modal */}
+      {editRequestProspect && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => { setEditRequestProspect(null); setEditReason(''); }}>
+          <div className="animate-scale-in w-full max-w-[420px] bg-white rounded-2xl shadow-xl border border-amber-200 p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+                <Edit2 size={16} className="text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-[15px] font-bold text-stone-900">Request Edit Approval</h3>
+                <p className="text-[11.5px] text-stone-500 mt-0.5 leading-tight">
+                  {editRequestProspect.clientName}
+                </p>
+              </div>
+            </div>
+            <p className="text-[12.5px] text-stone-500 leading-relaxed mb-4">
+              An Admin or Super Admin must approve your request before you can edit this brief. Please provide a reason for the edit.
+            </p>
+            <textarea
+              value={editReason}
+              onChange={e => setEditReason(e.target.value)}
+              placeholder="Reason for editing this brief..."
+              rows={3}
+              className="w-full px-3 py-2.5 border border-stone-200 rounded-lg text-[13px] outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300/40 resize-none text-stone-800 placeholder-stone-400"
+            />
+            <div className="flex gap-2.5 mt-4">
+              <button
+                onClick={() => { setEditRequestProspect(null); setEditReason(''); }}
+                className={`${btnSecondary} flex-1 justify-center`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRequestEdit}
+                disabled={submittingEditRequest || !editReason.trim()}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50 transition-all border-0 cursor-pointer"
+              >
+                {submittingEditRequest ? <Loader2 size={13} className="animate-spin" /> : <Clock size={13} />}
+                Submit Request
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Edit Brief Modal (after approval) */}
+      {editingProspect && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setEditingProspect(null)}>
+          <div className="animate-scale-in w-full max-w-5xl lg:max-w-6xl bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-[rgba(184,144,71,0.3)] flex flex-col overflow-hidden h-[100dvh] sm:h-auto sm:max-h-[calc(100svh-40px)]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 sm:p-5 border-b border-stone-100 shrink-0">
+              <h3 className="flex items-center gap-2 text-[14px] sm:text-[16px] font-bold text-stone-900">
+                <Edit2 size={17} className="text-amber-600 shrink-0" /> Edit Client Brief
+              </h3>
+              <button onClick={() => setEditingProspect(null)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
+                <X size={16} />
+              </button>
+            </div>
+            <ProspectForm
+              key={`edit-${editingProspect.id}`}
+              mode="edit"
+              serviceBudgets={serviceBudgets}
+              onSubmit={handleEditProspectSubmit}
+              onCancel={() => setEditingProspect(null)}
+              isSubmitting={editSubmitting}
+              initialData={editingProspect as unknown as ProspectFormData}
+            />
           </div>
         </div>,
         document.body
