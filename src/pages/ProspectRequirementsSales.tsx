@@ -113,7 +113,7 @@ export const ProspectRequirementsSales: React.FC<Props> = (_props) => {
       if (req?.status === 'APPROVED') {
         setEditingProspect(prospect);
       } else if (req?.status === 'PENDING') {
-        showToast('Edit request already submitted and is pending admin approval.', 'info');
+        showToast('Edit request already submitted and is pending admin approval.', 'success');
       } else {
         setEditReason('');
         setEditRequestProspect(prospect);

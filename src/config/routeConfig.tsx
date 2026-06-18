@@ -27,13 +27,16 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
 
 // Tab id → canonical route path for navigation
 export const TAB_TO_ROUTE: Record<AppTab, string> = {
-  overview:  '/overview',
-  users:     '/users',
-  prospects: '/prospects',
-  leads:     '/leads',
-  contracts: '/contracts',
-  tenders:   '/tenders',
-  projects:  '/projects',
+  overview:       '/overview',
+  users:          '/users',
+  prospects:      '/prospects',
+  leads:          '/leads',
+  contracts:      '/contracts',
+  tenders:        '/tenders',
+  projects:       '/projects',
+  inflow:         '/accounts/inflow',
+  outflow:        '/accounts/outflow',
+  accountsMasters:'/accounts/masters',
 };
 
 // Route path → active sidebar tab (/roles and /logs are under the users tab)
