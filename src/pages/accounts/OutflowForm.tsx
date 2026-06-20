@@ -6,7 +6,7 @@ import {
 } from '../../services/accounts.api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
-import { api } from '../../services/api.js';
+import { api, BACKEND_BASE } from '../../services/api.js';
 
 interface Props {
   currentUser: User;
@@ -18,6 +18,16 @@ interface Props {
 const SALARY_CATEGORY = 'Salary';
 const OFFICE_CATEGORY = 'Office Expense';
 
+const SERVICE_LABELS: Record<string, string> = {
+  ARCHITECTURAL_CONSULTATION: 'Arch. Consultation',
+  INTERIOR_DESIGN:            'Interior Design',
+  PMC:                        'PMC',
+  TURNKEY_CONSTRUCTION:       'Turnkey',
+  INTERIOR_EXECUTION:         'Int. Execution',
+  RENOVATION:                 'Renovation',
+  END_TO_END_SOLUTION:        'End-to-End',
+};
+
 const EMPTY = {
   date: new Date().toISOString().split('T')[0],
   name: '',
@@ -28,6 +38,7 @@ const EMPTY = {
   modeOfPayment: '' as '' | 'CASH' | 'ONLINE' | 'OTHER',
   projectManagerId: '',
   siteName: '',
+  siteId: '',
   description: '',
   supportingDocUrl: '',
   supportingDocName: '',
@@ -46,6 +57,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
   const [purposes, setPurposes] = useState<PurposeMaster[]>([]);
   const [categories, setCategories] = useState<ExpenseCategoryMaster[]>([]);
   const [pms, setPms] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -97,11 +109,13 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
       accountsMasterApi.listPurposes('BOTH'),
       accountsMasterApi.listCategories(),
       outflowApi.listProjectManagers(),
-    ]).then(([p1, p2, cats, pm]) => {
+      accountsMasterApi.listActiveProjects(),
+    ]).then(([p1, p2, cats, pm, projs]) => {
       const ids = new Set(p1.data.data.map(p => p.id));
       setPurposes([...p1.data.data, ...p2.data.data.filter(p => !ids.has(p.id))]);
       setCategories(cats.data.data);
       setPms(pm.data.data);
+      setProjects(projs.data.data);
     }).catch(() => {});
 
     if (existing) {
@@ -115,6 +129,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
         modeOfPayment: existing.modeOfPayment,
         projectManagerId: existing.projectManagerId ?? '',
         siteName: existing.siteName ?? '',
+        siteId: existing.siteId ?? '',
         description: existing.description ?? '',
         supportingDocUrl: existing.supportingDocUrl,
         supportingDocName: existing.supportingDocName,
@@ -154,6 +169,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
     e.preventDefault();
     if (!form.supportingDocUrl) { showToast('Supporting document is required.', 'error'); return; }
     if (!form.categoryId) { showToast('Please select a category.', 'error'); return; }
+    if (!form.siteId) { showToast('Please select a site.', 'error'); return; }
     if (!form.purposeId) { showToast('Please select a purpose.', 'error'); return; }
     if (!form.modeOfPayment) { showToast('Please select payment mode.', 'error'); return; }
     if (!form.expenseType) { showToast('Please select expense type.', 'error'); return; }
@@ -168,6 +184,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
       amount: Number(form.amount),
       modeOfPayment: form.modeOfPayment,
       projectManagerId: form.projectManagerId || undefined,
+      siteId: form.siteId || undefined,
       siteName: form.siteName || undefined,
       description: form.description || undefined,
       supportingDocUrl: form.supportingDocUrl,
@@ -352,8 +369,40 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
                 </select>
               )}
             </Field>
-            <Field label="Site Name">
-              <input value={form.siteName} onChange={e => set('siteName', e.target.value)} placeholder="Optional" className={INPUT} />
+            <Field label="Site Name *">
+              <select
+                value={form.siteId}
+                required
+                onChange={e => {
+                  const sId = e.target.value;
+                  const proj = projects.find(p => p.id === sId);
+                  if (proj) {
+                    setForm(prev => ({
+                      ...prev,
+                      siteId: sId,
+                      siteName: `${proj.prospect.client.clientName} (${proj.prospect.serviceType})`,
+                    }));
+                  } else {
+                    setForm(prev => ({
+                      ...prev,
+                      siteId: '',
+                      siteName: '',
+                    }));
+                  }
+                }}
+                className={INPUT}
+              >
+                <option value="">Select site</option>
+                {projects.map(p => {
+                  const label = `${p.prospect.client.clientName} - ${SERVICE_LABELS[p.prospect.serviceType] ?? p.prospect.serviceType}`;
+                  return (
+                    <option key={p.id} value={p.id}>{label}</option>
+                  );
+                })}
+                {form.siteName && !form.siteId && (
+                  <option value="" disabled>{form.siteName} (Custom)</option>
+                )}
+              </select>
             </Field>
           </div>
 
@@ -369,7 +418,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
                 <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} accept=".pdf,.jpg,.jpeg,.png" />
               </label>
               {form.supportingDocUrl && (
-                <a href={form.supportingDocUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] text-blue-400 hover:underline whitespace-nowrap">View</a>
+                <a href={form.supportingDocUrl.startsWith('http') ? form.supportingDocUrl : `${BACKEND_BASE}${form.supportingDocUrl}`} target="_blank" rel="noopener noreferrer" className="text-[11px] text-blue-400 hover:underline whitespace-nowrap">View</a>
               )}
             </div>
           </Field>

@@ -135,6 +135,7 @@ export const outflowApi = {
     search?: string;
     page?: number;
     pageSize?: number;
+    siteId?: string;
   }) => api.get<PaginatedResponse<OutflowExpense>>('/accounts/outflow', { params }),
 
   getById: (id: string) =>
@@ -179,6 +180,9 @@ export const accountsMasterApi = {
 
   toggleCategory: (id: string) =>
     api.patch<{ success: boolean; data: ExpenseCategoryMaster }>(`/accounts/masters/expense-categories/${id}/toggle`),
+
+  listActiveProjects: () =>
+    api.get<{ success: boolean; data: any[] }>('/accounts/active-projects'),
 };
 
 // ── Dashboard API ─────────────────────────────────────────────────────────────

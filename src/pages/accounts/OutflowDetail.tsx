@@ -6,6 +6,7 @@ import { useRouter } from '../../context/RouterContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { canWrite } from '../../config/permissions.js';
 import { OutflowForm } from './OutflowForm.js';
+import { BACKEND_BASE } from '../../services/api.js';
 
 interface Props { currentUser: User; expenseId: string; }
 
@@ -89,7 +90,7 @@ export const OutflowDetail: React.FC<Props> = ({ currentUser, expenseId }) => {
         <div className="col-span-2">
           <p className="text-[10px] text-[var(--text-muted)] uppercase font-semibold tracking-wide mb-1">Supporting Document</p>
           <a
-            href={expense.supportingDocUrl}
+            href={expense.supportingDocUrl.startsWith('http') ? expense.supportingDocUrl : `${BACKEND_BASE}${expense.supportingDocUrl}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-[11px] text-blue-400 hover:underline font-medium"

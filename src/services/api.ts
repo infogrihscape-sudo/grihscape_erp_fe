@@ -255,8 +255,10 @@ export const clientApi = {
 };
 
 // Backend base URL (without /api) for building static file links.
-// Empty string in production — nginx proxies /uploads/ to the backend.
-export const BACKEND_BASE = import.meta.env.VITE_BACKEND_BASE ?? '';
+// Falls back to deriving from VITE_API_URL so /uploads/ always resolves to the EC2 server.
+export const BACKEND_BASE: string =
+  import.meta.env.VITE_BACKEND_BASE ||
+  (import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace(/\/api\/?$/, '') : '');
 
 export const contractApi = {
   getContracts: () => api.get('/contracts'),

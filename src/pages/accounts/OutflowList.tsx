@@ -15,6 +15,16 @@ const STATUS_COLORS: Record<string, string> = {
   REJECTED:  'bg-red-500/15 text-red-400',
 };
 
+const SERVICE_LABELS: Record<string, string> = {
+  ARCHITECTURAL_CONSULTATION: 'Arch. Consultation',
+  INTERIOR_DESIGN:            'Interior Design',
+  PMC:                        'PMC',
+  TURNKEY_CONSTRUCTION:       'Turnkey',
+  INTERIOR_EXECUTION:         'Int. Execution',
+  RENOVATION:                 'Renovation',
+  END_TO_END_SOLUTION:        'End-to-End',
+};
+
 export const OutflowList: React.FC<Props> = ({ currentUser }) => {
   const { navigate } = useRouter();
   const [expenses, setExpenses] = useState<OutflowExpense[]>([]);
@@ -26,22 +36,27 @@ export const OutflowList: React.FC<Props> = ({ currentUser }) => {
   const [status, setStatus] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [categories, setCategories] = useState<ExpenseCategoryMaster[]>([]);
+  const [siteId, setSiteId] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [projects, setProjects] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     accountsMasterApi.listCategories().then(r => setCategories(r.data.data)).catch(() => {});
+    accountsMasterApi.listActiveProjects().then(r => setProjects(r.data.data)).catch(() => {});
   }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await outflowApi.list({ search, status, categoryId, page, pageSize: 20 });
+      const res = await outflowApi.list({ search, status, categoryId, siteId, startDate, endDate, page, pageSize: 20 });
       setExpenses(res.data.data);
       setTotal(res.data.total);
       setTotalPages(res.data.totalPages);
     } catch { }
     finally { setLoading(false); }
-  }, [search, status, categoryId, page]);
+  }, [search, status, categoryId, siteId, startDate, endDate, page]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -61,7 +76,7 @@ export const OutflowList: React.FC<Props> = ({ currentUser }) => {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Filter size={13} className="text-stone-500 shrink-0" />
           <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }} className="text-[11px] py-2 px-3 rounded-lg bg-[var(--card-bg)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none cursor-pointer">
             <option value="">All Status</option>
@@ -74,12 +89,25 @@ export const OutflowList: React.FC<Props> = ({ currentUser }) => {
             <option value="">All Categories</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
+          <select value={siteId} onChange={e => { setSiteId(e.target.value); setPage(1); }} className="text-[11px] py-2 px-3 rounded-lg bg-[var(--card-bg)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none cursor-pointer">
+            <option value="">All Sites</option>
+            {projects.map(p => {
+              const label = `${p.prospect.client.clientName} - ${SERVICE_LABELS[p.prospect.serviceType] ?? p.prospect.serviceType}`;
+              return <option key={p.id} value={p.id}>{label}</option>;
+            })}
+          </select>
+          <div className="flex items-center gap-1 text-[11px] text-[var(--text-muted)] bg-[var(--card-bg)] border border-[var(--border)] rounded-lg px-2 py-1 flex-wrap">
+            <span className="px-1 text-[10px] uppercase font-bold text-stone-500">Date:</span>
+            <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setPage(1); }} className="bg-transparent border-0 outline-none text-[var(--text-primary)] focus:ring-0 text-[10px] w-[100px] p-0" />
+            <span className="text-stone-500">to</span>
+            <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setPage(1); }} className="bg-transparent border-0 outline-none text-[var(--text-primary)] focus:ring-0 text-[10px] w-[100px] p-0" />
+          </div>
         </div>
 
         {canAct && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all shrink-0"
           >
             <Plus size={13} /> New Expense
           </button>

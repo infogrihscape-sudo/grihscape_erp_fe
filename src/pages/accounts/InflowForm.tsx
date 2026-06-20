@@ -11,10 +11,22 @@ interface Props {
   onSaved: () => void;
 }
 
+const SERVICE_LABELS: Record<string, string> = {
+  ARCHITECTURAL_CONSULTATION: 'Arch. Consultation',
+  INTERIOR_DESIGN:            'Interior Design',
+  PMC:                        'PMC',
+  TURNKEY_CONSTRUCTION:       'Turnkey',
+  INTERIOR_EXECUTION:         'Int. Execution',
+  RENOVATION:                 'Renovation',
+  END_TO_END_SOLUTION:        'End-to-End',
+};
+
 const EMPTY = {
   date: new Date().toISOString().split('T')[0],
   clientName: '',
   siteName: '',
+  projectId: '',
+  clientId: '',
   amount: '',
   isTaxApplicable: false,
   taxType: '' as '' | 'GST' | 'CUSTOM',
@@ -29,6 +41,7 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
   const { showToast } = useToast();
   const [form, setForm] = useState({ ...EMPTY });
   const [purposes, setPurposes] = useState<PurposeMaster[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Inline purpose creation
@@ -59,11 +72,15 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
       return [...prev, ...r.data.data.filter(p => !ids.has(p.id))];
     })).catch(() => {});
 
+    accountsMasterApi.listActiveProjects().then(r => setProjects(r.data.data)).catch(() => {});
+
     if (existing) {
       setForm({
         date: existing.date.split('T')[0],
         clientName: existing.clientName,
         siteName: existing.siteName ?? '',
+        projectId: existing.projectId ?? '',
+        clientId: existing.clientId ?? '',
         amount: existing.amount,
         isTaxApplicable: existing.isTaxApplicable,
         taxType: existing.taxType ?? '',
@@ -92,6 +109,8 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
       date: form.date,
       clientName: form.clientName,
       siteName: form.siteName || undefined,
+      projectId: form.projectId || undefined,
+      clientId: form.clientId || undefined,
       amount: Number(form.amount),
       isTaxApplicable: form.isTaxApplicable,
       taxType: form.isTaxApplicable ? form.taxType || undefined : undefined,
@@ -143,7 +162,41 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
           </div>
 
           <Field label="Site Name">
-            <input value={form.siteName} onChange={e => set('siteName', e.target.value)} placeholder="Site / project name (optional)" className={INPUT} />
+            <select
+              value={form.projectId}
+              onChange={e => {
+                const projId = e.target.value;
+                const proj = projects.find(p => p.id === projId);
+                if (proj) {
+                  setForm(prev => ({
+                    ...prev,
+                    projectId: projId,
+                    siteName: `${proj.prospect.client.clientName} (${proj.prospect.serviceType})`,
+                    clientName: proj.prospect.client.clientName,
+                    clientId: proj.prospect.clientId,
+                  }));
+                } else {
+                  setForm(prev => ({
+                    ...prev,
+                    projectId: '',
+                    siteName: '',
+                    clientId: '',
+                  }));
+                }
+              }}
+              className={INPUT}
+            >
+              <option value="">Select site (optional)</option>
+              {projects.map(p => {
+                const label = `${p.prospect.client.clientName} - ${SERVICE_LABELS[p.prospect.serviceType] ?? p.prospect.serviceType}`;
+                return (
+                  <option key={p.id} value={p.id}>{label}</option>
+                );
+              })}
+              {form.siteName && !form.projectId && (
+                <option value="" disabled>{form.siteName} (Custom)</option>
+              )}
+            </select>
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
