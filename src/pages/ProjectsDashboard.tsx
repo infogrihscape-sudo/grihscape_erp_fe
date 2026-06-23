@@ -10,6 +10,7 @@ import {
   Users, Loader2, AlertCircle, CheckCircle2, Clock, Building2,
   MapPin, ClipboardCheck, Palette, ArrowRight, Phone, PlusCircle, Layers,
 } from 'lucide-react';
+import { SearchableSelect } from '../components/SearchableSelect.js';
 
 interface Props { currentUser: User; }
 
@@ -226,29 +227,84 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
   const { navigate } = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
-  const [clientName, setClientName]   = useState('');
-  const [mobileNo, setMobileNo]       = useState('');
-  const [email, setEmail]             = useState('');
-  const [locality, setLocality]       = useState('');
-  const [pincode, setPincode]         = useState('');
-  const [district, setDistrict]       = useState('');
-  const [state, setState]             = useState('');
-  const [serviceType, setServiceType] = useState('');
-  const [pmId, setPmId]               = useState('');
-  const [archId, setArchId]           = useState('');
-  const [juniorId, setJuniorId]       = useState('');
-  const [notes, setNotes]             = useState('');
+  const [clientName, setClientName]           = useState('');
+  const [mobileNo, setMobileNo]               = useState('');
+  const [email, setEmail]                     = useState('');
+  const [locality, setLocality]               = useState('');
+  const [pincode, setPincode]                 = useState('');
+  const [district, setDistrict]               = useState('');
+  const [state, setState]                     = useState('');
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [pmId, setPmId]                       = useState('');
+  const [archId, setArchId]                   = useState('');
+  const [juniorId, setJuniorId]               = useState('');
+  const [notes, setNotes]                     = useState('');
+
+  const [localitiesList, setLocalitiesList]           = useState<string[]>([]);
+  const [localitySelectOther, setLocalitySelectOther] = useState(false);
+  const [manualLocality, setManualLocality]           = useState('');
+  const [fetchingPincode, setFetchingPincode]         = useState(false);
 
   const byRole = (roleName: string) => assignableUsers.filter(u => u.role.name === roleName);
   const pms        = byRole('Project Manager');
   const architects = byRole('Project Architect');
   const juniors    = byRole('Junior Architect');
 
+  const handlePincodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const pin = e.target.value.replace(/\D/g, '').slice(0, 6);
+    setPincode(pin);
+    if (pin.length !== 6) {
+      setState(''); setDistrict(''); setLocalitiesList([]); setLocalitySelectOther(false);
+      return;
+    }
+    setFetchingPincode(true);
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+      const data = await res.json();
+      const r = data[0];
+      if (r?.Status === 'Success' && Array.isArray(r.PostOffice)) {
+        setState(r.PostOffice[0].State);
+        setDistrict(r.PostOffice[0].District);
+        const offices = r.PostOffice.map((po: any) => po.Name);
+        setLocalitiesList(offices);
+        if (offices.length > 0) { setLocality(offices[0]); }
+        setLocalitySelectOther(false);
+      } else {
+        setLocalitiesList([]); setLocality(''); setDistrict(''); setState('');
+      }
+    } catch {
+      // ignore fetch errors
+    } finally {
+      setFetchingPincode(false);
+    }
+  };
+
+  const handleLocalitySelectChange = (val: string) => {
+    if (val === 'OTHER') {
+      setLocalitySelectOther(true);
+      setLocality(manualLocality);
+    } else {
+      setLocalitySelectOther(false);
+      setLocality(val);
+    }
+  };
+
+  const handleServiceToggle = (key: string) => {
+    let arr: string[];
+    if (key === 'END_TO_END_SOLUTION') {
+      arr = selectedServices.includes('END_TO_END_SOLUTION') ? [] : ['END_TO_END_SOLUTION'];
+    } else {
+      arr = selectedServices.filter(s => s !== 'END_TO_END_SOLUTION');
+      arr = arr.includes(key) ? arr.filter(s => s !== key) : [...arr, key];
+    }
+    setSelectedServices(arr);
+  };
+
   const handleSubmit = async () => {
     if (!clientName.trim()) { showToast('Client name is required.', 'error'); return; }
     if (!/^\d{10}$/.test(mobileNo.trim())) { showToast('Valid 10-digit mobile number is required.', 'error'); return; }
     if (!locality.trim()) { showToast('Locality is required.', 'error'); return; }
-    if (!serviceType) { showToast('Please select a service type.', 'error'); return; }
+    if (selectedServices.length === 0) { showToast('Please select at least one service.', 'error'); return; }
     if (!pmId || !archId) { showToast('Project Manager and Project Architect are required.', 'error'); return; }
 
     setSubmitting(true);
@@ -261,7 +317,7 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
         pincode: pincode.trim() || undefined,
         district: district.trim() || undefined,
         state: state.trim() || undefined,
-        serviceType,
+        serviceType: selectedServices.join(','),
         projectManagerId: pmId,
         projectArchitectId: archId,
         juniorArchitectId: juniorId || null,
@@ -277,6 +333,8 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
       setSubmitting(false);
     }
   };
+
+  const canSubmit = !submitting && !!clientName && !!mobileNo && !!locality && selectedServices.length > 0 && !!pmId && !!archId;
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -321,33 +379,96 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
                 <input value={email} onChange={e => setEmail(e.target.value)} placeholder="client@example.com" type="email" className={inputBase} />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
-                  Locality <span className="text-rose-500">*</span>
-                </label>
-                <input value={locality} onChange={e => setLocality(e.target.value)} placeholder="Area / locality" className={inputBase} />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">District</label>
-                <input value={district} onChange={e => setDistrict(e.target.value)} placeholder="District" className={inputBase} />
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Pincode</label>
+                  {fetchingPincode && <span className="text-[10px] text-[#b89047] font-semibold animate-pulse">Fetching...</span>}
+                </div>
+                <input value={pincode} onChange={handlePincodeChange} placeholder="e.g. 560001" maxLength={6} className={inputBase} />
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">State</label>
-                <input value={state} onChange={e => setState(e.target.value)} placeholder="State" className={inputBase} />
+                <input value={state} readOnly placeholder="Auto-filled from pincode" className="w-full bg-stone-100/50 border border-[rgba(184,144,71,0.22)] text-stone-600 text-[13px] rounded-lg px-3.5 py-1.5 outline-none cursor-not-allowed" />
               </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">District</label>
+                <input value={district} readOnly placeholder="Auto-filled from pincode" className="w-full bg-stone-100/50 border border-[rgba(184,144,71,0.22)] text-stone-600 text-[13px] rounded-lg px-3.5 py-1.5 outline-none cursor-not-allowed" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
+                  Locality <span className="text-rose-500">*</span>
+                </label>
+                {localitiesList.length > 0 ? (
+                  <SearchableSelect
+                    options={[
+                      { value: '', label: '— Select Area —' },
+                      ...localitiesList.map(l => ({ value: l, label: l })),
+                      { value: 'OTHER', label: 'Other (Type Manually)' },
+                    ]}
+                    value={localitySelectOther ? 'OTHER' : locality}
+                    onChange={handleLocalitySelectChange}
+                  />
+                ) : (
+                  <input value={locality} onChange={e => setLocality(e.target.value)} placeholder="Area / locality" className={inputBase} />
+                )}
+              </div>
+              {localitySelectOther && (
+                <div className="sm:col-span-2">
+                  <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
+                    Type Locality Manually <span className="text-rose-500">*</span>
+                  </label>
+                  <input value={manualLocality} onChange={e => { setManualLocality(e.target.value); setLocality(e.target.value); }} placeholder="Type locality..." className={inputBase} />
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Project type */}
+          {/* Service selection */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-3">Project Details</p>
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
-                Service Type <span className="text-rose-500">*</span>
-              </label>
-              <select value={serviceType} onChange={e => setServiceType(e.target.value)} className={inputBase}>
-                <option value="">— Select service type —</option>
-                {SERVICE_TYPES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-3">
+              Service Type <span className="text-rose-500">*</span>
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {SERVICE_TYPES.filter(s => s.value !== 'END_TO_END_SOLUTION').map(s => {
+                const isSelected = selectedServices.includes(s.value);
+                const isDisabled = selectedServices.includes('END_TO_END_SOLUTION');
+                return (
+                  <button key={s.value} type="button"
+                    onClick={() => !isDisabled && handleServiceToggle(s.value)}
+                    disabled={isDisabled}
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-left transition-all ${
+                      isDisabled
+                        ? 'border-stone-100 bg-stone-50 opacity-40 cursor-not-allowed'
+                        : isSelected
+                          ? 'border-[#b89047] bg-[rgba(184,144,71,0.08)] ring-1 ring-[#b89047] cursor-pointer'
+                          : 'border-[var(--border)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] cursor-pointer'
+                    }`}>
+                    <input type="checkbox" checked={isSelected} readOnly disabled={isDisabled} className="accent-[#b89047] w-3.5 h-3.5 cursor-pointer" />
+                    <span className={`text-[12px] font-semibold ${isSelected && !isDisabled ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>{s.label}</span>
+                  </button>
+                );
+              })}
+              <div className="col-span-1 sm:col-span-2 flex items-center gap-3 my-0.5">
+                <div className="flex-1 h-px bg-[var(--border)]" />
+                <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">or choose a complete solution</span>
+                <div className="flex-1 h-px bg-[var(--border)]" />
+              </div>
+              {(() => {
+                const isSelected = selectedServices.includes('END_TO_END_SOLUTION');
+                return (
+                  <button type="button" onClick={() => handleServiceToggle('END_TO_END_SOLUTION')}
+                    className={`col-span-1 sm:col-span-2 flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-left cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-[#b89047] bg-[rgba(184,144,71,0.08)] ring-1 ring-[#b89047]'
+                        : 'border-dashed border-[rgba(184,144,71,0.4)] bg-[rgba(184,144,71,0.02)] hover:bg-[rgba(184,144,71,0.06)]'
+                    }`}>
+                    <input type="checkbox" checked={isSelected} readOnly className="accent-[#b89047] w-3.5 h-3.5 shrink-0 cursor-pointer" />
+                    <div>
+                      <span className={`text-[12px] font-semibold block ${isSelected ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>End-to-End Solution</span>
+                      <span className="text-[10px] text-[var(--text-muted)] leading-tight">Complete project support — selecting this disables individual services.</span>
+                    </div>
+                  </button>
+                );
+              })()}
             </div>
           </div>
 
@@ -389,7 +510,7 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
         {/* Footer */}
         <div className="flex justify-end gap-2.5 px-5 py-3 border-t border-[var(--border)] shrink-0">
           <button onClick={onClose} className={btnSecondary} disabled={submitting}>Cancel</button>
-          <button onClick={handleSubmit} className={btnPrimary} disabled={submitting || !clientName || !mobileNo || !locality || !serviceType || !pmId || !archId}>
+          <button onClick={handleSubmit} className={btnPrimary} disabled={!canSubmit}>
             {submitting ? <Loader2 size={13} className="animate-spin" /> : <PlusCircle size={13} />}
             Onboard Project
           </button>
