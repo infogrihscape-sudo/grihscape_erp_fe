@@ -124,7 +124,7 @@ export const OutflowList: React.FC<Props> = ({ currentUser }) => {
           <table className="w-full text-[11px]">
             <thead>
               <tr className="border-b border-[var(--border)] text-[var(--text-muted)] text-left">
-                {['Date', 'Name', 'Category', 'Type', 'Amount', 'Mode', 'PM', 'Status', ''].map(h => (
+                {['Date', 'Paid To', 'Category', 'Type', 'Amount', 'Mode', 'PM', 'Status', ''].map(h => (
                   <th key={h} className="px-4 py-3 font-semibold">{h}</th>
                 ))}
               </tr>

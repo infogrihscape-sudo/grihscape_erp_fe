@@ -8,7 +8,7 @@ import { ShimmerTable } from '../components/Shimmer.js';
 import {
   HardHat, Search, RefreshCw, UserCheck, X, ChevronLeft, ChevronRight,
   Users, Loader2, AlertCircle, CheckCircle2, Clock, Building2,
-  MapPin, ClipboardCheck, Palette, ArrowRight, Phone,
+  MapPin, ClipboardCheck, Palette, ArrowRight, Phone, PlusCircle, Layers,
 } from 'lucide-react';
 
 interface Props { currentUser: User; }
@@ -68,7 +68,9 @@ const PIPELINE_STAGES = [
   { key: 'ASSIGNED',           label: 'Team Assigned',      short: 'Assigned',   icon: <Users size={14} />,        color: 'text-blue-600',     bg: 'bg-blue-50 dark:bg-blue-950/30',     border: 'border-blue-300 dark:border-blue-700',     ring: 'ring-blue-300' },
   { key: 'SITE_VERIFICATION',  label: 'Site Verification',  short: 'Site',       icon: <MapPin size={14} />,       color: 'text-purple-600',   bg: 'bg-purple-50 dark:bg-purple-950/30', border: 'border-purple-300 dark:border-purple-700', ring: 'ring-purple-300' },
   { key: 'CDRF_PENDING',       label: 'CDRF Pending',       short: 'CDRF',       icon: <ClipboardCheck size={14} />, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-300 dark:border-orange-700', ring: 'ring-orange-300' },
-  { key: 'DESIGN_REVIEW',      label: 'Design Review',      short: 'Design',     icon: <Palette size={14} />,      color: 'text-indigo-600',   bg: 'bg-indigo-50 dark:bg-indigo-950/30', border: 'border-indigo-300 dark:border-indigo-700', ring: 'ring-indigo-300' },
+  { key: 'DESIGN_REVIEW',      label: 'Design Review',      short: 'Layout',     icon: <Palette size={14} />,      color: 'text-indigo-600',   bg: 'bg-indigo-50 dark:bg-indigo-950/30', border: 'border-indigo-300 dark:border-indigo-700', ring: 'ring-indigo-300' },
+  { key: 'LAYOUT_APPROVED',    label: 'Layout Approved',    short: 'Approved',   icon: <CheckCircle2 size={14} />, color: 'text-cyan-600',     bg: 'bg-cyan-50 dark:bg-cyan-950/30',     border: 'border-cyan-300 dark:border-cyan-700',     ring: 'ring-cyan-300' },
+  { key: 'DESIGN_IN_PROGRESS', label: 'Design In Progress', short: 'Drawing',    icon: <Layers size={14} />,       color: 'text-violet-600',   bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-300 dark:border-violet-700', ring: 'ring-violet-300' },
   { key: 'COMPLETED',          label: 'Completed',           short: 'Done',       icon: <CheckCircle2 size={14} />, color: 'text-emerald-600',  bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-300 dark:border-emerald-700', ring: 'ring-emerald-300' },
 ];
 
@@ -202,6 +204,202 @@ function AssignModal({ project, assignableUsers, onClose, onAssigned }: AssignMo
   );
 }
 
+// ─── Onboard Existing Project Modal ──────────────────────────────────────────
+const SERVICE_TYPES = [
+  { value: 'ARCHITECTURAL_CONSULTATION', label: 'Architectural Consultation' },
+  { value: 'INTERIOR_DESIGN',            label: 'Interior Design' },
+  { value: 'PMC',                        label: 'PMC' },
+  { value: 'TURNKEY_CONSTRUCTION',       label: 'Turnkey Construction' },
+  { value: 'INTERIOR_EXECUTION',         label: 'Interior Execution' },
+  { value: 'RENOVATION',                 label: 'Renovation' },
+  { value: 'END_TO_END_SOLUTION',        label: 'End-to-End Solution' },
+];
+
+interface OnboardModalProps {
+  assignableUsers: AssignableUser[];
+  onClose: () => void;
+  onCreated: () => void;
+}
+
+function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardModalProps) {
+  const { showToast } = useToast();
+  const { navigate } = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+
+  const [clientName, setClientName]   = useState('');
+  const [mobileNo, setMobileNo]       = useState('');
+  const [email, setEmail]             = useState('');
+  const [locality, setLocality]       = useState('');
+  const [pincode, setPincode]         = useState('');
+  const [district, setDistrict]       = useState('');
+  const [state, setState]             = useState('');
+  const [serviceType, setServiceType] = useState('');
+  const [pmId, setPmId]               = useState('');
+  const [archId, setArchId]           = useState('');
+  const [juniorId, setJuniorId]       = useState('');
+  const [notes, setNotes]             = useState('');
+
+  const byRole = (roleName: string) => assignableUsers.filter(u => u.role.name === roleName);
+  const pms        = byRole('Project Manager');
+  const architects = byRole('Project Architect');
+  const juniors    = byRole('Junior Architect');
+
+  const handleSubmit = async () => {
+    if (!clientName.trim()) { showToast('Client name is required.', 'error'); return; }
+    if (!/^\d{10}$/.test(mobileNo.trim())) { showToast('Valid 10-digit mobile number is required.', 'error'); return; }
+    if (!locality.trim()) { showToast('Locality is required.', 'error'); return; }
+    if (!serviceType) { showToast('Please select a service type.', 'error'); return; }
+    if (!pmId || !archId) { showToast('Project Manager and Project Architect are required.', 'error'); return; }
+
+    setSubmitting(true);
+    try {
+      const res = await projectApi.onboardExisting({
+        clientName: clientName.trim(),
+        mobileNo: mobileNo.trim(),
+        email: email.trim() || undefined,
+        locality: locality.trim(),
+        pincode: pincode.trim() || undefined,
+        district: district.trim() || undefined,
+        state: state.trim() || undefined,
+        serviceType,
+        projectManagerId: pmId,
+        projectArchitectId: archId,
+        juniorArchitectId: juniorId || null,
+        notes: notes.trim() || undefined,
+      });
+      showToast('Existing project onboarded successfully.', 'success');
+      onCreated();
+      onClose();
+      navigate(`/projects/${res.data.projectId}`);
+    } catch (err: any) {
+      showToast(err.response?.data?.message ?? 'Failed to onboard project.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className={`${card} w-full max-w-2xl max-h-[90vh] flex flex-col`}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-[rgba(184,144,71,0.12)] text-[#b89047]">
+              <PlusCircle size={16} />
+            </div>
+            <div>
+              <p className="text-[13.5px] font-bold text-[var(--text-primary)]">Onboard Existing Project</p>
+              <p className="text-[11px] text-[var(--text-muted)]">Skips prospect flow — lands directly on Design Pipeline</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer border-0 bg-transparent p-1">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="overflow-y-auto px-5 py-4 space-y-5">
+
+          {/* Client info */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-3">Client Information</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
+                  Client Name <span className="text-rose-500">*</span>
+                </label>
+                <input value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Full name" className={inputBase} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
+                  Mobile Number <span className="text-rose-500">*</span>
+                </label>
+                <input value={mobileNo} onChange={e => setMobileNo(e.target.value)} placeholder="10-digit number" maxLength={10} className={inputBase} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">Email</label>
+                <input value={email} onChange={e => setEmail(e.target.value)} placeholder="client@example.com" type="email" className={inputBase} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
+                  Locality <span className="text-rose-500">*</span>
+                </label>
+                <input value={locality} onChange={e => setLocality(e.target.value)} placeholder="Area / locality" className={inputBase} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">District</label>
+                <input value={district} onChange={e => setDistrict(e.target.value)} placeholder="District" className={inputBase} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">State</label>
+                <input value={state} onChange={e => setState(e.target.value)} placeholder="State" className={inputBase} />
+              </div>
+            </div>
+          </div>
+
+          {/* Project type */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-3">Project Details</p>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
+                Service Type <span className="text-rose-500">*</span>
+              </label>
+              <select value={serviceType} onChange={e => setServiceType(e.target.value)} className={inputBase}>
+                <option value="">— Select service type —</option>
+                {SERVICE_TYPES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Team */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-3">Team Assignment</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { label: 'Project Manager', required: true, value: pmId, setter: setPmId, options: pms },
+                { label: 'Project Architect', required: true, value: archId, setter: setArchId, options: architects },
+                { label: 'Junior Architect', required: false, value: juniorId, setter: setJuniorId, options: juniors },
+              ].map(f => (
+                <div key={f.label}>
+                  <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
+                    {f.label} {f.required ? <span className="text-rose-500">*</span> : <span className="text-stone-400">(optional)</span>}
+                  </label>
+                  <select value={f.value} onChange={e => f.setter(e.target.value)} className={inputBase}>
+                    <option value="">{f.required ? `— Select —` : '— None —'}</option>
+                    {f.options.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                    {f.options.length === 0 && <option disabled>None available</option>}
+                  </select>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3">
+              <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">Notes <span className="text-stone-400">(optional)</span></label>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Any context about this existing project…" className={`${inputBase} resize-none`} />
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-800">
+            <Layers size={13} className="text-cyan-600 mt-0.5 shrink-0" />
+            <p className="text-[11px] text-cyan-700 dark:text-cyan-300">
+              Project will be created at <strong>Layout Approved</strong> stage. Design Pipeline will be ready immediately — you can add drawings right away.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2.5 px-5 py-3 border-t border-[var(--border)] shrink-0">
+          <button onClick={onClose} className={btnSecondary} disabled={submitting}>Cancel</button>
+          <button onClick={handleSubmit} className={btnPrimary} disabled={submitting || !clientName || !mobileNo || !locality || !serviceType || !pmId || !archId}>
+            {submitting ? <Loader2 size={13} className="animate-spin" /> : <PlusCircle size={13} />}
+            Onboard Project
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // ─── Pipeline bar ─────────────────────────────────────────────────────────────
 function PipelineBar({ statusCounts, filterStatus, onFilter }: {
   statusCounts: Record<string, number>;
@@ -237,6 +435,8 @@ function PipelineBar({ statusCounts, filterStatus, onFilter }: {
               SITE_VERIFICATION:  'bg-purple-400',
               CDRF_PENDING:       'bg-orange-400',
               DESIGN_REVIEW:      'bg-indigo-400',
+              LAYOUT_APPROVED:    'bg-cyan-400',
+              DESIGN_IN_PROGRESS: 'bg-violet-400',
               COMPLETED:          'bg-emerald-400',
             };
             return <div key={s.key} className={`${colorMap[s.key]} transition-all`} style={{ width: `${pct}%` }} />;
@@ -245,7 +445,7 @@ function PipelineBar({ statusCounts, filterStatus, onFilter }: {
       )}
 
       {/* Stage cards */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+      <div className="grid grid-cols-4 lg:grid-cols-8 gap-2">
         {PIPELINE_STAGES.map((s, idx) => {
           const count = statusCounts[s.key] ?? 0;
           const isActive = filterStatus === s.key;
@@ -388,6 +588,7 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
 
   const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([]);
   const [assignTarget, setAssignTarget] = useState<Project | null>(null);
+  const [showOnboard, setShowOnboard] = useState(false);
 
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
@@ -425,7 +626,7 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
 
   const totalAll      = Object.values(statusCounts).reduce((a, b) => a + b, 0);
   const pendingCount  = statusCounts['PENDING_ASSIGNMENT'] ?? 0;
-  const activeCount   = (statusCounts['ASSIGNED'] ?? 0) + (statusCounts['SITE_VERIFICATION'] ?? 0) + (statusCounts['CDRF_PENDING'] ?? 0) + (statusCounts['DESIGN_REVIEW'] ?? 0);
+  const activeCount   = (statusCounts['ASSIGNED'] ?? 0) + (statusCounts['SITE_VERIFICATION'] ?? 0) + (statusCounts['CDRF_PENDING'] ?? 0) + (statusCounts['DESIGN_REVIEW'] ?? 0) + (statusCounts['LAYOUT_APPROVED'] ?? 0) + (statusCounts['DESIGN_IN_PROGRESS'] ?? 0);
   const completedCount = statusCounts['COMPLETED'] ?? 0;
 
   const handlePipelineFilter = (s: string) => {
@@ -447,6 +648,12 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
           </div>
           <p className="text-[11px] text-[var(--text-muted)] mt-0.5 ml-9">Post-sales project lifecycle — assignment, site verification, design & delivery</p>
         </div>
+        {isSuperAdmin && (
+          <button onClick={() => setShowOnboard(true)} className={btnPrimary}>
+            <PlusCircle size={13} />
+            Add Existing Project
+          </button>
+        )}
       </div>
 
       {/* ── Stat cards ── */}
@@ -629,6 +836,15 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
           assignableUsers={assignableUsers}
           onClose={() => setAssignTarget(null)}
           onAssigned={fetchProjects}
+        />
+      )}
+
+      {/* Onboard Existing Project Modal */}
+      {showOnboard && (
+        <OnboardExistingModal
+          assignableUsers={assignableUsers}
+          onClose={() => setShowOnboard(false)}
+          onCreated={fetchProjects}
         />
       )}
     </div>

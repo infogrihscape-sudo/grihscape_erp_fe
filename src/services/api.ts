@@ -296,6 +296,20 @@ export const projectApi = {
     juniorArchitectId?: string | null;
     notes?: string;
   }) => api.post(`/projects/${id}/assign`, data),
+  onboardExisting: (data: {
+    clientName: string;
+    mobileNo: string;
+    email?: string;
+    locality: string;
+    pincode?: string;
+    district?: string;
+    state?: string;
+    serviceType: string;
+    projectManagerId: string;
+    projectArchitectId: string;
+    juniorArchitectId?: string | null;
+    notes?: string;
+  }) => api.post('/projects/onboard-existing', data),
 
   // Site verification
   assignSiteEngineer: (projectId: string, siteEngineerId: string) =>

@@ -58,6 +58,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
   const [categories, setCategories] = useState<ExpenseCategoryMaster[]>([]);
   const [pms, setPms] = useState<{ id: string; name: string; email: string }[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+  const [manualSite, setManualSite] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -139,6 +140,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
         expenseName: existing.expenseName ?? '',
         department: existing.department ?? '',
       });
+      if (existing.siteName && !existing.siteId) setManualSite(true);
     }
   }, [existing]);
 
@@ -169,8 +171,8 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
     e.preventDefault();
     if (!form.supportingDocUrl) { showToast('Supporting document is required.', 'error'); return; }
     if (!form.categoryId) { showToast('Please select a category.', 'error'); return; }
-    if (!form.siteId) { showToast('Please select a site.', 'error'); return; }
     if (!form.purposeId) { showToast('Please select a purpose.', 'error'); return; }
+    if (!form.siteId && !form.siteName.trim()) { showToast('Please select a site or enter a site name manually.', 'error'); return; }
     if (!form.modeOfPayment) { showToast('Please select payment mode.', 'error'); return; }
     if (!form.expenseType) { showToast('Please select expense type.', 'error'); return; }
     if (needsPM && !form.projectManagerId) { showToast('Project Manager is required for expenses ≤ ₹10,000.', 'error'); return; }
@@ -235,8 +237,8 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
             <Field label="Date *">
               <input type="date" value={form.date} onChange={e => set('date', e.target.value)} required className={INPUT} />
             </Field>
-            <Field label="Expense Name *">
-              <input value={form.name} onChange={e => set('name', e.target.value)} required placeholder="Brief expense name" className={INPUT} />
+            <Field label="Paid To *">
+              <input value={form.name} onChange={e => set('name', e.target.value)} required placeholder="Name of person/vendor paid" className={INPUT} />
             </Field>
           </div>
 
@@ -370,39 +372,52 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
               )}
             </Field>
             <Field label="Site Name *">
-              <select
-                value={form.siteId}
-                required
-                onChange={e => {
-                  const sId = e.target.value;
-                  const proj = projects.find(p => p.id === sId);
-                  if (proj) {
-                    setForm(prev => ({
-                      ...prev,
-                      siteId: sId,
-                      siteName: `${proj.prospect.client.clientName} (${proj.prospect.serviceType})`,
-                    }));
-                  } else {
-                    setForm(prev => ({
-                      ...prev,
-                      siteId: '',
-                      siteName: '',
-                    }));
-                  }
-                }}
-                className={INPUT}
-              >
-                <option value="">Select site</option>
-                {projects.map(p => {
-                  const label = `${p.prospect.client.clientName} - ${SERVICE_LABELS[p.prospect.serviceType] ?? p.prospect.serviceType}`;
-                  return (
-                    <option key={p.id} value={p.id}>{label}</option>
-                  );
-                })}
-                {form.siteName && !form.siteId && (
-                  <option value="" disabled>{form.siteName} (Custom)</option>
-                )}
-              </select>
+              {manualSite ? (
+                <div className="flex gap-2">
+                  <input
+                    autoFocus
+                    value={form.siteName}
+                    onChange={e => set('siteName', e.target.value)}
+                    placeholder="Enter site name manually…"
+                    className={INPUT}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setManualSite(false); setForm(prev => ({ ...prev, siteId: '', siteName: '' })); }}
+                    className="px-2 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 shrink-0 text-[11px]"
+                  >✕</button>
+                </div>
+              ) : (
+                <select
+                  value={form.siteId}
+                  onChange={e => {
+                    const sId = e.target.value;
+                    if (sId === '__manual__') {
+                      setManualSite(true);
+                      setForm(prev => ({ ...prev, siteId: '', siteName: '' }));
+                      return;
+                    }
+                    const proj = projects.find(p => p.id === sId);
+                    if (proj) {
+                      setForm(prev => ({
+                        ...prev,
+                        siteId: sId,
+                        siteName: `${proj.prospect.client.clientName} (${proj.prospect.serviceType})`,
+                      }));
+                    } else {
+                      setForm(prev => ({ ...prev, siteId: '', siteName: '' }));
+                    }
+                  }}
+                  className={INPUT}
+                >
+                  <option value="">Select site</option>
+                  {projects.map(p => {
+                    const label = `${p.prospect.client.clientName} - ${SERVICE_LABELS[p.prospect.serviceType] ?? p.prospect.serviceType}`;
+                    return <option key={p.id} value={p.id}>{label}</option>;
+                  })}
+                  <option value="__manual__">＋ Enter manually…</option>
+                </select>
+              )}
             </Field>
           </div>
 
