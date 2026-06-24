@@ -217,8 +217,11 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
     const isNameValid = fullName.trim().length >= 2;
     const isPhoneValid = normalizeAndValidatePhone(phoneNumber).isValid;
     const isServicesValid = selectedServices.length > 0;
-    return isNameValid && isPhoneValid && isServicesValid;
-  }, [fullName, phoneNumber, selectedServices]);
+    const isCampaignValid = campaignName.trim().length > 0;
+    const isAdsetValid = adsetName.trim().length > 0;
+    const isAdNameValid = adName.trim().length > 0;
+    return isNameValid && isPhoneValid && isServicesValid && isCampaignValid && isAdsetValid && isAdNameValid;
+  }, [fullName, phoneNumber, selectedServices, campaignName, adsetName, adName]);
 
   const phoneHint = useMemo(() => {
     if (!phoneNumber) return '';
@@ -381,6 +384,10 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
     if (selectedServices.length === 0) {
       errors.services = 'Select at least one service';
     }
+
+    if (!campaignName.trim()) errors.campaignName = 'Campaign Name is required';
+    if (!adsetName.trim()) errors.adsetName = 'Adset Name is required';
+    if (!adName.trim()) errors.adName = 'Ad Name is required';
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -825,13 +832,13 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
           {currentUser.role === 'Sales & Marketing' && (
             <button
               onClick={handleOpenDrawer}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#c5a880] to-[#af926a] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#8f6d2e] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0"
             >
               <Plus className="w-4 h-4" /> Add Lead
             </button>
           )}
 
-          <button
+          {/* <button
             onClick={() => {
               setActiveTab('bulk');
               handleClearIngestion();
@@ -839,7 +846,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-[var(--text-secondary)] bg-[var(--hover-bg)] border border-[rgba(184,144,71,0.25)] hover:opacity-80 hover:text-[var(--text-primary)] transition-colors duration-150 cursor-pointer"
           >
             <Upload className="w-4 h-4" /> Upload Excel
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -1590,43 +1597,58 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             <hr className="border-[var(--border)] my-2" />
 
             <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
-              Campaign & Ads Context (Optional)
+              Campaign & Ads Context
             </div>
 
             {/* Campaign Name */}
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-[var(--text-muted)]">Campaign Name</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                Campaign Name <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="text"
                 value={campaignName}
-                onChange={(e) => setCampaignName(e.target.value)}
+                onChange={(e) => { setCampaignName(e.target.value); if (formErrors.campaignName) setFormErrors(prev => ({ ...prev, campaignName: '' })); }}
                 placeholder="e.g. Interior Renovations 2026"
-                className="w-full bg-[var(--input-bg)] border border-[rgba(197,168,128,0.35)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2"
+                className={`w-full bg-[var(--input-bg)] border text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:ring-2 focus:ring-amber-100/50 ${formErrors.campaignName ? 'border-rose-300 focus:border-rose-500' : 'border-[rgba(197,168,128,0.35)] focus:border-[#c5a880]'}`}
               />
+              {formErrors.campaignName && (
+                <p className="text-[11px] text-rose-600 flex items-center gap-1 font-medium mt-0.5"><AlertCircle size={10} /> {formErrors.campaignName}</p>
+              )}
             </div>
 
             {/* Adset Name */}
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-[var(--text-muted)]">Adset Name</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                Adset Name <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="text"
                 value={adsetName}
-                onChange={(e) => setAdsetName(e.target.value)}
+                onChange={(e) => { setAdsetName(e.target.value); if (formErrors.adsetName) setFormErrors(prev => ({ ...prev, adsetName: '' })); }}
                 placeholder="e.g. Summer Audience"
-                className="w-full bg-[var(--input-bg)] border border-[rgba(197,168,128,0.35)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2"
+                className={`w-full bg-[var(--input-bg)] border text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:ring-2 focus:ring-amber-100/50 ${formErrors.adsetName ? 'border-rose-300 focus:border-rose-500' : 'border-[rgba(197,168,128,0.35)] focus:border-[#c5a880]'}`}
               />
+              {formErrors.adsetName && (
+                <p className="text-[11px] text-rose-600 flex items-center gap-1 font-medium mt-0.5"><AlertCircle size={10} /> {formErrors.adsetName}</p>
+              )}
             </div>
 
             {/* Ad Name */}
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-[var(--text-muted)]">Ad Name</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                Ad Name <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="text"
                 value={adName}
-                onChange={(e) => setAdName(e.target.value)}
+                onChange={(e) => { setAdName(e.target.value); if (formErrors.adName) setFormErrors(prev => ({ ...prev, adName: '' })); }}
                 placeholder="e.g. Static Image - Living Room"
-                className="w-full bg-[var(--input-bg)] border border-[rgba(197,168,128,0.35)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:border-[#c5a880] focus:ring-2"
+                className={`w-full bg-[var(--input-bg)] border text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-2 outline-none transition focus:ring-2 focus:ring-amber-100/50 ${formErrors.adName ? 'border-rose-300 focus:border-rose-500' : 'border-[rgba(197,168,128,0.35)] focus:border-[#c5a880]'}`}
               />
+              {formErrors.adName && (
+                <p className="text-[11px] text-rose-600 flex items-center gap-1 font-medium mt-0.5"><AlertCircle size={10} /> {formErrors.adName}</p>
+              )}
             </div>
           </form>
 
@@ -1640,9 +1662,14 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleManualSubmit}
               disabled={!isFormValid || submitting}
-              className="flex-1 py-2.5 rounded-lg text-xs font-bold text-white bg-gradient-to-br from-[#c5a880] to-[#af926a] hover:opacity-95 transition-all cursor-pointer border-0 shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:pointer-events-none"
+              className={`flex-1 py-2.5 rounded-lg text-xs font-bold text-white transition-all border-0 shadow-sm flex items-center justify-center gap-1.5 ${
+                !isFormValid || submitting
+                  ? 'bg-stone-400 cursor-not-allowed pointer-events-none opacity-70'
+                  : 'bg-gradient-to-br from-[#b89047] to-[#8f6d2e] hover:brightness-110 cursor-pointer'
+              }`}
             >
               {submitting ? (
                 <RefreshCw size={12} className="animate-spin" />

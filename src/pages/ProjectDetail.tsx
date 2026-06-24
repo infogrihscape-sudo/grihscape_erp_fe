@@ -1113,7 +1113,7 @@ function DesignTab({ project, currentUser, onRefresh }: { project: any; currentU
   const canUpload            = !isCompleted && (isAdmin || isArch);
   const canReview            = !isCompleted && isAdmin;
   const canSend              = !isCompleted && (isAdmin || isPM);
-  const canRecordClientResp  = !isCompleted && isAdmin;
+  const canRecordClientResp  = !isCompleted && (isAdmin || isPM);
 
   const clientEmail = project.prospect?.client?.email;
   const clientName  = project.prospect?.client?.clientName;

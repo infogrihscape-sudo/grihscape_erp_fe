@@ -14,7 +14,7 @@ export const ROLE_ROUTES: Record<string, string[]> = {
   'Project Architect': ['/overview', '/projects'],
   'Junior Architect':  ['/overview', '/projects'],
   'Site Engineer':     ['/overview', '/projects'],
-  'Accounts':          ['/overview', '__accounts_payments__', '/accounts/inflow', '/accounts/outflow'],
+  'Accounts':          ['/overview', '/prospects', '__accounts_payments__', '/accounts/inflow', '/accounts/outflow'],
 };
 
 /** Roles restricted to read-only access — no create/edit/delete/workflow actions. */
