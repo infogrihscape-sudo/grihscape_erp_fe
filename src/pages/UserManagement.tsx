@@ -198,8 +198,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
     if (!e) errors.email = 'Email address is required.';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) errors.email = 'Please enter a valid email address.';
     if (!p) errors.phone = 'Phone number is required.';
-    else if (!/^\d+$/.test(p)) errors.phone = 'Phone number must contain only digits.';
-    else if (p.length !== 10) errors.phone = 'Phone number must be exactly 10 digits.';
+    else if (!/^[6-9]\d{9}$/.test(p)) errors.phone = 'Enter a valid 10-digit mobile number starting with 6, 7, 8 or 9.';
     if (!newUserRoleId) errors.roleId = 'Please select an access role.';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -305,8 +304,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
     if (!e) errors.email = 'Email address is required.';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) errors.email = 'Please enter a valid email address.';
     if (!p) errors.phone = 'Phone number is required.';
-    else if (!/^\d+$/.test(p)) errors.phone = 'Phone number must contain only digits.';
-    else if (p.length !== 10) errors.phone = 'Phone number must be exactly 10 digits.';
+    else if (!/^[6-9]\d{9}$/.test(p)) errors.phone = 'Enter a valid 10-digit mobile number starting with 6, 7, 8 or 9.';
     if (!editUserRoleId) errors.roleId = 'Please select an access role.';
     setEditFormErrors(errors);
     return Object.keys(errors).length === 0;

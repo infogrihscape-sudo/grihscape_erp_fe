@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Search, Filter, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
-import { outflowApi, accountsMasterApi, type OutflowExpense, type ExpenseCategoryMaster } from '../../services/accounts.api.js';
+import { outflowApi, accountsMasterApi, type OutflowExpense, type ExpenseCategoryMaster, type SiteNameMaster } from '../../services/accounts.api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useRouter } from '../../context/RouterContext.js';
+import { useToast } from '../../context/ToastContext.js';
 import { canWrite } from '../../config/permissions.js';
 import { OutflowForm } from './OutflowForm.js';
 
@@ -27,6 +28,7 @@ const SERVICE_LABELS: Record<string, string> = {
 
 export const OutflowList: React.FC<Props> = ({ currentUser }) => {
   const { navigate } = useRouter();
+  const { showToast } = useToast();
   const [expenses, setExpenses] = useState<OutflowExpense[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -36,7 +38,8 @@ export const OutflowList: React.FC<Props> = ({ currentUser }) => {
   const [status, setStatus] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [categories, setCategories] = useState<ExpenseCategoryMaster[]>([]);
-  const [siteId, setSiteId] = useState('');
+  const [siteFilter, setSiteFilter] = useState('');
+  const [siteNames, setSiteNames] = useState<SiteNameMaster[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [projects, setProjects] = useState<any[]>([]);
@@ -45,18 +48,27 @@ export const OutflowList: React.FC<Props> = ({ currentUser }) => {
   useEffect(() => {
     accountsMasterApi.listCategories().then(r => setCategories(r.data.data)).catch(() => {});
     accountsMasterApi.listActiveProjects().then(r => setProjects(r.data.data)).catch(() => {});
+    accountsMasterApi.listSiteNames().then(r => setSiteNames(r.data.data)).catch(() => {});
   }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await outflowApi.list({ search, status, categoryId, siteId, startDate, endDate, page, pageSize: 20 });
+      const isCustomSite = siteFilter.startsWith('__site__');
+      const res = await outflowApi.list({
+        search, status, categoryId,
+        siteId: !isCustomSite && siteFilter ? siteFilter : undefined,
+        siteName: isCustomSite ? siteFilter.slice(8) : undefined,
+        startDate, endDate, page, pageSize: 20,
+      });
       setExpenses(res.data.data);
       setTotal(res.data.total);
       setTotalPages(res.data.totalPages);
-    } catch { }
+    } catch (err: any) {
+      showToast(err?.response?.data?.message ?? 'Failed to load expenses.', 'error');
+    }
     finally { setLoading(false); }
-  }, [search, status, categoryId, siteId, startDate, endDate, page]);
+  }, [search, status, categoryId, siteFilter, startDate, endDate, page]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -89,12 +101,16 @@ export const OutflowList: React.FC<Props> = ({ currentUser }) => {
             <option value="">All Categories</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
-          <select value={siteId} onChange={e => { setSiteId(e.target.value); setPage(1); }} className="text-[11px] py-2 px-3 rounded-lg bg-[var(--card-bg)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none cursor-pointer">
+          <select value={siteFilter} onChange={e => { setSiteFilter(e.target.value); setPage(1); }} className="text-[11px] py-2 px-3 rounded-lg bg-[var(--card-bg)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none cursor-pointer">
             <option value="">All Sites</option>
             {projects.map(p => {
-              const label = `${p.prospect.client.clientName} - ${SERVICE_LABELS[p.prospect.serviceType] ?? p.prospect.serviceType}`;
+              const label = `${p.prospect.client.clientName} - ${p.prospect.serviceType.split(',').map((s: string) => SERVICE_LABELS[s.trim()] ?? s.trim()).join(', ')}`;
               return <option key={p.id} value={p.id}>{label}</option>;
             })}
+            {siteNames.length > 0 && <option disabled>──────────</option>}
+            {siteNames.map(s => (
+              <option key={s.id} value={`__site__${s.name}`}>{s.name}</option>
+            ))}
           </select>
           <div className="flex items-center gap-1 text-[11px] text-[var(--text-muted)] bg-[var(--card-bg)] border border-[var(--border)] rounded-lg px-2 py-1 flex-wrap">
             <span className="px-1 text-[10px] uppercase font-bold text-stone-500">Date:</span>

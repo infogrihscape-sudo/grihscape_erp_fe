@@ -632,7 +632,7 @@ function ProjectRow({ project, isAdmin, onAssign, onClick }: {
             {c.clientName}
           </p>
           <p className="text-[10px] text-[var(--text-muted)] truncate mt-0.5">
-            {SERVICE_LABELS[project.prospect.serviceType] ?? project.prospect.serviceType}
+            {project.prospect.serviceType.split(',').map((s: string) => SERVICE_LABELS[s.trim()] ?? s.trim()).join(', ')}
             {project.prospect.initialPaymentAmount ? (
               <span className="ml-1.5 text-emerald-600 font-semibold">
                 ₹{project.prospect.initialPaymentAmount} {project.prospect.initialPaymentUnit}

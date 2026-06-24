@@ -3,6 +3,7 @@ import { Plus, Search, Filter, ChevronLeft, ChevronRight, Eye } from 'lucide-rea
 import { inflowApi, type InflowChallan } from '../../services/accounts.api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useRouter } from '../../context/RouterContext.js';
+import { useToast } from '../../context/ToastContext.js';
 import { canWrite } from '../../config/permissions.js';
 import { InflowForm } from './InflowForm.js';
 
@@ -19,6 +20,7 @@ const MODE_LABELS: Record<string, string> = { CASH: 'Cash', ONLINE: 'Online', OT
 
 export const InflowList: React.FC<Props> = ({ currentUser }) => {
   const { navigate } = useRouter();
+  const { showToast } = useToast();
   const [challans, setChallans] = useState<InflowChallan[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -35,7 +37,7 @@ export const InflowList: React.FC<Props> = ({ currentUser }) => {
       setChallans(res.data.data);
       setTotal(res.data.total);
       setTotalPages(res.data.totalPages);
-    } catch { /* toast handled globally */ }
+    } catch (err: any) { showToast(err?.response?.data?.message ?? 'Failed to load challans.', 'error'); }
     finally { setLoading(false); }
   }, [search, status, page]);
 

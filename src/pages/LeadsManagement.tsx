@@ -136,7 +136,7 @@ const normalizeAndValidatePhone = (phone: string): { isValid: boolean; normalize
     clean = clean.slice(1);
   }
   
-  const isValid = clean.length === 10;
+  const isValid = clean.length === 10 && /^[6-9]/.test(clean);
   return { isValid, normalized: isValid ? `+91${clean}` : phone };
 };
 
@@ -1023,10 +1023,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                     {paginatedLeads.map((lead, index) => {
                       const cleanPhone = lead.phoneNumber.replace(/[^0-9]/g, '').slice(-10);
                       const matchedProspect = prospectMap[cleanPhone];
-                      // Show prospect's current services (may differ after editing) when converted
-                      const servicesDisplay: string[] = matchedProspect
-                        ? (matchedProspect.serviceType || '').split(',').filter(Boolean)
-                        : lead.services;
+                      const servicesDisplay: string[] = lead.services;
 
                       return (
                       <tr key={lead.id} className={`transition-colors ${lead.isDuplicate30Days ? 'bg-rose-50/30 hover:bg-rose-50/50' : 'hover:bg-[var(--hover-bg)]/40'}`}>

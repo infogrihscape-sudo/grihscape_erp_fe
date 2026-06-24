@@ -178,7 +178,7 @@ function ClientContactBanner({ client, prospect }: { client: any; prospect: any 
       {prospect?.serviceType && (
         <div className="flex items-center gap-1 text-[11.5px]">
           <span className="text-[var(--text-muted)] font-semibold">Service:</span>
-          <span className="text-[#b89047] font-semibold">{SERVICE_LABELS[prospect.serviceType] ?? prospect.serviceType}</span>
+          <span className="text-[#b89047] font-semibold">{prospect.serviceType.split(',').map((s: string) => SERVICE_LABELS[s.trim()] ?? s.trim()).join(', ')}</span>
         </div>
       )}
     </div>
@@ -227,7 +227,7 @@ function OverviewTab({ project, currentUser, onRefresh }: { project: any; curren
     { label: 'Client',    value: c?.clientName },
     { label: 'Mobile',    value: c?.mobileNo ? <a href={`tel:${c.mobileNo}`} className="hover:text-[#b89047] transition-colors">{c.mobileNo}</a> : null },
     { label: 'Email',     value: c?.email ? <a href={`mailto:${c.email}`} className="hover:text-[#b89047] transition-colors">{c.email}</a> : null },
-    { label: 'Service',   value: SERVICE_LABELS[p?.serviceType] ?? p?.serviceType },
+    { label: 'Service',   value: p?.serviceType ? p.serviceType.split(',').map((s: string) => SERVICE_LABELS[s.trim()] ?? s.trim()).join(', ') : null },
     { label: 'Location',  value: [c?.locality, c?.city, c?.state].filter(Boolean).join(', ') || null },
     { label: 'Payment',   value: p?.initialPaymentAmount ? <span className="font-bold text-emerald-600">₹{p.initialPaymentAmount} {p.initialPaymentUnit}</span> : null },
     { label: 'Plot Area', value: p?.plotArea ? `${p.plotArea} sq.ft` : null },

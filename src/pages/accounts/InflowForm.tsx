@@ -100,10 +100,10 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
     }
   }, [existing]);
 
-  const taxAmount = form.isTaxApplicable && form.taxPercent
-    ? (Number(form.amount) * Number(form.taxPercent)) / 100
+  const taxAmount = form.isTaxApplicable && form.taxPercent && form.amount
+    ? ((Number(form.amount) || 0) * Number(form.taxPercent)) / 100
     : 0;
-  const finalAmount = Number(form.amount) + taxAmount;
+  const finalAmount = (Number(form.amount) || 0) + taxAmount;
 
   const set = (k: string, v: any) => setForm(prev => ({ ...prev, [k]: v }));
 

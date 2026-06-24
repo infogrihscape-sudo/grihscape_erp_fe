@@ -142,6 +142,7 @@ export const outflowApi = {
     page?: number;
     pageSize?: number;
     siteId?: string;
+    siteName?: string;
   }) => api.get<PaginatedResponse<OutflowExpense>>('/accounts/outflow', { params }),
 
   getById: (id: string) =>
