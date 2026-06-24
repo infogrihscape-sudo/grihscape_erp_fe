@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { X, Upload } from 'lucide-react';
 import {
   outflowApi, accountsMasterApi,
-  type OutflowExpense, type PurposeMaster, type ExpenseCategoryMaster,
+  type OutflowExpense, type PurposeMaster, type ExpenseCategoryMaster, type SiteNameMaster,
 } from '../../services/accounts.api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { api, BACKEND_BASE } from '../../services/api.js';
+import { SearchableSelect } from '../../components/SearchableSelect.js';
 
 interface Props {
   currentUser: User;
@@ -58,8 +59,12 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
   const [categories, setCategories] = useState<ExpenseCategoryMaster[]>([]);
   const [pms, setPms] = useState<{ id: string; name: string; email: string }[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
-  const [manualSite, setManualSite] = useState(false);
+  const [siteNames, setSiteNames] = useState<SiteNameMaster[]>([]);
   const [uploading, setUploading] = useState(false);
+
+  const [addingSite, setAddingSite] = useState(false);
+  const [newSiteName, setNewSiteName] = useState('');
+  const [savingSite, setSavingSite] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Inline category creation
@@ -111,12 +116,14 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
       accountsMasterApi.listCategories(),
       outflowApi.listProjectManagers(),
       accountsMasterApi.listActiveProjects(),
-    ]).then(([p1, p2, cats, pm, projs]) => {
+      accountsMasterApi.listSiteNames(),
+    ]).then(([p1, p2, cats, pm, projs, sites]) => {
       const ids = new Set(p1.data.data.map(p => p.id));
       setPurposes([...p1.data.data, ...p2.data.data.filter(p => !ids.has(p.id))]);
       setCategories(cats.data.data);
       setPms(pm.data.data);
       setProjects(projs.data.data);
+      setSiteNames(sites.data.data);
     }).catch(() => {});
 
     if (existing) {
@@ -140,7 +147,6 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
         expenseName: existing.expenseName ?? '',
         department: existing.department ?? '',
       });
-      if (existing.siteName && !existing.siteId) setManualSite(true);
     }
   }, [existing]);
 
@@ -150,6 +156,54 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
   const needsPM = Number(form.amount) > 0 && Number(form.amount) <= 10000;
 
   const set = (k: string, v: any) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const handleAddSite = async () => {
+    if (!newSiteName.trim() || savingSite) return;
+    setSavingSite(true);
+    try {
+      const res = await accountsMasterApi.createSiteName(newSiteName.trim());
+      const created = res.data.data;
+      setSiteNames(prev => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+      set('siteId', `__site__${created.name}`);
+      set('siteName', created.name);
+      setAddingSite(false);
+      setNewSiteName('');
+      showToast(`"${created.name}" added as site.`, 'success');
+    } catch (e: any) {
+      showToast(e?.response?.data?.message ?? 'Failed to add site name.', 'error');
+    } finally { setSavingSite(false); }
+  };
+
+  const siteOptions = [
+    { value: '', label: 'Select site' },
+    ...projects.map(p => ({
+      value: p.id,
+      label: `${p.prospect.client.clientName} — ${SERVICE_LABELS[p.prospect.serviceType] ?? p.prospect.serviceType}`,
+    })),
+    ...siteNames.map(s => ({ value: `__site__${s.name}`, label: s.name })),
+    { value: '__new__', label: '＋ Add new site name…' },
+  ];
+
+  const siteSelectValue = form.siteId || '';
+
+  const handleSiteChange = (val: string) => {
+    if (val === '__new__') { setAddingSite(true); return; }
+    if (val.startsWith('__site__')) {
+      const name = val.slice(8);
+      setForm(prev => ({ ...prev, siteId: val, siteName: name }));
+    } else if (val) {
+      const proj = projects.find(p => p.id === val);
+      if (proj) {
+        setForm(prev => ({
+          ...prev,
+          siteId: val,
+          siteName: `${proj.prospect.client.clientName} (${proj.prospect.serviceType})`,
+        }));
+      }
+    } else {
+      setForm(prev => ({ ...prev, siteId: '', siteName: '' }));
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -172,7 +226,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
     if (!form.supportingDocUrl) { showToast('Supporting document is required.', 'error'); return; }
     if (!form.categoryId) { showToast('Please select a category.', 'error'); return; }
     if (!form.purposeId) { showToast('Please select a purpose.', 'error'); return; }
-    if (!form.siteId && !form.siteName.trim()) { showToast('Please select a site or enter a site name manually.', 'error'); return; }
+    if (!form.siteName.trim()) { showToast('Please select a site or add a site name.', 'error'); return; }
     if (!form.modeOfPayment) { showToast('Please select payment mode.', 'error'); return; }
     if (!form.expenseType) { showToast('Please select expense type.', 'error'); return; }
     if (needsPM && !form.projectManagerId) { showToast('Project Manager is required for expenses ≤ ₹10,000.', 'error'); return; }
@@ -186,7 +240,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
       amount: Number(form.amount),
       modeOfPayment: form.modeOfPayment,
       projectManagerId: form.projectManagerId || undefined,
-      siteId: form.siteId || undefined,
+      siteId: form.siteId && !form.siteId.startsWith('__site__') ? form.siteId : undefined,
       siteName: form.siteName || undefined,
       description: form.description || undefined,
       supportingDocUrl: form.supportingDocUrl,
@@ -372,51 +426,31 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
               )}
             </Field>
             <Field label="Site Name *">
-              {manualSite ? (
+              {addingSite ? (
                 <div className="flex gap-2">
                   <input
                     autoFocus
-                    value={form.siteName}
-                    onChange={e => set('siteName', e.target.value)}
-                    placeholder="Enter site name manually…"
+                    value={newSiteName}
+                    onChange={e => setNewSiteName(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') { e.preventDefault(); handleAddSite(); }
+                      if (e.key === 'Escape') { setAddingSite(false); setNewSiteName(''); }
+                    }}
+                    placeholder="New site name…"
                     className={INPUT}
                   />
-                  <button
-                    type="button"
-                    onClick={() => { setManualSite(false); setForm(prev => ({ ...prev, siteId: '', siteName: '' })); }}
-                    className="px-2 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 shrink-0 text-[11px]"
-                  >✕</button>
+                  <button type="button" onClick={handleAddSite} disabled={savingSite || !newSiteName.trim()} className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] disabled:opacity-60 shrink-0">
+                    {savingSite ? '…' : 'Add'}
+                  </button>
+                  <button type="button" onClick={() => { setAddingSite(false); setNewSiteName(''); }} className="px-2 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 shrink-0 text-[11px]">✕</button>
                 </div>
               ) : (
-                <select
-                  value={form.siteId}
-                  onChange={e => {
-                    const sId = e.target.value;
-                    if (sId === '__manual__') {
-                      setManualSite(true);
-                      setForm(prev => ({ ...prev, siteId: '', siteName: '' }));
-                      return;
-                    }
-                    const proj = projects.find(p => p.id === sId);
-                    if (proj) {
-                      setForm(prev => ({
-                        ...prev,
-                        siteId: sId,
-                        siteName: `${proj.prospect.client.clientName} (${proj.prospect.serviceType})`,
-                      }));
-                    } else {
-                      setForm(prev => ({ ...prev, siteId: '', siteName: '' }));
-                    }
-                  }}
-                  className={INPUT}
-                >
-                  <option value="">Select site</option>
-                  {projects.map(p => {
-                    const label = `${p.prospect.client.clientName} - ${SERVICE_LABELS[p.prospect.serviceType] ?? p.prospect.serviceType}`;
-                    return <option key={p.id} value={p.id}>{label}</option>;
-                  })}
-                  <option value="__manual__">＋ Enter manually…</option>
-                </select>
+                <SearchableSelect
+                  options={siteOptions}
+                  value={siteSelectValue}
+                  onChange={handleSiteChange}
+                  placeholder="Select site"
+                />
               )}
             </Field>
           </div>

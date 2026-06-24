@@ -78,6 +78,12 @@ export interface ExpenseCategoryMaster {
   isActive: boolean;
 }
 
+export interface SiteNameMaster {
+  id: string;
+  name: string;
+  isActive: boolean;
+}
+
 export interface PaginatedResponse<T> {
   success: boolean;
   data: T[];
@@ -183,6 +189,12 @@ export const accountsMasterApi = {
 
   listActiveProjects: () =>
     api.get<{ success: boolean; data: any[] }>('/accounts/active-projects'),
+
+  listSiteNames: () =>
+    api.get<{ success: boolean; data: SiteNameMaster[] }>('/accounts/masters/site-names'),
+
+  createSiteName: (name: string) =>
+    api.post<{ success: boolean; data: SiteNameMaster }>('/accounts/masters/site-names', { name }),
 };
 
 // ── Dashboard API ─────────────────────────────────────────────────────────────

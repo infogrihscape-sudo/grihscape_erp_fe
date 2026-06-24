@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
-import { inflowApi, accountsMasterApi, type InflowChallan, type PurposeMaster } from '../../services/accounts.api.js';
+import { inflowApi, accountsMasterApi, type InflowChallan, type PurposeMaster, type SiteNameMaster } from '../../services/accounts.api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
+import { SearchableSelect } from '../../components/SearchableSelect.js';
 
 interface Props {
   currentUser: User;
@@ -42,7 +43,12 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
   const [form, setForm] = useState({ ...EMPTY });
   const [purposes, setPurposes] = useState<PurposeMaster[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+  const [siteNames, setSiteNames] = useState<SiteNameMaster[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const [addingSite, setAddingSite] = useState(false);
+  const [newSiteName, setNewSiteName] = useState('');
+  const [savingSite, setSavingSite] = useState(false);
 
   // Inline purpose creation
   const [addingPurpose, setAddingPurpose] = useState(false);
@@ -73,6 +79,7 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
     })).catch(() => {});
 
     accountsMasterApi.listActiveProjects().then(r => setProjects(r.data.data)).catch(() => {});
+    accountsMasterApi.listSiteNames().then(r => setSiteNames(r.data.data)).catch(() => {});
 
     if (existing) {
       setForm({
@@ -99,6 +106,61 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
   const finalAmount = Number(form.amount) + taxAmount;
 
   const set = (k: string, v: any) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const handleAddSite = async () => {
+    if (!newSiteName.trim() || savingSite) return;
+    setSavingSite(true);
+    try {
+      const res = await accountsMasterApi.createSiteName(newSiteName.trim());
+      const created = res.data.data;
+      setSiteNames(prev => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+      set('siteName', created.name);
+      set('projectId', '');
+      set('clientId', '');
+      setAddingSite(false);
+      setNewSiteName('');
+      showToast(`"${created.name}" added as site.`, 'success');
+    } catch (e: any) {
+      showToast(e?.response?.data?.message ?? 'Failed to add site name.', 'error');
+    } finally { setSavingSite(false); }
+  };
+
+  const siteOptions = [
+    { value: '', label: 'Select site (optional)' },
+    ...projects.map(p => ({
+      value: p.id,
+      label: `${p.prospect.client.clientName} — ${SERVICE_LABELS[p.prospect.serviceType] ?? p.prospect.serviceType}`,
+    })),
+    ...siteNames.map(s => ({ value: `__site__${s.name}`, label: s.name })),
+    { value: '__new__', label: '＋ Add new site name…' },
+  ];
+
+  const siteSelectValue = form.projectId
+    ? form.projectId
+    : form.siteName
+      ? `__site__${form.siteName}`
+      : '';
+
+  const handleSiteChange = (val: string) => {
+    if (val === '__new__') { setAddingSite(true); return; }
+    if (val.startsWith('__site__')) {
+      const name = val.slice(8);
+      setForm(prev => ({ ...prev, projectId: '', clientId: '', siteName: name }));
+    } else if (val) {
+      const proj = projects.find(p => p.id === val);
+      if (proj) {
+        setForm(prev => ({
+          ...prev,
+          projectId: val,
+          siteName: `${proj.prospect.client.clientName} (${proj.prospect.serviceType})`,
+          clientName: proj.prospect.client.clientName,
+          clientId: proj.prospect.clientId,
+        }));
+      }
+    } else {
+      setForm(prev => ({ ...prev, projectId: '', siteName: '', clientId: '' }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,41 +224,32 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
           </div>
 
           <Field label="Site Name">
-            <select
-              value={form.projectId}
-              onChange={e => {
-                const projId = e.target.value;
-                const proj = projects.find(p => p.id === projId);
-                if (proj) {
-                  setForm(prev => ({
-                    ...prev,
-                    projectId: projId,
-                    siteName: `${proj.prospect.client.clientName} (${proj.prospect.serviceType})`,
-                    clientName: proj.prospect.client.clientName,
-                    clientId: proj.prospect.clientId,
-                  }));
-                } else {
-                  setForm(prev => ({
-                    ...prev,
-                    projectId: '',
-                    siteName: '',
-                    clientId: '',
-                  }));
-                }
-              }}
-              className={INPUT}
-            >
-              <option value="">Select site (optional)</option>
-              {projects.map(p => {
-                const label = `${p.prospect.client.clientName} - ${SERVICE_LABELS[p.prospect.serviceType] ?? p.prospect.serviceType}`;
-                return (
-                  <option key={p.id} value={p.id}>{label}</option>
-                );
-              })}
-              {form.siteName && !form.projectId && (
-                <option value="" disabled>{form.siteName} (Custom)</option>
-              )}
-            </select>
+            {addingSite ? (
+              <div className="flex gap-2">
+                <input
+                  autoFocus
+                  value={newSiteName}
+                  onChange={e => setNewSiteName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') { e.preventDefault(); handleAddSite(); }
+                    if (e.key === 'Escape') { setAddingSite(false); setNewSiteName(''); }
+                  }}
+                  placeholder="New site name…"
+                  className={INPUT}
+                />
+                <button type="button" onClick={handleAddSite} disabled={savingSite || !newSiteName.trim()} className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] disabled:opacity-60 shrink-0">
+                  {savingSite ? '…' : 'Add'}
+                </button>
+                <button type="button" onClick={() => { setAddingSite(false); setNewSiteName(''); }} className="px-2 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 shrink-0 text-[11px]">✕</button>
+              </div>
+            ) : (
+              <SearchableSelect
+                options={siteOptions}
+                value={siteSelectValue}
+                onChange={handleSiteChange}
+                placeholder="Select site (optional)"
+              />
+            )}
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
