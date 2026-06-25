@@ -1,20 +1,21 @@
 export const ROLE_ROUTES: Record<string, string[]> = {
   'Super Admin': [
     '/overview', '/users', '/roles', '/logs', '/leads', '/prospects',
-    '/contracts', '/tenders', '/projects',
+    '/contracts', '/tenders', '/projects', '/delay-analysis',
     '__accounts_payments__', '/accounts/inflow', '/accounts/outflow', '/accounts/masters',
   ],
   'Admin': [
     '/overview', '/users', '/roles', '/logs', '/leads', '/prospects',
-    '/contracts', '/tenders', '/projects',
+    '/contracts', '/tenders', '/projects', '/delay-analysis',
     '__accounts_payments__', '/accounts/inflow', '/accounts/outflow', '/accounts/masters',
   ],
   'Sales & Marketing': ['/overview', '/leads', '/prospects', '/contracts', '/tenders'],
-  'Project Manager':   ['/overview', '/projects'],
+  'Project Manager':   ['/overview', '/projects', '/delay-analysis'],
   'Project Architect': ['/overview', '/projects'],
   'Junior Architect':  ['/overview', '/projects'],
-  'Site Engineer':     ['/overview', '/projects'],
-  'Accounts':          ['/overview', '/prospects', '__accounts_payments__', '/accounts/inflow', '/accounts/outflow'],
+  'Site Engineer':      ['/overview', '/projects'],
+  'Construction Head':  ['/overview', '/projects'],
+  'Accounts':           ['/overview', '/prospects', '__accounts_payments__', '/accounts/inflow', '/accounts/outflow'],
 };
 
 /** Roles restricted to read-only access — no create/edit/delete/workflow actions. */

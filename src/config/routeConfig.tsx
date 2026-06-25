@@ -2,10 +2,11 @@ import React from 'react';
 import {
   LayoutDashboard, Users, ClipboardList, Database, ScrollText,
   Sparkles, FileText, Award, HardHat, ArrowDownLeft, ArrowUpRight, Settings,
+  TrendingDown,
 } from 'lucide-react';
 
 export type AppTab = 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders' | 'projects'
-  | 'inflow' | 'outflow' | 'accountsMasters';
+  | 'inflow' | 'outflow' | 'accountsMasters' | 'delayAnalysis';
 
 export interface SidebarItem {
   id: AppTab;
@@ -27,32 +28,34 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
 
 // Tab id → canonical route path for navigation
 export const TAB_TO_ROUTE: Record<AppTab, string> = {
-  overview:       '/overview',
-  users:          '/users',
-  prospects:      '/prospects',
-  leads:          '/leads',
-  contracts:      '/contracts',
-  tenders:        '/tenders',
-  projects:       '/projects',
-  inflow:         '/accounts/inflow',
-  outflow:        '/accounts/outflow',
-  accountsMasters:'/accounts/masters',
+  overview:        '/overview',
+  users:           '/users',
+  prospects:       '/prospects',
+  leads:           '/leads',
+  contracts:       '/contracts',
+  tenders:         '/tenders',
+  projects:        '/projects',
+  inflow:          '/accounts/inflow',
+  outflow:         '/accounts/outflow',
+  accountsMasters: '/accounts/masters',
+  delayAnalysis:   '/delay-analysis',
 };
 
 // Route path → active sidebar tab (/roles and /logs are under the users tab)
 export const ROUTE_TO_TAB: Record<string, AppTab> = {
-  '/overview':            'overview',
-  '/users':               'users',
-  '/roles':               'users',
-  '/logs':                'users',
-  '/prospects':           'prospects',
-  '/leads':               'leads',
-  '/contracts':           'contracts',
-  '/tenders':             'tenders',
-  '/projects':            'projects',
-  '/accounts/inflow':     'inflow',
-  '/accounts/outflow':    'outflow',
-  '/accounts/masters':    'accountsMasters',
+  '/overview':         'overview',
+  '/users':            'users',
+  '/roles':            'users',
+  '/logs':             'users',
+  '/prospects':        'prospects',
+  '/leads':            'leads',
+  '/contracts':        'contracts',
+  '/tenders':          'tenders',
+  '/projects':         'projects',
+  '/accounts/inflow':  'inflow',
+  '/accounts/outflow': 'outflow',
+  '/accounts/masters': 'accountsMasters',
+  '/delay-analysis':   'delayAnalysis',
 };
 
 export interface PageInfo {
@@ -77,6 +80,7 @@ export const PAGE_INFO: Record<string, PageInfo> = {
   inflow:           { icon: <ArrowDownLeft size={15} />,   title: 'Inflow — Payments Received', subtitle: 'Challans, tax handling, and approval workflow',                    iconBg: 'rgba(16,185,129,0.12)', iconColor: '#10b981' },
   outflow:          { icon: <ArrowUpRight size={15} />,    title: 'Outflow — Expenses',     subtitle: 'Advances, contractor, purchase, salary & office expenses',              iconBg: 'rgba(239,68,68,0.12)',  iconColor: '#ef4444' },
   accountsMasters:  { icon: <Settings size={15} />,        title: 'Accounts Masters',       subtitle: 'Purpose and expense category master data',                             iconBg: 'rgba(139,92,246,0.12)', iconColor: '#8b5cf6' },
+  delayAnalysis:    { icon: <TrendingDown size={15} />,    title: 'Delay Analysis',         subtitle: 'Auto-generated delay breakdown across all assigned projects',          iconBg: 'rgba(239,68,68,0.12)',  iconColor: '#ef4444' },
 };
 
 // Extracts project id from /projects/:id path; returns null otherwise

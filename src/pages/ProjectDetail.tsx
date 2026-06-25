@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext.js';
 import { useRouter } from '../context/RouterContext.js';
 import { CDRFEditor } from '../components/CDRFEditor.js';
 import { ShimmerTable } from '../components/Shimmer.js';
+import ConstructionTab from './construction/ConstructionTab.js';
 import {
   ChevronLeft, ClipboardCheck, CalendarDays, FileText,
   Upload, CheckCircle2, XCircle, Loader2, X, Plus,
@@ -45,16 +46,17 @@ const STATUS_BADGE: Record<string, string> = {
   COMPLETED:          'text-emerald-700 bg-emerald-50 border-emerald-200',
 };
 
-type TabId = 'overview' | 'site' | 'cdrf-meetings' | 'cdrf-form' | 'design' | 'pipeline' | 'transmittals';
+type TabId = 'overview' | 'site' | 'cdrf-meetings' | 'cdrf-form' | 'design' | 'pipeline' | 'transmittals' | 'construction';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
-  { id: 'overview',      label: 'Overview',          icon: <Building2 size={13} /> },
+  { id: 'overview',      label: 'Overview',           icon: <Building2 size={13} /> },
   { id: 'site',          label: 'Site Verification',  icon: <MapPin size={13} /> },
-  { id: 'cdrf-meetings', label: 'Client Meetings',     icon: <CalendarDays size={13} /> },
-  { id: 'cdrf-form',     label: 'Client Brief',        icon: <ClipboardCheck size={13} /> },
+  { id: 'cdrf-meetings', label: 'Client Meetings',    icon: <CalendarDays size={13} /> },
+  { id: 'cdrf-form',     label: 'Client Brief',       icon: <ClipboardCheck size={13} /> },
   { id: 'design',        label: 'Layout & Approval',  icon: <Upload size={13} /> },
   { id: 'pipeline',      label: 'Design Pipeline',    icon: <FileText size={13} /> },
   { id: 'transmittals',  label: 'Transmittals',       icon: <Send size={13} /> },
+  { id: 'construction',  label: 'Construction',       icon: <HardHat size={13} /> },
 ];
 
 // ─── Tab unlock gate — each tab requires this status or later ─────────────────
@@ -71,6 +73,7 @@ const TAB_MIN_STATUS: Record<TabId, string> = {
   design:          'DESIGN_REVIEW',
   pipeline:        'LAYOUT_APPROVED',
   transmittals:    'DESIGN_IN_PROGRESS',
+  construction:    'DESIGN_IN_PROGRESS',
 };
 
 // ─── Project pipeline stages ──────────────────────────────────────────────────
@@ -2699,6 +2702,19 @@ export const ProjectDetail: React.FC<Props> = ({ currentUser, projectId }) => {
         {activeTab === 'design'        && <DesignTab        project={project} currentUser={currentUser} onRefresh={fetchProject} />}
         {activeTab === 'pipeline'      && <PipelineTab      project={project} currentUser={currentUser} onRefresh={fetchProject} />}
         {activeTab === 'transmittals'  && <TransmittalsTab  project={project} currentUser={currentUser} />}
+        {activeTab === 'construction'  && (
+          <div className="p-4 md:p-6">
+            <ConstructionTab
+              projectId={project.id}
+              role={currentUser.role}
+              userId={currentUser.id}
+              assignableUsers={[
+                ...(project.assignment?.siteEngineer     ? [{ ...project.assignment.siteEngineer,     role: { name: 'Site Engineer'     } }] : []),
+                ...(project.assignment?.constructionHead ? [{ ...project.assignment.constructionHead, role: { name: 'Construction Head' } }] : []),
+              ]}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

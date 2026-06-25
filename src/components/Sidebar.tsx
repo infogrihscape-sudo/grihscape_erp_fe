@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Users, LogOut, ChevronLeft, ChevronRight,
   X, ClipboardList, Database, Sun, Moon, ScrollText, Award, HardHat,
   CreditCard, ArrowDownLeft, ArrowUpRight, Settings, ChevronDown, ChevronUp,
+  TrendingDown,
 } from 'lucide-react';
 import type { User } from '../context/AuthContext.js';
 import { ROLE_ROUTES } from '../config/permissions.js';
@@ -53,6 +54,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { route: '/contracts',         icon: <ScrollText size={16} />,      label: 'Contracts' },
   { route: '/tenders',           icon: <Award size={16} />,           label: 'Tender Management' },
   { route: '/projects',          icon: <HardHat size={16} />,         label: 'Projects' },
+  { route: '/delay-analysis',    icon: <TrendingDown size={16} />,    label: 'Delay Analysis' },
   {
     route: '__accounts_payments__',
     icon: <CreditCard size={16} />,

@@ -55,6 +55,9 @@ const OutflowDetail = React.lazy(() =>
 const AccountsMasters = React.lazy(() =>
   import('../pages/accounts/AccountsMasters.js').then((m) => ({ default: m.AccountsMasters }))
 );
+const DelayAnalysisPage = React.lazy(() =>
+  import('../pages/construction/DelayAnalysisPage.js').then((m) => ({ default: m.DelayAnalysisPage }))
+);
 
 interface AppRouterProps {
   user: User;
@@ -62,7 +65,7 @@ interface AppRouterProps {
 
 const VALID_PATHS = [
   '/overview', '/users', '/roles', '/logs', '/prospects', '/leads',
-  '/contracts', '/tenders', '/projects',
+  '/contracts', '/tenders', '/projects', '/delay-analysis',
   '/accounts/inflow', '/accounts/outflow', '/accounts/masters',
 ];
 
@@ -87,15 +90,16 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
   const inflowId        = getInflowDetailId(path);
   const outflowId       = getOutflowDetailId(path);
 
-  const isUsers        = path === '/users' || path === '/roles' || path === '/logs';
-  const isProspects    = path === '/prospects';
-  const isLeads        = path === '/leads';
-  const isContracts    = path === '/contracts';
-  const isTenders      = path === '/tenders';
-  const isProjects     = path === '/projects';
-  const isInflowList   = path === '/accounts/inflow';
-  const isOutflowList  = path === '/accounts/outflow';
-  const isAccMasters   = path === '/accounts/masters';
+  const isUsers          = path === '/users' || path === '/roles' || path === '/logs';
+  const isProspects      = path === '/prospects';
+  const isLeads          = path === '/leads';
+  const isContracts      = path === '/contracts';
+  const isTenders        = path === '/tenders';
+  const isProjects       = path === '/projects';
+  const isInflowList     = path === '/accounts/inflow';
+  const isOutflowList    = path === '/accounts/outflow';
+  const isAccMasters     = path === '/accounts/masters';
+  const isDelayAnalysis  = path === '/delay-analysis';
 
   const userRoutes = ROLE_ROUTES[user.role] ?? [];
 
@@ -248,6 +252,10 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
         ) : isAccMasters ? (
           <Suspense fallback={<PageLoader text="Loading Masters…" />}>
             <AccountsMasters currentUser={user} />
+          </Suspense>
+        ) : isDelayAnalysis ? (
+          <Suspense fallback={<PageLoader text="Loading Delay Analysis…" />}>
+            <DelayAnalysisPage user={user} />
           </Suspense>
         ) : (
           <Suspense fallback={<PageLoader text="Loading Operations Console…" />}>
