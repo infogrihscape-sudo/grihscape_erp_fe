@@ -3,7 +3,7 @@ import { projectApi } from '../../services/api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { ShimmerTable } from '../../components/Shimmer.js';
-import { CalendarDays, Plus, Loader2, CheckCircle2, SquarePen, X, FileText } from 'lucide-react';
+import { CalendarDays, Plus, Loader2, CheckCircle2, SquarePen, X, FileText, Link, MapPin, Check } from 'lucide-react';
 import {
   card, inputBase, btnPrimary, btnSecondary, label,
   ClientContactBanner, Modal,
@@ -192,7 +192,7 @@ export function CdrfMeetingsTab({ project, currentUser }: { project: any; curren
                             ? 'text-indigo-700 bg-indigo-50 border-indigo-200 dark:bg-indigo-950/30 dark:border-indigo-800 dark:text-indigo-400'
                             : 'text-stone-600 bg-stone-50 border-stone-200 dark:bg-stone-800/40 dark:border-stone-700 dark:text-stone-400'
                         }`}>
-                          {m.meetingType === 'ONLINE' ? '🔗' : '📍'} {m.meetingType}
+                          {m.meetingType === 'ONLINE' ? <Link size={10} className="shrink-0" /> : <MapPin size={10} className="shrink-0" />} {m.meetingType}
                         </span>
                         <span className="text-[10px] text-[var(--text-muted)] font-medium">Meeting #{idx + 1}</span>
                       </div>
@@ -205,8 +205,8 @@ export function CdrfMeetingsTab({ project, currentUser }: { project: any; curren
                       </p>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11.5px] text-[var(--text-muted)]">
                         <span>Scheduled by <span className="font-semibold text-[var(--text-secondary)]">{m.scheduledBy?.name ?? '—'}</span></span>
-                        <span className={`font-semibold ${m.clientPresent ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
-                          Client {m.clientPresent ? '✓ Present' : '✗ Absent'}
+                        <span className={`inline-flex items-center gap-1 font-semibold ${m.clientPresent ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                          Client {m.clientPresent ? <Check size={11} className="shrink-0" /> : <X size={11} className="shrink-0" />} {m.clientPresent ? 'Present' : 'Absent'}
                         </span>
                       </div>
                       {m.notes && (
@@ -217,7 +217,7 @@ export function CdrfMeetingsTab({ project, currentUser }: { project: any; curren
                       {m.meetingLink && (
                         <a href={m.meetingLink} target="_blank" rel="noreferrer"
                           className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium">
-                          🔗 Join Meeting Link
+                          <Link size={11} className="shrink-0" /> Join Meeting Link
                         </a>
                       )}
                     </div>

@@ -149,7 +149,7 @@ export const OutflowList: React.FC<Props> = ({ currentUser }) => {
             <tbody>
               {expenses.map(e => (
                 <tr key={e.id} className="border-b border-[var(--border)] hover:bg-white/3 transition-colors">
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{new Date(e.date).toLocaleDateString('en-IN')}</td>
+                  <td className="px-4 py-3 text-[var(--text-secondary)]">{new Date(e.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                   <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{e.name}</td>
                   <td className="px-4 py-3 text-[var(--text-secondary)]">{e.category?.name}</td>
                   <td className="px-4 py-3 text-[var(--text-secondary)]">{e.expenseType}</td>

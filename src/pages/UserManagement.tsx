@@ -29,15 +29,15 @@ const roleBadgeClass = (_r: string) => 'text-stone-900 font-semibold';
 const roleLabel = (r: string) => r;
 
 /* ── shared Tailwind snippets ── */
-const inputBase = 'w-full bg-white border border-[rgba(184,144,71,0.38)] text-stone-900 text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-[rgba(184,144,71,0.2)] font-[inherit] compact-input';
+const inputBase = 'w-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 dark:focus:border-emerald-500/80 font-[inherit] compact-input';
 const inputInvalid = 'border-red-300 focus:border-red-400 focus:ring-red-100';
-const labelBase = 'text-[10px] font-bold uppercase tracking-wide text-stone-500';
+const labelBase = 'text-xs text-slate-400 dark:text-slate-500 leading-normal font-bold uppercase tracking-wide';
 const btnSecondary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-stone-600 bg-stone-150/70 border border-[rgba(184,144,71,0.28)] hover:bg-stone-200 hover:text-stone-850 transition-colors duration-150 cursor-pointer';
 const btnDanger  = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-rose-600 bg-rose-50/70 border border-rose-100 hover:bg-rose-600 hover:text-white hover:-translate-y-px transition-all duration-150 cursor-pointer shadow-xs';
 const btnSuccess = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-emerald-700 bg-emerald-50/70 border border-emerald-100 hover:bg-emerald-600 hover:text-white hover:-translate-y-px transition-all duration-150 cursor-pointer shadow-xs';
 const btnEdit    = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-sky-600 bg-sky-50/70 border border-sky-100 hover:bg-sky-600 hover:text-white hover:-translate-y-px transition-all duration-150 cursor-pointer shadow-xs';
 const btnWarn    = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-amber-600 bg-amber-50/70 border border-amber-100 hover:bg-amber-600 hover:text-white hover:-translate-y-px transition-all duration-150 cursor-pointer shadow-xs';
-const card = 'bg-white border border-[rgba(184,144,71,0.24)] rounded-xl shadow-xs';
+const card = 'bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl shadow-xs';
 
 export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
   const { showToast } = useToast();
@@ -381,7 +381,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
     const ref = logoutTime && logoutTime > loginTime ? logoutTime : loginTime;
     return (
       <div className="flex flex-col items-center justify-center gap-1">
-        <span className="text-[11px] text-stone-500 text-center">Logged out {ref.toLocaleDateString()} {ref.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        <span className="text-[11px] text-stone-500 dark:text-stone-400 text-center">Logged out {ref.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })} · {ref.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
         {locationLink}
       </div>
     );
@@ -936,7 +936,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                     </td>
                     <td className="px-4 py-3 border-b border-[rgba(184,144,71,0.12)] whitespace-nowrap">
                       <div className="flex items-center gap-1.5 text-[11.5px] text-stone-600">
-                        <Calendar size={11} className="text-stone-400 shrink-0" />{new Date(log.createdAt).toLocaleString()}
+                        <Calendar size={11} className="text-stone-400 shrink-0" />
+                        <span>
+                          {new Date(log.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })} · {new Date(log.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-3 border-b border-[rgba(184,144,71,0.12)]">
@@ -1050,7 +1053,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
       {/* ── Delete Confirm Modal ── */}
       {showDeleteConfirm && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(null)}>
-          <div className="animate-scale-in w-full max-w-[380px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
+          <div className="animate-scale-in w-full max-w-[380px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6 max-h-[calc(100vh-40px)] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="flex items-center gap-2 text-[16px] font-bold text-stone-900">
                 <Trash2 size={18} className="text-rose-500" />Delete Member
@@ -1147,7 +1150,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
       {/* ── Role Modal ── */}
       {showRoleModal && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowRoleModal(false)}>
-          <div className="animate-scale-in w-full max-w-[420px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
+          <div className="animate-scale-in w-full max-w-[420px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6 max-h-[calc(100vh-40px)] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-[16px] font-bold text-stone-900">{editingRoleId ? 'Edit Role' : 'Create Role'}</h3>
               <button onClick={() => setShowRoleModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
@@ -1178,13 +1181,17 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                   {editingRoleCreatedAt && (
                     <div className="flex justify-between items-center text-[11px]">
                       <span className="text-stone-400 font-semibold uppercase tracking-wider">Created At</span>
-                      <span className="text-stone-700 font-medium">{new Date(editingRoleCreatedAt).toLocaleString()}</span>
+                      <span className="text-stone-700 dark:text-stone-300 font-medium">
+                        {new Date(editingRoleCreatedAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })} · {new Date(editingRoleCreatedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true })}
+                      </span>
                     </div>
                   )}
                   {editingRoleUpdatedAt && (
                     <div className="flex justify-between items-center text-[11px]">
                       <span className="text-stone-400 font-semibold uppercase tracking-wider">Updated At</span>
-                      <span className="text-stone-700 font-medium">{new Date(editingRoleUpdatedAt).toLocaleString()}</span>
+                      <span className="text-stone-700 dark:text-stone-300 font-medium">
+                        {new Date(editingRoleUpdatedAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })} · {new Date(editingRoleUpdatedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true })}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -1204,7 +1211,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
       {/* ── Map Modal ── */}
       {mapData && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setMapData(null)}>
-          <div className="animate-scale-in w-full max-w-[600px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
+          <div className="animate-scale-in w-full max-w-[600px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6 max-h-[calc(100vh-40px)] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="flex items-center gap-2 text-[16px] font-bold text-stone-900">
                 <MapPin size={18} className="text-[#b89047]" /> Location for {mapData.name}

@@ -699,7 +699,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
                 Tender: {selectedTender.bidNumber}
                 {getStatusBadge(selectedTender.status)}
               </h2>
-              <p className="text-[11px] text-[var(--text-muted)] mt-0.5">Created on {new Date(selectedTender.createdAt).toLocaleDateString()}</p>
+              <p className="text-[11px] text-[var(--text-muted)] mt-0.5">Created on {new Date(selectedTender.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}</p>
             </div>
           </div>
 
@@ -826,7 +826,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
               
               <div className="border-t border-stone-100 pt-3 flex justify-between text-[11px] text-[var(--text-muted)]">
                 <span>Bid Date:</span>
-                <span className="font-bold text-[var(--text-primary)]">{new Date(selectedTender.bidDate).toLocaleDateString()}</span>
+                <span className="font-bold text-[var(--text-primary)]">{new Date(selectedTender.bidDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}</span>
               </div>
             </div>
 
@@ -1011,7 +1011,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
                       {tender.bidNumber}
                     </td>
                     <td className="px-4 py-3.5">
-                      {new Date(tender.bidDate).toLocaleDateString()}
+                      {new Date(tender.bidDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-4 py-3.5 max-w-xs truncate">
                       <p className="font-semibold text-[var(--text-primary)] truncate">{tender.ministryStateName}</p>

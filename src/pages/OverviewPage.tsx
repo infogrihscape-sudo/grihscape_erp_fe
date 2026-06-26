@@ -1506,7 +1506,9 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                     </div>
                     <div className="text-right text-[var(--text-muted)]">
                       <span>User: {log.user?.name || log.userId}</span>
-                      <p className="text-[9.5px]">{new Date(log.createdAt).toLocaleString()}</p>
+                      <p className="text-[9.5px]">
+                        {new Date(log.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })} · {new Date(log.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true })}
+                      </p>
                     </div>
                   </div>
                 ))}

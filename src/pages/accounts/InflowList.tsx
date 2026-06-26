@@ -109,7 +109,7 @@ export const InflowList: React.FC<Props> = ({ currentUser }) => {
                 >
                   <td className="px-4 py-3 text-[var(--text-muted)]">{c.srNo}</td>
                   <td className="px-4 py-3 font-mono font-semibold text-[var(--text-primary)]">{c.challanNo}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{new Date(c.date).toLocaleDateString('en-IN')}</td>
+                  <td className="px-4 py-3 text-[var(--text-secondary)]">{new Date(c.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                   <td className="px-4 py-3 text-[var(--text-primary)] font-medium">{c.clientName}</td>
                   <td className="px-4 py-3 text-[var(--text-secondary)]">{c.siteName ?? '—'}</td>
                   <td className="px-4 py-3 text-[var(--text-secondary)]">₹{Number(c.amount).toLocaleString('en-IN')}</td>

@@ -10,14 +10,23 @@ export interface CDRFEditorProps {
 
 // ─── Color tokens ─────────────────────────────────────────────────
 const C = {
-  navy:        "#b89047", navyDark: "#16110a", navyMid: "#9e7735",
-  orange:      "#E8650A", orangeLight: "#FDF0E5",
-  white:       "#FFFFFF",
-  grey50:      "#F5F6F8", grey100: "#EAECF0", grey200: "#D0D3D9",
-  grey300:     "#B0B5BF", grey400: "#9CA3AF", grey500: "#6B7280",
-  grey600:     "#5A5E6B", grey800: "#1A1A2E",
+  navy:        "var(--accent, #b89047)",
+  navyDark:    "var(--sidebar-bg, #111217)",
+  navyMid:     "var(--accent-dark, #9e7735)",
+  orange:      "var(--accent, #b89047)",
+  orangeLight: "rgba(184, 144, 71, 0.1)",
+  white:       "var(--card-bg, #FFFFFF)",
+  grey50:      "var(--hover-bg, #F5F6F8)",
+  grey100:     "var(--border-subtle, #EAECF0)",
+  grey200:     "var(--border, #D0D3D9)",
+  grey300:     "var(--text-muted, #B0B5BF)",
+  grey400:     "var(--text-muted, #9CA3AF)",
+  grey500:     "var(--text-secondary, #6B7280)",
+  grey600:     "var(--text-secondary, #5A5E6B)",
+  grey800:     "var(--text-primary, #1A1A2E)",
   green:       "#16A34A", red: "#DC2626", amber: "#D97706",
 } as const;
+
 
 // ─── Template builder ─────────────────────────────────────────────
 export function buildCDRFTemplate(): any[] {
@@ -445,9 +454,9 @@ function RequirementMatrixField({ field, onChange, readOnly }: any) {
     <div style={{ marginBottom: 20 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: C.grey600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{field.label}</div>
       <div style={{ border: `1px solid ${C.grey200}`, borderRadius: 8, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 110px 120px', background: C.navy, padding: '8px 12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 110px 120px', background: C.grey100, borderBottom: `1px solid ${C.grey200}`, padding: '8px 12px' }}>
           {['Requirement', 'Must Have', 'Nice To Have', 'Future'].map((h, i) => (
-            <div key={i} style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? 'white' : C.orange, textTransform: 'uppercase', textAlign: i > 0 ? 'center' : 'left' }}>{h}</div>
+            <div key={i} style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? C.grey800 : C.grey600, textTransform: 'uppercase', textAlign: i > 0 ? 'center' : 'left' }}>{h}</div>
           ))}
         </div>
         {(field.items ?? []).map((item: any, idx: number) => (
@@ -475,9 +484,9 @@ function RatingScaleField({ field, onChange, readOnly }: any) {
     <div style={{ marginBottom: 20 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: C.grey600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{field.label}</div>
       <div style={{ border: `1px solid ${C.grey200}`, borderRadius: 8, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px 60px 60px 60px', background: C.navy, padding: '8px 12px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'white', textTransform: 'uppercase' }}>Item</div>
-          {[1,2,3,4,5].map(n => <div key={n} style={{ fontSize: 10, fontWeight: 700, color: C.orange, textAlign: 'center' }}>{n}</div>)}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px 60px 60px 60px', background: C.grey100, borderBottom: `1px solid ${C.grey200}`, padding: '8px 12px' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.grey800, textTransform: 'uppercase' }}>Item</div>
+          {[1,2,3,4,5].map(n => <div key={n} style={{ fontSize: 10, fontWeight: 700, color: C.grey600, textAlign: 'center' }}>{n}</div>)}
         </div>
         {(field.items ?? []).map((item: any, idx: number) => (
           <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px 60px 60px 60px', padding: '8px 12px', background: idx % 2 === 0 ? C.grey50 : 'white', borderTop: `1px solid ${C.grey100}`, alignItems: 'center' }}>
@@ -506,8 +515,8 @@ function YesNoTableField({ field, onChange, readOnly }: any) {
     <div style={{ marginBottom: 20 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: C.grey600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{field.label}</div>
       <div style={{ border: `1px solid ${C.grey200}`, borderRadius: 8, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', background: C.navy, padding: '8px 12px' }}>
-          {['Item', 'Preferred', 'Avoid'].map((h, i) => <div key={i} style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? 'white' : C.orange, textTransform: 'uppercase', textAlign: i > 0 ? 'center' : 'left' }}>{h}</div>)}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', background: C.grey100, borderBottom: `1px solid ${C.grey200}`, padding: '8px 12px' }}>
+          {['Item', 'Preferred', 'Avoid'].map((h, i) => <div key={i} style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? C.grey800 : C.grey600, textTransform: 'uppercase', textAlign: i > 0 ? 'center' : 'left' }}>{h}</div>)}
         </div>
         {(field.items ?? []).map((item: any, idx: number) => (
           <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', padding: '8px 12px', background: idx % 2 === 0 ? C.grey50 : 'white', borderTop: `1px solid ${C.grey100}`, alignItems: 'center' }}>
@@ -538,8 +547,8 @@ function RoomPriorityField({ field, onChange, readOnly }: any) {
     <div style={{ marginBottom: 20 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: C.grey600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{field.label}</div>
       <div style={{ border: `1px solid ${C.grey200}`, borderRadius: 8, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px 1fr', background: C.navy, padding: '8px 12px' }}>
-          {['Room / Space', 'Priority', 'Budget %', 'Phase', 'Notes'].map((h, i) => <div key={i} style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? 'white' : C.orange, textTransform: 'uppercase', textAlign: i > 0 ? 'center' : 'left' }}>{h}</div>)}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px 1fr', background: C.grey100, borderBottom: `1px solid ${C.grey200}`, padding: '8px 12px' }}>
+          {['Room / Space', 'Priority', 'Budget %', 'Phase', 'Notes'].map((h, i) => <div key={i} style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? C.grey800 : C.grey600, textTransform: 'uppercase', textAlign: i > 0 ? 'center' : 'left' }}>{h}</div>)}
         </div>
         {(field.rooms ?? []).map((room: any, idx: number) => (
           <div key={room.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px 1fr', padding: '6px 12px', background: idx % 2 === 0 ? C.grey50 : 'white', borderTop: `1px solid ${C.grey100}`, alignItems: 'center', gap: 4 }}>
@@ -681,7 +690,7 @@ function Sidebar({ modules, activeSectionId, onSelectSection, pct }: any) {
               const isActive = activeSectionId === sec.id;
               return (
                 <div key={sec.id} onClick={() => onSelectSection(sec.id)}
-                  style={{ padding: '6px 14px 6px 22px', fontSize: 11, color: secDisabled ? 'rgba(255,255,255,0.2)' : isActive ? 'white' : 'rgba(255,255,255,0.55)', cursor: 'pointer', background: isActive ? 'rgba(232,101,10,0.15)' : 'transparent', borderLeft: isActive ? `3px solid ${C.orange}` : '3px solid transparent', transition: 'all 0.12s', display: 'flex', alignItems: 'center', gap: 5, lineHeight: 1.3 }}
+                  style={{ padding: '6px 14px 6px 22px', fontSize: 11, color: secDisabled ? 'rgba(255,255,255,0.2)' : isActive ? 'white' : 'rgba(255,255,255,0.55)', cursor: 'pointer', background: isActive ? 'rgba(184,144,71,0.15)' : 'transparent', borderLeft: isActive ? `3px solid ${C.orange}` : '3px solid transparent', transition: 'all 0.12s', display: 'flex', alignItems: 'center', gap: 5, lineHeight: 1.3 }}
                   onMouseEnter={(e: any) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
                   onMouseLeave={(e: any) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                 >
@@ -804,34 +813,35 @@ export function CDRFEditor({ initialModules, onChange, readOnly = false }: CDRFE
   const pct = calcCDRFCompletion(data);
 
   return (
-    <div style={{ display: 'flex', height: '100%', minHeight: 500, border: `1px solid #D0D3D9`, borderRadius: 10, overflow: 'hidden', fontFamily: "'Segoe UI', system-ui, sans-serif", background: '#F0F2F5' }}>
+    <div style={{ display: 'flex', height: '100%', minHeight: 500, border: `1px solid ${C.grey200}`, borderRadius: 10, overflow: 'hidden', fontFamily: "'Segoe UI', system-ui, sans-serif", background: 'var(--page-bg, #F0F2F5)' }}>
       <Sidebar modules={data} activeSectionId={activeSec} onSelectSection={handleSelectSection} pct={pct} />
       <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
         {data.map(mod => (
           <div key={mod.id} id={mod.id} style={{ marginBottom: 28 }}>
             {/* Module header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, padding: '12px 16px', background: mod.enabled ? C.navy : C.grey400, borderRadius: 10, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, padding: '12px 16px', background: mod.enabled ? C.grey50 : C.grey100, border: `1px solid ${C.grey200}`, borderRadius: 10, position: 'relative', overflow: 'hidden' }}>
               {!mod.enabled && (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.35)' }}>
-                  <span style={{ fontSize: 18, fontWeight: 900, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.2em', border: '3px solid rgba(255,255,255,0.4)', padding: '4px 14px', borderRadius: 8, transform: 'rotate(-5deg)' }}>NOT APPLICABLE</span>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', zIndex: 1 }}>
+                  <span style={{ fontSize: 16, fontWeight: 900, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.2em', border: '2px solid rgba(255,255,255,0.5)', padding: '4px 14px', borderRadius: 8, transform: 'rotate(-4deg)' }}>NOT APPLICABLE</span>
                 </div>
               )}
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: C.orange, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{mod.label}</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'white' }}>{mod.title}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{mod.subtitle}</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: C.navy, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{mod.label}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: C.grey800 }}>{mod.title}</div>
+                <div style={{ fontSize: 11, color: C.grey600, marginTop: 2 }}>{mod.subtitle}</div>
               </div>
               <div style={{ display: 'flex', gap: 6, position: 'relative', zIndex: 2 }}>
-                <button onClick={() => handleCollapseModule(mod.id)} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: 6, padding: '5px 10px', fontSize: 11, cursor: 'pointer' }}>
+                <button onClick={() => handleCollapseModule(mod.id)} style={{ background: C.white, border: `1px solid ${C.grey200}`, color: C.grey800, borderRadius: 6, padding: '5px 10px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
                   {mod.collapsed ? '▶ Expand' : '▼ Collapse'}
                 </button>
                 {!readOnly && (
-                  <button onClick={() => handleToggleModule(mod.id)} style={{ background: mod.enabled ? 'rgba(232,101,10,0.2)' : 'rgba(22,163,74,0.2)', border: `1px solid ${mod.enabled ? C.orange : C.green}`, color: mod.enabled ? C.orange : C.green, borderRadius: 6, padding: '5px 10px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
+                  <button onClick={() => handleToggleModule(mod.id)} style={{ background: mod.enabled ? 'rgba(239, 68, 68, 0.1)' : 'rgba(22, 163, 74, 0.1)', border: `1px solid ${mod.enabled ? '#ef4444' : C.green}`, color: mod.enabled ? '#ef4444' : C.green, borderRadius: 6, padding: '5px 10px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
                     {mod.enabled ? '⊘ Disable' : '↺ Enable'}
                   </button>
                 )}
               </div>
             </div>
+
 
             {/* Sections */}
             {!mod.collapsed && mod.sections.map((sec: any, si: number) => (

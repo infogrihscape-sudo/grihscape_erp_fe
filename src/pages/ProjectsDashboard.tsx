@@ -7,7 +7,7 @@ import { useRouter } from '../context/RouterContext.js';
 import { ShimmerTable } from '../components/Shimmer.js';
 import {
   HardHat, Search, RefreshCw, UserCheck, X, ChevronLeft, ChevronRight,
-  Users, Loader2, AlertCircle, CheckCircle2, Clock, Building2,
+  Users, Loader2, AlertCircle, AlertTriangle, CheckCircle2, Clock, Building2,
   MapPin, ClipboardCheck, Palette, ArrowRight, Phone, PlusCircle, Layers,
 } from 'lucide-react';
 import { SearchableSelect } from '../components/SearchableSelect.js';
@@ -664,7 +664,9 @@ function ProjectRow({ project, isAdmin, onAssign, onClick }: {
               </p>
             </div>
           ) : (
-            <span className="text-[10px] text-amber-600 font-semibold">⚠ Not assigned</span>
+            <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-semibold">
+              <AlertTriangle size={10} className="shrink-0" /> Not assigned
+            </span>
           )}
         </div>
 
@@ -805,8 +807,8 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{s.label}</p>
                 <p className="text-[28px] font-black text-[var(--text-primary)] leading-tight mt-0.5">{s.value}</p>
-                <p className={`text-[10px] mt-1 font-medium ${s.urgent ? 'text-amber-600' : 'text-[var(--text-muted)]'}`}>
-                  {s.urgent ? '⚠ ' : ''}{s.sub}
+                <p className={`flex items-center gap-1 text-[10px] mt-1 font-medium ${s.urgent ? 'text-amber-600' : 'text-[var(--text-muted)]'}`}>
+                  {s.urgent && <AlertTriangle size={10} className="shrink-0" />}{s.sub}
                 </p>
               </div>
               <div className={`p-2 rounded-xl bg-gradient-to-br ${s.accent} text-white shadow-sm`}>

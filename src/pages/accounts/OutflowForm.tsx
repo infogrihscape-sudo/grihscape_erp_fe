@@ -314,8 +314,8 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
                   <button type="button" onClick={handleAddCategory} disabled={savingCategory || !newCategoryName.trim()} className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] disabled:opacity-60 shrink-0">
                     {savingCategory ? '…' : 'Add'}
                   </button>
-                  <button type="button" onClick={() => { setAddingCategory(false); setNewCategoryName(''); }} className="px-2 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 shrink-0 text-[11px]">
-                    ✕
+                  <button type="button" onClick={() => { setAddingCategory(false); setNewCategoryName(''); }} className="px-2 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 shrink-0 text-[11px] flex items-center justify-center">
+                    <X size={11} />
                   </button>
                 </div>
               ) : (
@@ -410,8 +410,8 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
                   <button type="button" onClick={handleAddPurpose} disabled={savingPurpose || !newPurposeName.trim()} className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] disabled:opacity-60 shrink-0">
                     {savingPurpose ? '…' : 'Add'}
                   </button>
-                  <button type="button" onClick={() => { setAddingPurpose(false); setNewPurposeName(''); }} className="px-2 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 shrink-0 text-[11px]">
-                    ✕
+                  <button type="button" onClick={() => { setAddingPurpose(false); setNewPurposeName(''); }} className="px-2 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 shrink-0 text-[11px] flex items-center justify-center">
+                    <X size={11} />
                   </button>
                 </div>
               ) : (
@@ -442,7 +442,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
                   <button type="button" onClick={handleAddSite} disabled={savingSite || !newSiteName.trim()} className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] disabled:opacity-60 shrink-0">
                     {savingSite ? '…' : 'Add'}
                   </button>
-                  <button type="button" onClick={() => { setAddingSite(false); setNewSiteName(''); }} className="px-2 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 shrink-0 text-[11px]">✕</button>
+                  <button type="button" onClick={() => { setAddingSite(false); setNewSiteName(''); }} className="px-2 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 shrink-0 text-[11px] flex items-center justify-center"><X size={11} /></button>
                 </div>
               ) : (
                 <SearchableSelect

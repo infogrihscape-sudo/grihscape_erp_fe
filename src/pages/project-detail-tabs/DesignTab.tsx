@@ -7,7 +7,7 @@ import { ShimmerTable } from '../../components/Shimmer.js';
 import { FileUploadZone } from '../../components/ui/FileUploadZone.js';
 import {
   Upload, Eye, CheckCircle2, XCircle, Loader2,
-  AlertTriangle, Clock, Send, MessageSquare, Download, X, FileText,
+  AlertTriangle, Clock, Send, MessageSquare, Download, X, FileText, Check, RefreshCw
 } from 'lucide-react';
 import {
   card, inputBase, btnPrimary, btnSecondary, btnDanger, label,
@@ -400,7 +400,10 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
                     ${reviewForm.status === s
                       ? s === 'APPROVED' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-rose-600 text-white border-rose-600'
                       : 'bg-[var(--card-bg)] text-[var(--text-secondary)] border-[var(--border)]'}`}>
-                  {s === 'APPROVED' ? '✓ Approve' : '✗ Reject'}
+                  <span className="flex items-center justify-center gap-1.5">
+                    {s === 'APPROVED' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+                    {s === 'APPROVED' ? 'Approve' : 'Reject'}
+                  </span>
                 </button>
               ))}
             </div>
@@ -430,7 +433,10 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
                     ${clientResponseForm.response === r
                       ? r === 'APPROVED' ? 'bg-teal-600 text-white border-teal-600' : 'bg-orange-500 text-white border-orange-500'
                       : 'bg-[var(--card-bg)] text-[var(--text-secondary)] border-[var(--border)]'}`}>
-                  {r === 'APPROVED' ? '✓ Client Approved' : '↩ Revision Required'}
+                  <span className="flex items-center justify-center gap-1.5">
+                    {r === 'APPROVED' ? <CheckCircle2 size={13} /> : <RefreshCw size={13} />}
+                    {r === 'APPROVED' ? 'Client Approved' : 'Revision Required'}
+                  </span>
                 </button>
               ))}
             </div>
@@ -452,7 +458,11 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
                 finally { setFeedbackUploading(false); }
               }} className="w-full text-[12px] text-[var(--text-secondary)] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-[rgba(184,144,71,0.1)] file:text-[#b89047] hover:file:bg-[rgba(184,144,71,0.2)] cursor-pointer" />
               {feedbackUploading && <p className="text-[11px] text-[var(--text-muted)] mt-1 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Uploading…</p>}
-              {clientResponseForm.fileName && !feedbackUploading && <p className="text-[11px] text-emerald-600 mt-1">✓ {clientResponseForm.fileName}</p>}
+              {clientResponseForm.fileName && !feedbackUploading && (
+                <p className="flex items-center gap-1 text-[11px] text-emerald-600 mt-1">
+                  <Check size={12} className="shrink-0" /> {clientResponseForm.fileName}
+                </p>
+              )}
             </div>
             {clientResponseForm.response === 'APPROVED' && (
               <div className="flex items-start gap-2 px-3 py-2.5 bg-teal-50 border border-teal-200 rounded-lg text-[11px] text-teal-700">
@@ -544,7 +554,10 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
                         ${reviewForm.status === s
                           ? s === 'APPROVED' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-rose-600 text-white border-rose-600'
                           : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-stone-400'}`}>
-                      {s === 'APPROVED' ? '✓ Approve' : '✗ Reject'}
+                      <span className="flex items-center justify-center gap-1.5">
+                        {s === 'APPROVED' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+                        {s === 'APPROVED' ? 'Approve' : 'Reject'}
+                      </span>
                     </button>
                   ))}
                 </div>

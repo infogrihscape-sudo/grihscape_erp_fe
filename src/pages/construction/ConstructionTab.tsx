@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   HardHat, ListTodo, ClipboardCheck, Banknote,
-  Plus, ChevronDown, ChevronRight, AlertCircle,
+  Plus, ChevronDown, ChevronRight, AlertCircle, AlertTriangle,
   CheckCircle2, Clock, Pause, TrendingDown,
   FileText, Send, X, Loader2, RefreshCw,
   Pencil, Paperclip, ExternalLink,
@@ -720,7 +720,11 @@ function TaskReportsView({ projectId, task, canSubmit, userId, showToast, onBack
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-[10px] text-stone-400">
                       <span>by {r.submittedBy.name}</span>
-                      {r.issues && <span className="text-amber-600">⚠ Issues noted</span>}
+                      {r.issues && (
+                        <span className="inline-flex items-center gap-1 text-amber-600 font-medium">
+                          <AlertTriangle size={10} className="shrink-0" /> Issues noted
+                        </span>
+                      )}
                     </div>
                   </div>
 
