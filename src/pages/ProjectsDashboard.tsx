@@ -234,6 +234,16 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
   const [archId, setArchId]                   = useState('');
   const [juniorId, setJuniorId]               = useState('');
   const [notes, setNotes]                     = useState('');
+  const [formErrors, setFormErrors]           = useState<{
+    clientName?: string;
+    mobileNo?: string;
+    email?: string;
+    pincode?: string;
+    locality?: string;
+    serviceType?: string;
+    projectManagerId?: string;
+    projectArchitectId?: string;
+  }>({});
 
   const [localitiesList, setLocalitiesList]           = useState<string[]>([]);
   const [localitySelectOther, setLocalitySelectOther] = useState(false);
@@ -248,6 +258,7 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
   const handlePincodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const pin = e.target.value.replace(/\D/g, '').slice(0, 6);
     setPincode(pin);
+    if (formErrors.pincode) setFormErrors(p => ({ ...p, pincode: undefined }));
     if (pin.length !== 6) {
       setState(''); setDistrict(''); setLocalitiesList([]); setLocalitySelectOther(false);
       return;
@@ -282,6 +293,7 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
       setLocalitySelectOther(false);
       setLocality(val);
     }
+    if (formErrors.locality) setFormErrors(p => ({ ...p, locality: undefined }));
   };
 
   const handleServiceToggle = (key: string) => {
@@ -293,14 +305,43 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
       arr = arr.includes(key) ? arr.filter(s => s !== key) : [...arr, key];
     }
     setSelectedServices(arr);
+    if (formErrors.serviceType) setFormErrors(p => ({ ...p, serviceType: undefined }));
   };
 
   const handleSubmit = async () => {
-    if (!clientName.trim()) { showToast('Client name is required.', 'error'); return; }
-    if (!/^\d{10}$/.test(mobileNo.trim())) { showToast('Valid 10-digit mobile number is required.', 'error'); return; }
-    if (!locality.trim()) { showToast('Locality is required.', 'error'); return; }
-    if (selectedServices.length === 0) { showToast('Please select at least one service.', 'error'); return; }
-    if (!pmId || !archId) { showToast('Project Manager and Project Architect are required.', 'error'); return; }
+    const errors: typeof formErrors = {};
+    if (!clientName.trim()) {
+      errors.clientName = 'Client name is required.';
+    }
+    if (!mobileNo.trim()) {
+      errors.mobileNo = 'Mobile number is required.';
+    } else if (!/^[6-9]\d{9}$/.test(mobileNo.trim())) {
+      errors.mobileNo = 'Enter a valid 10-digit mobile number starting with 6-9.';
+    }
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = 'Enter a valid email address.';
+    }
+    if (pincode.trim() && pincode.trim().length !== 6) {
+      errors.pincode = 'Pincode must be exactly 6 digits.';
+    }
+    if (!locality.trim()) {
+      errors.locality = 'Locality is required.';
+    }
+    if (selectedServices.length === 0) {
+      errors.serviceType = 'At least one service type is required.';
+    }
+    if (!pmId) {
+      errors.projectManagerId = 'Project Manager is required.';
+    }
+    if (!archId) {
+      errors.projectArchitectId = 'Project Architect is required.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      showToast('Please fix the validation errors in the form.', 'error');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -329,7 +370,7 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
     }
   };
 
-  const canSubmit = !submitting && !!clientName && !!mobileNo && !!locality && selectedServices.length > 0 && !!pmId && !!archId;
+  const canSubmit = !submitting;
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -361,24 +402,57 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
                 <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
                   Client Name <span className="text-rose-500">*</span>
                 </label>
-                <input value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Full name" className={inputBase} />
+                <input
+                  value={clientName}
+                  onChange={e => { setClientName(e.target.value); if (formErrors.clientName) setFormErrors(p => ({ ...p, clientName: undefined })); }}
+                  placeholder="Full name"
+                  className={`${inputBase} ${formErrors.clientName ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200' : ''}`}
+                />
+                {formErrors.clientName && <p className="text-[10.5px] text-rose-500 mt-1 font-medium">{formErrors.clientName}</p>}
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
                   Mobile Number <span className="text-rose-500">*</span>
                 </label>
-                <input value={mobileNo} onChange={e => setMobileNo(e.target.value)} placeholder="10-digit number" maxLength={10} className={inputBase} />
+                <input
+                  value={mobileNo}
+                  onChange={e => {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setMobileNo(digits);
+                    if (formErrors.mobileNo) setFormErrors(p => ({ ...p, mobileNo: undefined }));
+                  }}
+                  placeholder="10-digit number starting with 6–9"
+                  inputMode="numeric"
+                  maxLength={10}
+                  className={`${inputBase} ${formErrors.mobileNo ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200' : ''}`}
+                />
+                {formErrors.mobileNo && <p className="text-[10.5px] text-rose-500 mt-1 font-medium">{formErrors.mobileNo}</p>}
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">Email</label>
-                <input value={email} onChange={e => setEmail(e.target.value)} placeholder="client@example.com" type="email" className={inputBase} />
+                <input
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); if (formErrors.email) setFormErrors(p => ({ ...p, email: undefined })); }}
+                  placeholder="client@example.com"
+                  type="email"
+                  className={`${inputBase} ${formErrors.email ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200' : ''}`}
+                />
+                {formErrors.email && <p className="text-[10.5px] text-rose-500 mt-1 font-medium">{formErrors.email}</p>}
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Pincode</label>
                   {fetchingPincode && <span className="text-[10px] text-[#b89047] font-semibold animate-pulse">Fetching...</span>}
                 </div>
-                <input value={pincode} onChange={handlePincodeChange} placeholder="e.g. 560001" maxLength={6} className={inputBase} />
+                <input
+                  value={pincode}
+                  onChange={handlePincodeChange}
+                  placeholder="e.g. 560001"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className={`${inputBase} ${formErrors.pincode ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200' : ''}`}
+                />
+                {formErrors.pincode && <p className="text-[10.5px] text-rose-500 mt-1 font-medium">{formErrors.pincode}</p>}
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">State</label>
@@ -403,8 +477,14 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
                     onChange={handleLocalitySelectChange}
                   />
                 ) : (
-                  <input value={locality} onChange={e => setLocality(e.target.value)} placeholder="Area / locality" className={inputBase} />
+                  <input
+                    value={locality}
+                    onChange={e => { setLocality(e.target.value); if (formErrors.locality) setFormErrors(p => ({ ...p, locality: undefined })); }}
+                    placeholder="Area / locality"
+                    className={`${inputBase} ${formErrors.locality ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200' : ''}`}
+                  />
                 )}
+                {formErrors.locality && <p className="text-[10.5px] text-rose-500 mt-1 font-medium">{formErrors.locality}</p>}
               </div>
               {localitySelectOther && (
                 <div className="sm:col-span-2">
@@ -419,9 +499,12 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
 
           {/* Service selection */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-3">
-              Service Type <span className="text-rose-500">*</span>
-            </p>
+            <div className="flex items-center gap-2 mb-3">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
+                Service Type <span className="text-rose-500">*</span>
+              </p>
+              {formErrors.serviceType && <p className="text-[10.5px] text-rose-500 font-medium">{formErrors.serviceType}</p>}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {SERVICE_TYPES.filter(s => s.value !== 'END_TO_END_SOLUTION').map(s => {
                 const isSelected = selectedServices.includes(s.value);
@@ -472,19 +555,24 @@ function OnboardExistingModal({ assignableUsers, onClose, onCreated }: OnboardMo
             <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-3">Team Assignment</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { label: 'Project Manager', required: true, value: pmId, setter: setPmId, options: pms },
-                { label: 'Project Architect', required: true, value: archId, setter: setArchId, options: architects },
-                { label: 'Junior Architect', required: false, value: juniorId, setter: setJuniorId, options: juniors },
+                { label: 'Project Manager',  required: true,  value: pmId,      setter: setPmId,      options: pms,       errKey: 'projectManagerId'  as const },
+                { label: 'Project Architect',required: true,  value: archId,    setter: setArchId,    options: architects,errKey: 'projectArchitectId' as const },
+                { label: 'Junior Architect', required: false, value: juniorId,  setter: setJuniorId,  options: juniors,   errKey: undefined },
               ].map(f => (
                 <div key={f.label}>
                   <label className="block text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">
                     {f.label} {f.required ? <span className="text-rose-500">*</span> : <span className="text-stone-400">(optional)</span>}
                   </label>
-                  <select value={f.value} onChange={e => f.setter(e.target.value)} className={inputBase}>
+                  <select
+                    value={f.value}
+                    onChange={e => { f.setter(e.target.value); if (f.errKey) setFormErrors(p => ({ ...p, [f.errKey!]: undefined })); }}
+                    className={`${inputBase} ${f.errKey && formErrors[f.errKey] ? 'border-rose-400' : ''}`}
+                  >
                     <option value="">{f.required ? `— Select —` : '— None —'}</option>
                     {f.options.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                     {f.options.length === 0 && <option disabled>None available</option>}
                   </select>
+                  {f.errKey && formErrors[f.errKey] && <p className="text-[10.5px] text-rose-500 mt-1 font-medium">{formErrors[f.errKey]}</p>}
                 </div>
               ))}
             </div>
