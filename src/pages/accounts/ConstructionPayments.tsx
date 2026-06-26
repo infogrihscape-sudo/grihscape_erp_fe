@@ -267,7 +267,7 @@ export const ConstructionPayments: React.FC<Props> = ({ currentUser }) => {
           No payment requests match the current filters.
         </div>
       ) : (
-        <div className="table-container">
+        <div className="table-container flex-1 overflow-auto">
           <table className="erp-table">
             <thead>
               <tr >

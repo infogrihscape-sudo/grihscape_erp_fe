@@ -536,7 +536,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
   );
 
   return (
-    <div className="animate-fade-in h-full overflow-y-auto p-4">
+    <div className="animate-fade-in h-full flex flex-col p-4 overflow-hidden">
       {/* Actions Bar */}
       <div className="flex flex-wrap items-center justify-end gap-2 mb-4 shrink-0">
         {['users', 'logs'].includes(activeSubTab) && (
@@ -580,7 +580,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
       )}
 
       {/* Loading state */}
-      {loading ? (
+      <div className="flex-1 min-h-0 flex flex-col">
+        {loading ? (
         activeSubTab === 'users' ? (
           <div className="flex flex-col flex-1 min-h-0">
             {/* Search skeleton */}
@@ -719,7 +720,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
           </div>
         )
       ) : activeSubTab === 'users' ? (
-        <>
+        <div className="flex flex-col flex-grow min-h-0">
           {/* Search & Filters */}
           <div className="flex flex-wrap items-center gap-3 mb-4 bg-stone-50/30 p-2.5 rounded-xl border border-[rgba(184,144,71,0.15)]">
             <div className={`${card} flex items-center gap-2.5 px-3.5 py-1.5 compact-search-container flex-grow min-w-[200px]`}>
@@ -755,8 +756,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
           </div>
 
           {/* Users table */}
-          <div className={`${card} overflow-y-auto overflow-x-auto scrollbar-thin max-h-[min(420px,55vh)]`}>
-            <div className="table-container">
+          <div className={`${card} flex-grow flex flex-col min-h-0 overflow-hidden`}>
+            <div className="table-container in-card flex-1 overflow-auto">
               <table className="erp-table min-w-[750px]">
                 <colgroup>
                   <col style={{ width: '44px' }} />
@@ -833,9 +834,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                 start={userIndexStart + 1} end={Math.min(userIndexStart + ITEMS_PER_PAGE, filteredUsers.length)} count={filteredUsers.length} />
             )}
           </div>
-        </>
+        </div>
       ) : activeSubTab === 'roles' ? (
-        <>
+        <div className="flex flex-col flex-grow min-h-0">
           {/* Search */}
           <div className="flex flex-wrap items-center gap-3 mb-4 bg-stone-50/30 p-2.5 rounded-xl border border-[rgba(184,144,71,0.15)]">
             <div className={`${card} flex items-center gap-2.5 px-3.5 py-1.5 compact-search-container flex-grow`}>
@@ -847,8 +848,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               />
             </div>
           </div>
-          <div className={`${card} overflow-y-auto overflow-x-auto scrollbar-thin max-h-[min(420px,55vh)] animate-fade-in`}>
-            <div className="table-container">
+          <div className={`${card} flex-grow flex flex-col min-h-0 overflow-hidden animate-fade-in`}>
+            <div className="table-container in-card flex-1 overflow-auto">
               <table className="erp-table min-w-[480px]">
                 <colgroup>
                   <col style={{ width: '44px' }} />
@@ -895,10 +896,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                 start={roleIndexStart + 1} end={Math.min(roleIndexStart + ITEMS_PER_PAGE, roles.length)} count={roles.length} />
             )}
           </div>
-      </>
+        </div>
       ) : (
         /* Audit Logs */
-        <>
+        <div className="flex flex-col flex-grow min-h-0">
           {/* Search & Filters */}
           <div className="flex flex-wrap items-center gap-3 mb-4 bg-stone-50/30 p-2.5 rounded-xl border border-[rgba(184,144,71,0.15)]">
             <div className={`${card} flex items-center gap-2.5 px-3.5 py-1.5 compact-search-container flex-grow min-w-[200px]`}>
@@ -918,8 +919,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               />
             </div>
           </div>
-          <div className={`${card} overflow-y-auto overflow-x-auto scrollbar-thin max-h-[min(420px,55vh)] animate-fade-in`}>
-            <div className="table-container">
+          <div className={`${card} flex-grow flex flex-col min-h-0 overflow-hidden animate-fade-in`}>
+            <div className="table-container in-card flex-1 overflow-auto">
               <table className="erp-table min-w-[600px]">
                 <colgroup>
                   <col style={{ width: '44px' }} />
@@ -996,8 +997,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                 start={logIndexStart + 1} end={Math.min(logIndexStart + ITEMS_PER_PAGE, logs.length)} count={logs.length} />
             )}
           </div>
-      </>
+        </div>
       )}
+      </div>
 
       {/* ── Edit User Modal ── */}
       {showEditModal && editingUser && createPortal(

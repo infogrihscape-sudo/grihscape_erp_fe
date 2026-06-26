@@ -510,13 +510,20 @@ input.border-red-300:focus,
 
 /* ── Premium Unified Table Design (Centered & Bordered) ── */
 .table-container {
-  overflow-x: auto;
+  overflow: auto;
   border-radius: 12px;
   border: 1px solid var(--border);
   background-color: var(--card-bg);
   box-shadow: var(--shadow-card);
   margin-top: 8px;
   margin-bottom: 8px;
+}
+
+.table-container.in-card {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .erp-table {
@@ -527,7 +534,6 @@ input.border-red-300:focus,
 }
 
 .erp-table thead {
-  background-color: var(--table-head);
   color: var(--text-muted);
   font-size: 9.5px;
   text-transform: uppercase;
@@ -535,9 +541,31 @@ input.border-red-300:focus,
   font-weight: 700;
 }
 
-.erp-table th, .erp-table td {
+.erp-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--table-head);
   padding: 11px 14px;
   border: 1px solid var(--border);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.erp-table td {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.erp-table tfoot td, .erp-table tfoot th {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background-color: var(--table-head);
+  border-top: 2px solid var(--border);
+  padding: 11px 14px;
   text-align: center;
   vertical-align: middle;
 }

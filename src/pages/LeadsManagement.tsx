@@ -999,8 +999,8 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
           </div>
 
           {/* Directory Table Card */}
-          <div className={`${card} flex-1 overflow-y-auto overflow-x-auto scrollbar-thin flex flex-col justify-between`}>
-            <div className="overflow-x-auto min-w-full flex-1">
+          <div className={`${card} flex-grow flex flex-col min-h-0 overflow-hidden`}>
+            <div className="table-container in-card flex-1 overflow-auto min-w-full">
               {loading ? (
                 <div className="p-4">
                   <ShimmerTable rows={8} cols={5} />

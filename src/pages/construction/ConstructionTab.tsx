@@ -4,7 +4,7 @@ import {
   Plus, ChevronDown, ChevronRight, AlertCircle, AlertTriangle,
   CheckCircle2, Clock, Pause, TrendingDown,
   FileText, Send, X, Loader2, RefreshCw,
-  Pencil, Paperclip, ExternalLink, Upload,
+  Pencil, Paperclip, ExternalLink, Upload, Eye,
 } from 'lucide-react';
 import { constructionApi } from '../../services/construction.api';
 import { api } from '../../services/api';
@@ -212,17 +212,111 @@ function TasksPanel({ projectId, canCreate, canUpdateStatus, assignableUsers, sh
       ) : tasks.length === 0 ? (
         <div className="text-center py-12 text-stone-400 text-sm">No tasks yet. {canCreate && 'Add the first task.'}</div>
       ) : (
-        <div className="space-y-2">
-          {tasks.map(task => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              expanded={expandedTask === task.id}
-              onToggle={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
-              canUpdateStatus={canUpdateStatus}
-              onStatusClick={() => setStatusModal(task)}
-            />
-          ))}
+        <div className="table-container">
+          <table className="erp-table">
+            <thead>
+              <tr>
+                <th>Task ID</th>
+                <th>Task Title</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Planned Start</th>
+                <th>Planned End</th>
+                <th>Assigned Engineer</th>
+                <th>Progress</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.flatMap(task => {
+                const meta = STATUS_META[task.status] ?? STATUS_META.NOT_STARTED;
+                const now = new Date();
+                const overdue = task.status !== 'COMPLETED' && new Date(task.plannedEnd) < now;
+                const daysLate = overdue
+                  ? Math.floor((now.getTime() - new Date(task.plannedEnd).getTime()) / 86_400_000)
+                  : 0;
+                const isExpanded = expandedTask === task.id;
+                
+                return [
+                  <tr key={task.id} className={overdue ? 'bg-red-50/20 dark:bg-red-950/10' : ''}>
+                    <td className="mono-cell">{task.taskId}</td>
+                    <td className="font-semibold text-[var(--text-primary)] text-left px-4">
+                      <div className="flex flex-col">
+                        <span>{task.title}</span>
+                        {daysLate > 0 && (
+                          <span className="text-[9px] font-bold text-rose-600 dark:text-rose-455 mt-0.5">
+                            +{daysLate}d late
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td>{task.category}</td>
+                    <td>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${PRIORITY_BADGE[task.priority] ?? ''}`}>
+                        {task.priority}
+                      </span>
+                    </td>
+                    <td>{fmt(task.plannedStart)}</td>
+                    <td>{fmt(task.plannedEnd)}</td>
+                    <td>{task.assignedEngineer ? `@${task.assignedEngineer.name}` : '—'}</td>
+                    <td>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <div className="w-12 h-1.5 bg-stone-100 dark:bg-slate-800 rounded-full overflow-hidden shrink-0">
+                          <div
+                            className={`h-full rounded-full ${task.status === 'COMPLETED' ? 'bg-emerald-500' : task.status === 'DELAYED' ? 'bg-red-500' : 'bg-[#b89047]'}`}
+                            style={{ width: `${task.progressPct}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-stone-500 dark:text-stone-400 shrink-0">{task.progressPct}%</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${meta.color}`}>
+                        {meta.icon}{meta.label}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                        {canUpdateStatus && task.status !== 'COMPLETED' && (
+                          <button
+                            onClick={() => setStatusModal(task)}
+                            className="text-[10px] px-2 py-0.5 border border-stone-200 dark:border-slate-850 rounded hover:bg-stone-50 dark:hover:bg-slate-800 text-stone-600 dark:text-stone-300 transition-colors cursor-pointer"
+                          >
+                            Update
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setExpandedTask(isExpanded ? null : task.id)}
+                          className="p-1 rounded hover:bg-stone-100 dark:hover:bg-slate-800 text-stone-400 dark:text-stone-500 transition-colors cursor-pointer"
+                          title="View details"
+                        >
+                          <Eye size={12} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>,
+                  isExpanded && (
+                    <tr key={`${task.id}-exp`} className="bg-stone-50/50 dark:bg-slate-900/20">
+                      <td colSpan={10} className="text-left px-6 py-3 text-xs text-stone-650 dark:text-stone-350">
+                        {task.description && <p className="mb-2 leading-relaxed">{task.description}</p>}
+                        {task.dependsOn && (
+                          <p className="text-stone-400 dark:text-stone-500">
+                            Depends on: <span className="font-mono text-[10px]">{task.dependsOn.taskId}</span> — {task.dependsOn.title}
+                          </p>
+                        )}
+                        <div className="flex gap-4 text-[10px] text-stone-400 dark:text-stone-500 mt-2 border-t border-stone-100 dark:border-slate-800/80 pt-2">
+                          <span>Daily reports: {task._count?.dailyReports ?? 0}</span>
+                          {task.actualStart && <span>Started: {fmt(task.actualStart)}</span>}
+                          {task.actualEnd && <span>Completed: {fmt(task.actualEnd)}</span>}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                ].filter(Boolean);
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -524,54 +618,63 @@ function ReportsPanel({ projectId, canSubmit, userId, showToast }: any) {
       ) : tasks.length === 0 ? (
         <div className="text-center py-12 text-stone-400 text-sm">No tasks yet. Add tasks first.</div>
       ) : (
-        <div className="space-y-2">
-          {tasks.map(task => {
-            const meta    = STATUS_META[task.status] ?? STATUS_META.NOT_STARTED;
-            const count   = task._count?.dailyReports ?? 0;
-            const overdue = task.status !== 'COMPLETED' && new Date(task.plannedEnd) < new Date();
-            return (
-              <button
-                key={task.id}
-                onClick={() => setSelected(task)}
-                className={`w-full text-left bg-white border rounded-xl px-4 py-3 hover:shadow-sm hover:border-[#b89047]/40 transition-all group
-                  ${overdue ? 'border-red-200' : 'border-stone-200'}`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] font-mono text-stone-400">{task.taskId}</span>
+        <div className="table-container">
+          <table className="erp-table">
+            <thead>
+              <tr>
+                <th>Task ID</th>
+                <th>Task Title</th>
+                <th>Priority</th>
+                <th>Progress</th>
+                <th>Status</th>
+                <th>Reports Count</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map(task => {
+                const meta = STATUS_META[task.status] ?? STATUS_META.NOT_STARTED;
+                const count = task._count?.dailyReports ?? 0;
+                const overdue = task.status !== 'COMPLETED' && new Date(task.plannedEnd) < new Date();
+                return (
+                  <tr key={task.id} className={overdue ? 'bg-red-50/20 dark:bg-red-950/10' : ''}>
+                    <td className="mono-cell">{task.taskId}</td>
+                    <td className="font-semibold text-[var(--text-primary)] text-left px-4">{task.title}</td>
+                    <td>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${PRIORITY_BADGE[task.priority] ?? ''}`}>
                         {task.priority}
                       </span>
-                      <span className="text-xs font-semibold text-stone-800 truncate">{task.title}</span>
-                    </div>
-                    <div className="flex items-center gap-3 mt-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-24 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                    </td>
+                    <td>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <div className="w-12 h-1.5 bg-stone-100 dark:bg-slate-800 rounded-full overflow-hidden shrink-0">
                           <div
                             className={`h-full rounded-full ${task.status === 'COMPLETED' ? 'bg-emerald-500' : task.status === 'DELAYED' ? 'bg-red-500' : 'bg-[#b89047]'}`}
                             style={{ width: `${task.progressPct}%` }}
                           />
                         </div>
-                        <span className="text-[10px] text-stone-400">{task.progressPct}%</span>
+                        <span className="text-[10px] text-stone-500 dark:text-stone-400 shrink-0">{task.progressPct}%</span>
                       </div>
-                      <div className={`flex items-center gap-1 text-[11px] font-medium ${meta.color}`}>
+                    </td>
+                    <td>
+                      <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${meta.color}`}>
                         {meta.icon}{meta.label}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-stone-700 leading-none">{count}</div>
-                      <div className="text-[9px] text-stone-400 mt-0.5">report{count !== 1 ? 's' : ''}</div>
-                    </div>
-                    <ChevronRight size={15} className="text-stone-300 group-hover:text-[#b89047] transition-colors" />
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+                      </span>
+                    </td>
+                    <td className="font-bold text-stone-700 dark:text-stone-300">{count}</td>
+                    <td>
+                      <button
+                        onClick={() => setSelected(task)}
+                        className="px-2.5 py-1 bg-stone-50 dark:bg-slate-805 hover:bg-stone-100 dark:hover:bg-slate-700 border border-stone-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        View Reports <ChevronRight size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

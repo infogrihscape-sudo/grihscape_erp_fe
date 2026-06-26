@@ -325,8 +325,8 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
             ))}
           </div>
 
-          <div className={`${card} flex-1 overflow-y-auto overflow-x-auto scrollbar-thin flex flex-col justify-between`}>
-            <div className="table-container min-w-full">
+          <div className={`${card} flex-1 flex flex-col min-h-0 overflow-hidden`}>
+            <div className="table-container in-card flex-1 overflow-auto min-w-full">
               <table className="erp-table min-w-[850px]">
                 <thead>
                   <tr className="sticky top-0 z-10 backdrop-blur-xs">
