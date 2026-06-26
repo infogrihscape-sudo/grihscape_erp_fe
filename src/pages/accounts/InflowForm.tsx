@@ -4,6 +4,7 @@ import { inflowApi, accountsMasterApi, type InflowChallan, type PurposeMaster, t
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { api, fileUrl } from '../../services/api.js';
+import { makeUniqueFileName } from '../../utils/validators.js';
 import { SearchableSelect } from '../../components/SearchableSelect.js';
 
 interface Props {
@@ -142,7 +143,7 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
         headers: { 'Content-Type': 'multipart/form-data', 'x-file-type': 'design' },
       });
       setSupportingDocUrl(res.data.url);
-      setSupportingDocName(res.data.filename ?? file.name);
+      setSupportingDocName(makeUniqueFileName(res.data.filename ?? file.name, 'Inflow-Receipt'));
     } catch { showToast('File upload failed.', 'error'); }
     finally { setUploading(false); }
   };

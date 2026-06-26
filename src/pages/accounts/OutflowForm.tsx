@@ -7,6 +7,7 @@ import {
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { api, fileUrl } from '../../services/api.js';
+import { makeUniqueFileName } from '../../utils/validators.js';
 import { SearchableSelect } from '../../components/SearchableSelect.js';
 
 interface Props {
@@ -216,7 +217,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
         headers: { 'Content-Type': 'multipart/form-data', 'x-file-type': 'design' },
       });
       set('supportingDocUrl', res.data.url);
-      set('supportingDocName', res.data.filename ?? file.name);
+      set('supportingDocName', makeUniqueFileName(res.data.filename ?? file.name, 'Expense-Proof'));
     } catch { showToast('File upload failed.', 'error'); }
     finally { setUploading(false); }
   };

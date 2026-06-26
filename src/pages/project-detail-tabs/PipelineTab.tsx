@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { projectApi, fileUrl } from '../../services/api.js';
+import { makeUniqueFileName } from '../../utils/validators.js';
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { ShimmerTable } from '../../components/Shimmer.js';
@@ -45,15 +46,22 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
   const [submittingRequest, setSubmittingRequest] = useState(false);
   const [rejectForm, setRejectForm] = useState<{ id: string; reason: string } | null>(null);
 
+  const [statusChangeRequest, setStatusChangeRequest] = useState<{ drawingId: string; status: string; currentStatus: string; drawingName: string; notes: string; } | null>(null);
+  const [statusChangeComment, setStatusChangeComment] = useState('');
+
   const isAdmin        = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
   const isSuperAdmin   = isAdmin; // Admin has same pipeline authority as Super Admin
+  const isRealSuperAdmin = currentUser.role === 'Super Admin';
   const isPM           = project.assignment?.projectManager?.id === currentUser.id;
   const isArch         = currentUser.role === 'Project Architect' || currentUser.role === 'Junior Architect';
   const isCompleted    = project.status === 'COMPLETED';
   const isAssignedArch = (currentUser.role === 'Project Architect' && project.assignment?.projectArchitect?.id === currentUser.id) ||
                          (currentUser.role === 'Junior Architect'   && project.assignment?.juniorArchitect?.id  === currentUser.id);
   const canManage      = isAdmin || isPM;
-  const canAddDrawings = !isCompleted && (canManage || isAssignedArch);
+  const hasAnyApproval = pipeline?.approvedByPM || pipeline?.approvedByAdmin;
+  const canAddDrawings = !isCompleted && (
+    isRealSuperAdmin || (!hasAnyApproval && (canManage || isAssignedArch))
+  );
 
   const fetchPipeline = useCallback(async () => {
     setLoading(true);
@@ -207,11 +215,32 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
 
   const handleAssign = async () => {
     setSubmitting(true);
+
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const timestamp = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+
+    const selectedArch = architects.find(u => u.id === assignForm.assignedArchitectId)?.name ?? 'None';
+    const selectedJr = architects.find(u => u.id === assignForm.juniorArchitectId)?.name ?? 'None';
+    const userDisplay = `${currentUser.name} (${currentUser.role})`;
+
+    let logEntry = `[${timestamp}] ${userDisplay}: Assigned Team (Arch: ${selectedArch}, Jr: ${selectedJr}).`;
+    if (assignForm.notes.trim()) {
+      logEntry += ` Notes: "${assignForm.notes.trim()}"`;
+    }
+
+    const existingNotes = showAssignModal.notes ?? '';
+    const newNotes = existingNotes ? `${logEntry}\n${existingNotes}` : logEntry;
+
     try {
       await projectApi.assignDrawingTeam(project.id, showAssignModal.id, {
         assignedArchitectId: assignForm.assignedArchitectId || null,
         juniorArchitectId: assignForm.juniorArchitectId || null,
-        notes: assignForm.notes,
+        notes: newNotes,
       });
       showToast('Team assigned.', 'success');
       setShowAssignModal(null);
@@ -220,12 +249,65 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
     finally { setSubmitting(false); }
   };
 
-  const handleStatusChange = async (drawingId: string, status: string) => {
+  const handleStatusChangeWithLog = async () => {
+    if (!statusChangeRequest) return;
+    const { drawingId, status, currentStatus, notes } = statusChangeRequest;
+
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const timestamp = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+
+    const userDisplay = `${currentUser.name} (${currentUser.role})`;
+    const commentStr = statusChangeComment.trim() ? ` (Comment: "${statusChangeComment.trim()}")` : '';
+    const logEntry = `[${timestamp}] ${userDisplay}: Changed status from ${currentStatus} to ${status}.${commentStr}`;
+
+    const newNotes = notes.trim() ? `${logEntry}\n${notes.trim()}` : logEntry;
+
+    setSubmitting(true);
     try {
-      await projectApi.updateDrawing(project.id, drawingId, { status });
+      await projectApi.updateDrawing(project.id, drawingId, { status, notes: newNotes });
       showToast('Status updated.', 'success');
+      setStatusChangeRequest(null);
       fetchPipeline();
-    } catch (err: any) { showToast(err.response?.data?.message ?? 'Failed.', 'error'); }
+    } catch (err: any) {
+      showToast(err.response?.data?.message ?? 'Failed.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const renderNotesAndLogs = (notes: string | null) => {
+    if (!notes) return null;
+    const lines = notes.split('\n').filter(Boolean);
+    return (
+      <div className="mt-2.5 pt-2.5 border-t border-[var(--border)]/45">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-2">Activity & Change Log</p>
+        <div className="space-y-2 pl-2.5 border-l-2 border-[var(--border)]/60">
+          {lines.map((line, idx) => {
+            const matchLog = line.match(/^\[([^\]]+)\]\s+([^:]+):\s+(.*)$/);
+            if (matchLog) {
+              const [, timestamp, user, action] = matchLog;
+              return (
+                <div key={idx} className="text-[11px] leading-relaxed text-[var(--text-primary)]">
+                  <span className="text-[var(--text-muted)] font-mono text-[9.5px] mr-2 bg-[var(--border)]/30 px-1.5 py-0.5 rounded">{timestamp}</span>
+                  <span className="font-bold text-[var(--text-secondary)] mr-1.5">{user}</span>
+                  <span>{action}</span>
+                </div>
+              );
+            }
+            return (
+              <p key={idx} className="text-[11px] text-[var(--text-muted)] italic leading-relaxed">
+                {line}
+              </p>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const handleApprovePM = async () => {
@@ -363,12 +445,12 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
         )}
         <div className="flex gap-2 mt-3 flex-wrap">
           {canManage && !pipeline.approvedByPM && (isPM || isSuperAdmin) && (
-            <button onClick={handleApprovePM} disabled={submitting} className={btnPrimary}>
+            <button onClick={handleApprovePM} disabled={submitting || (pipeline.drawings ?? []).length === 0} className={btnPrimary}>
               {submitting ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />} Approve as PM
             </button>
           )}
           {isSuperAdmin && !pipeline.approvedByAdmin && (
-            <button onClick={handleApproveAdmin} disabled={submitting} className={btnPrimary}>
+            <button onClick={handleApproveAdmin} disabled={submitting || (pipeline.drawings ?? []).length === 0} className={btnPrimary}>
               {submitting ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />} Approve as Admin
             </button>
           )}
@@ -456,98 +538,184 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
         </div>
       ) : (
         Object.entries(byCategory).map(([cat, drawings]) => (
-          <div key={cat} className={`${card} overflow-hidden`}>
-            <div className="px-4 py-2.5 bg-[var(--border)]/20 border-b border-[var(--border)]">
-              <p className="text-[10.5px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                {CATEGORY_LABELS[cat] ?? cat} <span className="font-normal">({drawings.length})</span>
+          <div key={cat} className="space-y-2">
+            <div className="px-1 py-1.5 border-b border-[var(--border)]/60 flex items-center justify-between mt-4 mb-2">
+              <p className="text-[11px] font-extrabold uppercase tracking-widest text-[var(--text-muted)]">
+                {CATEGORY_LABELS[cat] ?? cat}
               </p>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--border)]/40 text-[var(--text-secondary)]">
+                {drawings.length}
+              </span>
             </div>
-            <div className="divide-y divide-[var(--border)]">
+            <div className="space-y-3">
               {drawings.map((d: any) => (
-                <div key={d.id} className={`p-3.5 ${d.pendingDelete ? 'bg-rose-50/40' : ''}`}>
+                <div key={d.id} className={`${card} p-4 transition-all duration-200 hover:shadow-md ${d.pendingDelete ? 'bg-rose-50/40 dark:bg-rose-950/10 border-rose-300/50' : 'hover:border-[#b89047]/40'}`}>
                   {d.pendingDelete && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 mb-2.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px]">
+                    <div className="flex items-center gap-2 px-3 py-1.5 mb-3 rounded-lg bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-[11px]">
                       <Trash2 size={11} className="text-rose-500 shrink-0" />
-                      <span className="text-rose-700 font-semibold">Pending Deletion</span>
+                      <span className="text-rose-700 dark:text-rose-400 font-semibold">Pending Deletion</span>
                       {d.pendingDeleteRequestedBy && <span className="text-rose-500">— requested by {d.pendingDeleteRequestedBy.name}</span>}
                     </div>
                   )}
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <p className="text-[13px] font-bold text-[var(--text-primary)] truncate">
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    {/* Left Column: Drawing Name and Files */}
+                    <div className="md:col-span-4 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-[13.5px] font-bold text-[var(--text-primary)] leading-tight">
                           {d.drawingMaster?.name}
                           {d.roomName && <span className="text-[#b89047]"> — {d.roomName}</span>}
                           {d.wallDirection && <span className="text-[var(--text-muted)]"> ({d.wallDirection} Wall)</span>}
                         </p>
-                        <StatusBadge status={d.status} />
+                        <StatusBadge status={d.status} className="shrink-0" />
                       </div>
-                      <div className="flex items-center gap-3 flex-wrap text-[11px] text-[var(--text-muted)]">
-                        {d.assignedArchitect && <span>Arch: <span className="text-[var(--text-secondary)] font-semibold">{d.assignedArchitect.name}</span></span>}
-                        {d.juniorArchitect && <span>Jr: <span className="text-[var(--text-secondary)] font-semibold">{d.juniorArchitect.name}</span></span>}
-                        {!d.assignedArchitect && <span className="text-amber-600">No architect assigned</span>}
-                      </div>
-                      {d.notes && <p className="text-[11px] text-[var(--text-muted)] mt-1 italic">{d.notes}</p>}
+                      
                       {d.files?.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-2 items-end">
-                          {d.files.map((f: any) => {
-                            const attachUrl = fileUrl(f.fileUrl);
-                            const isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(f.fileName);
-                            return isImg ? (
-                              <button key={f.id} type="button" onClick={() => setDrawingDocViewer({ url: attachUrl, fileName: f.fileName })}
-                                className="group relative w-14 h-14 rounded-lg overflow-hidden border border-[rgba(184,144,71,0.3)] hover:border-[#b89047] transition-colors cursor-pointer bg-transparent p-0 shrink-0">
-                                <img src={attachUrl} alt={f.fileName} className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <Eye size={12} className="text-white" />
-                                </div>
-                              </button>
-                            ) : (
-                              <button key={f.id} type="button" onClick={() => setDrawingDocViewer({ url: attachUrl, fileName: f.fileName })}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold text-[#b89047] bg-[rgba(184,144,71,0.06)] border-[rgba(184,144,71,0.25)] hover:bg-[rgba(184,144,71,0.12)] transition-colors cursor-pointer">
-                                {f.fileType === 'IMAGE' ? <ImageIcon size={9} /> : <FileText size={9} />}
-                                {f.fileType} — {f.fileName}
-                              </button>
-                            );
-                          })}
+                        <div className="pt-1">
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">Attached Files</p>
+                          <div className="flex flex-wrap gap-1.5 items-end">
+                            {d.files.map((f: any) => {
+                              const attachUrl = fileUrl(f.fileUrl);
+                              const isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(f.fileName);
+                              return isImg ? (
+                                <button key={f.id} type="button" onClick={() => setDrawingDocViewer({ url: attachUrl, fileName: f.fileName })}
+                                  className="group relative w-12 h-12 rounded-lg overflow-hidden border border-[rgba(184,144,71,0.3)] hover:border-[#b89047] transition-colors cursor-pointer bg-transparent p-0 shrink-0">
+                                  <img src={attachUrl} alt={f.fileName} className="w-full h-full object-cover" />
+                                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <Eye size={10} className="text-white" />
+                                  </div>
+                                </button>
+                              ) : (
+                                <button key={f.id} type="button" onClick={() => setDrawingDocViewer({ url: attachUrl, fileName: f.fileName })}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-semibold text-[#b89047] bg-[rgba(184,144,71,0.04)] border-[rgba(184,144,71,0.18)] hover:bg-[rgba(184,144,71,0.08)] transition-colors cursor-pointer max-w-[150px]">
+                                  {f.fileType === 'IMAGE' ? <ImageIcon size={8} /> : <FileText size={8} />}
+                                  <span className="truncate">{f.fileName}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-col gap-1.5 shrink-0 items-end">
-                      {isSuperAdmin && d.pendingDelete && (
-                        <>
-                          <button onClick={() => handleApproveDelete(d.id)} disabled={submitting} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 cursor-pointer transition-colors">
-                            <Check size={10} /> Delete
-                          </button>
-                          <button onClick={() => handleRejectDelete(d.id)} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 cursor-pointer transition-colors">
-                            <XCircle size={10} /> Keep
-                          </button>
-                        </>
+                    
+                    {/* Middle Column: Assigned Team */}
+                    <div className="md:col-span-3 border-t md:border-t-0 md:border-l border-[var(--border)]/40 pt-3 md:pt-0 md:pl-4 space-y-1.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Assigned Team</p>
+                      <div className="space-y-1.5">
+                        {d.assignedArchitect ? (
+                          <div className="text-[11.5px] text-[var(--text-secondary)] flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                            <span className="truncate">Arch: <strong className="text-[var(--text-primary)] font-semibold">{d.assignedArchitect.name}</strong></span>
+                          </div>
+                        ) : (
+                          <div className="text-[11.5px] text-amber-600 flex items-center gap-1.5 italic">
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                            <span>No Architect</span>
+                          </div>
+                        )}
+                        {d.juniorArchitect && (
+                          <div className="text-[11.5px] text-[var(--text-secondary)] flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                            <span className="truncate">Junior: <strong className="text-[var(--text-primary)] font-semibold">{d.juniorArchitect.name}</strong></span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Activity Log Column */}
+                    <div className="md:col-span-3 border-t md:border-t-0 md:border-l border-[var(--border)]/40 pt-3 md:pt-0 md:pl-4 space-y-1.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Activity Log</p>
+                      {d.notes ? (
+                        <div className="max-h-[80px] overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
+                          {d.notes.split('\n').filter(Boolean).map((line: string, idx: number) => {
+                            const matchLog = line.match(/^\[([^\]]+)\]\s+([^:]+):\s+(.*)$/);
+                            if (matchLog) {
+                              const [, timestamp, user, action] = matchLog;
+                              const shortTime = timestamp.replace(/^\d{4}-/, ''); // remove year
+                              return (
+                                <div key={idx} className="text-[10.5px] leading-snug">
+                                  <span className="text-[var(--text-muted)] font-mono text-[9px] block">{shortTime}</span>
+                                  <span className="text-[var(--text-primary)] font-medium">{action}</span>
+                                </div>
+                              );
+                            }
+                            return (
+                              <p key={idx} className="text-[10.5px] text-[var(--text-muted)] italic leading-snug">
+                                {line}
+                              </p>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-[10.5px] text-[var(--text-muted)] italic">No activities logged yet.</p>
                       )}
-                      {(canManage || isArch) && !d.pendingDelete && !isSuperAdmin && (
-                        <button onClick={() => handleRequestDelete(d.id)} title="Request deletion approval"
-                          className="p-1.5 rounded-lg text-[10px] text-rose-500 border border-rose-200 bg-rose-50 hover:bg-rose-100 cursor-pointer transition-colors">
-                          <Trash2 size={11} />
-                        </button>
-                      )}
-                      {canManage && (
-                        <button onClick={() => { setShowAssignModal(d); setAssignForm({ assignedArchitectId: d.assignedArchitect?.id ?? '', juniorArchitectId: d.juniorArchitect?.id ?? '', notes: d.notes ?? '' }); }} className={btnSecondary}>
-                          <Users size={10} /> Team
-                        </button>
-                      )}
+                    </div>
+                    
+                    {/* Actions Column */}
+                    <div className="md:col-span-2 border-t md:border-t-0 md:border-l border-[var(--border)]/40 pt-3 md:pt-0 md:pl-4 flex flex-row md:flex-col gap-1.5 items-center md:items-stretch justify-end md:justify-start w-full md:w-auto">
                       {(canManage || isArch) && bothApproved && d.status !== 'APPROVED' && (
-                        <select value={d.status} onChange={e => handleStatusChange(d.id, e.target.value)}
-                          className="text-[10.5px] font-semibold bg-[var(--card-bg)] border border-[var(--border)] rounded-lg px-2 py-1 outline-none focus:border-[#b89047] cursor-pointer text-[var(--text-secondary)]">
+                        <select value={d.status} onChange={e => {
+                          setStatusChangeRequest({
+                            drawingId: d.id,
+                            status: e.target.value,
+                            currentStatus: d.status,
+                            drawingName: d.drawingMaster?.name + (d.roomName ? ` — ${d.roomName}` : ''),
+                            notes: d.notes ?? '',
+                          });
+                          setStatusChangeComment('');
+                        }}
+                          className="w-full text-[11px] font-semibold bg-[var(--card-bg)] border border-[var(--border)] rounded-lg px-2 py-1.5 outline-none focus:border-[#b89047] cursor-pointer text-[var(--text-secondary)]">
                           {(canManage
                             ? ['NOT_STARTED', 'IN_PROGRESS', 'REVIEW', 'APPROVED']
                             : ['IN_PROGRESS', 'REVIEW']
                           ).map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
                         </select>
                       )}
-                      {bothApproved && (canManage || isArch) && (
-                        <button onClick={() => { setShowFileUpload(d); setFileForm({ fileType: 'PDF', fileUrl: '', fileName: '' }); }} className={btnSecondary}>
-                          <Upload size={10} /> File
-                        </button>
-                      )}
+                      
+                      <div className="flex items-center gap-1.5 w-full justify-end md:justify-stretch">
+                        {bothApproved && (canManage || isArch) && (
+                          <button onClick={() => { setShowFileUpload(d); setFileForm({ fileType: 'PDF', fileUrl: '', fileName: '' }); }} className={`${btnSecondary} flex-1 justify-center py-1 text-[11px]`}>
+                            <Upload size={10} /> File
+                          </button>
+                        )}
+                        
+                        {canManage && (
+                          <button onClick={() => { setShowAssignModal(d); setAssignForm({ assignedArchitectId: d.assignedArchitect?.id ?? '', juniorArchitectId: d.juniorArchitect?.id ?? '', notes: '' }); }} className={`${btnSecondary} flex-1 justify-center py-1 text-[11px]`}>
+                            <Users size={10} /> Team
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5 w-full justify-end md:justify-stretch mt-auto">
+                        {isSuperAdmin && d.pendingDelete && (
+                          <div className="flex gap-1 w-full">
+                            <button onClick={() => handleApproveDelete(d.id)} disabled={submitting} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 cursor-pointer transition-colors">
+                              <Check size={10} /> Delete
+                            </button>
+                            <button onClick={() => handleRejectDelete(d.id)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 cursor-pointer transition-colors">
+                              <XCircle size={10} /> Keep
+                            </button>
+                          </div>
+                        )}
+                        
+                        {isRealSuperAdmin && !d.pendingDelete && (
+                          <button onClick={() => {
+                            if (window.confirm(`Are you sure you want to directly delete "${d.drawingMaster?.name}"?`)) {
+                              handleRemove(d.id);
+                            }
+                          }} title="Delete drawing directly"
+                            className="p-1.5 w-full rounded-lg text-rose-500 border border-rose-200 bg-rose-50 hover:bg-rose-100 cursor-pointer transition-colors flex items-center justify-center gap-1 text-[11px] font-semibold">
+                            <Trash2 size={10} /> Delete
+                          </button>
+                        )}
+                        
+                        {!isRealSuperAdmin && (canManage || isArch) && !d.pendingDelete && (
+                          <button onClick={() => handleRequestDelete(d.id)} title="Request deletion approval"
+                            className="p-1.5 w-full rounded-lg text-rose-500 border border-rose-200 bg-rose-50 hover:bg-rose-100 cursor-pointer transition-colors flex items-center justify-center gap-1 text-[11px] font-semibold">
+                            <Trash2 size={10} /> Delete
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -709,7 +877,16 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
                 maxSizeMb={50}
                 label="Click or drag a drawing file here"
                 value={fileForm.fileUrl ? { url: fileForm.fileUrl, fileName: fileForm.fileName } : null}
-                onSuccess={(url, fileName) => { setFileForm(f => ({ ...f, fileUrl: url, fileName })); setUploadError(null); }}
+                onSuccess={(url, rawName) => {
+                  const parts = [
+                    showFileUpload.drawingMaster?.name,
+                    showFileUpload.roomName ?? null,
+                    (showFileUpload as any).wallDirection ?? null,
+                  ].filter(Boolean).join('_');
+                  const unique = makeUniqueFileName(rawName, parts || 'Drawing');
+                  setFileForm(f => ({ ...f, fileUrl: url, fileName: unique }));
+                  setUploadError(null);
+                }}
                 onError={msg => setUploadError(msg)}
                 onClear={() => setFileForm(f => ({ ...f, fileUrl: '', fileName: '' }))}
               />
@@ -756,6 +933,34 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Status change comment modal */}
+      {statusChangeRequest && (
+        <Modal title="Update Drawing Status" subtitle={statusChangeRequest.drawingName} onClose={() => setStatusChangeRequest(null)}>
+          <div className="p-5 space-y-4">
+            <div className="p-3 bg-[var(--border)]/20 rounded-lg flex items-center justify-between text-[12px]">
+              <span className="text-[var(--text-muted)] font-semibold">Change Status:</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded border border-stone-200 dark:border-stone-700">{statusChangeRequest.currentStatus.replace(/_/g, ' ')}</span>
+                <span className="text-stone-400">→</span>
+                <span className="font-bold text-[#b89047] bg-[#b89047]/10 px-2 py-0.5 rounded border border-[#b89047]/20">{statusChangeRequest.status.replace(/_/g, ' ')}</span>
+              </div>
+            </div>
+            <div>
+              <label className={label}>Log Comment / Progress Note</label>
+              <textarea className={`${inputBase} resize-none`} rows={3} value={statusChangeComment}
+                onChange={e => setStatusChangeComment(e.target.value)}
+                placeholder="Optional: Describe why the status is changing or add progress comments…" />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setStatusChangeRequest(null)} className={btnSecondary}>Cancel</button>
+              <button onClick={handleStatusChangeWithLog} disabled={submitting} className={btnPrimary}>
+                {submitting ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />} Update Status
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

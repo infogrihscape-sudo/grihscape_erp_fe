@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { projectApi, fileUrl } from '../../services/api.js';
+import { makeUniqueFileName } from '../../utils/validators.js';
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { ShimmerTable } from '../../components/Shimmer.js';
@@ -92,9 +93,9 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
   };
 
   const CLIENT_STATUS_COLORS: Record<string, string> = {
-    PENDING_CLIENT:    'text-blue-700 bg-blue-50 border-blue-200',
-    REVISION_REQUESTED: 'text-orange-700 bg-orange-50 border-orange-200',
-    CLIENT_APPROVED:   'text-teal-700 bg-teal-50 border-teal-200',
+    PENDING_CLIENT:    'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40',
+    REVISION_REQUESTED: 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/30',
+    CLIENT_APPROVED:   'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/20 border-teal-200 dark:border-teal-900/30',
   };
   const CLIENT_STATUS_LABELS: Record<string, string> = {
     PENDING_CLIENT:    'Awaiting Client Response',
@@ -158,11 +159,11 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
 
       {/* Active status banners */}
       {revisionRequested && !isCompleted && (
-        <div className="flex items-start gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-xl">
-          <AlertTriangle size={15} className="text-orange-500 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 px-4 py-3 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900/30 rounded-xl">
+          <AlertTriangle size={15} className="text-orange-500 dark:text-orange-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-[12.5px] font-bold text-orange-800">Client Requested Revision</p>
-            <p className="text-[11.5px] text-orange-700 mt-0.5">
+            <p className="text-[12.5px] font-bold text-orange-800 dark:text-orange-300">Client Requested Revision</p>
+            <p className="text-[11.5px] text-orange-700 dark:text-orange-400 mt-0.5">
               The client has asked for changes on <strong>v{latestDraft.version}</strong>.
               {canUpload ? ' Upload a revised layout file to start the next review cycle.' : ' Waiting for the architect to upload a revised version.'}
             </p>
@@ -170,33 +171,33 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
         </div>
       )}
       {awaitingAdminReview && !revisionRequested && !isCompleted && (
-        <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl">
-          <Clock size={15} className="text-amber-500 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xl">
+          <Clock size={15} className="text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" />
           <div>
-            <p className="text-[12.5px] font-bold text-amber-800">Waiting for Admin Review</p>
-            <p className="text-[11.5px] text-amber-700 mt-0.5">v{latestDraft.version} has been uploaded. Admin needs to approve or reject it before it can be sent to the client.</p>
+            <p className="text-[12.5px] font-bold text-amber-800 dark:text-amber-300">Waiting for Admin Review</p>
+            <p className="text-[11.5px] text-amber-700 dark:text-amber-400 mt-0.5">v{latestDraft.version} has been uploaded. Admin needs to approve or reject it before it can be sent to the client.</p>
           </div>
         </div>
       )}
       {awaitingSend && !isCompleted && (
-        <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl">
-          <Send size={15} className="text-blue-500 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 rounded-xl">
+          <Send size={15} className="text-blue-500 dark:text-blue-400 mt-0.5 shrink-0" />
           <div>
-            <p className="text-[12.5px] font-bold text-blue-800">Ready to Send to Client</p>
-            <p className="text-[11.5px] text-blue-700 mt-0.5">v{latestDraft.version} is approved. PM or Admin can now send it to the client for review.</p>
+            <p className="text-[12.5px] font-bold text-blue-800 dark:text-blue-300">Ready to Send to Client</p>
+            <p className="text-[11.5px] text-blue-700 dark:text-blue-400 mt-0.5">v{latestDraft.version} is approved. PM or Admin can now send it to the client for review.</p>
           </div>
         </div>
       )}
       {awaitingResponse && !isCompleted && (
-        <div className="flex items-start gap-3 px-4 py-3 bg-sky-50 border border-sky-200 rounded-xl">
-          <Clock size={15} className="text-sky-500 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 px-4 py-3 bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-900/30 rounded-xl">
+          <Clock size={15} className="text-sky-500 dark:text-sky-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-[12.5px] font-bold text-sky-800">Awaiting Client Response — v{latestDraft.version} sent</p>
-            <p className="text-[11.5px] text-sky-700 mt-0.5 mb-2">When the client gives feedback, record their response here:</p>
+            <p className="text-[12.5px] font-bold text-sky-800 dark:text-sky-300">Awaiting Client Response — v{latestDraft.version} sent</p>
+            <p className="text-[11.5px] text-sky-700 dark:text-sky-400 mt-0.5 mb-2">When the client gives feedback, record their response here:</p>
             {canRecordClientResp && (
               <button
                 onClick={() => { setShowClientResponse(latestDraft); setClientResponseForm({ response: 'APPROVED', notes: '' }); }}
-                className={btnPrimary}>
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12px] font-semibold text-white bg-sky-600 hover:bg-sky-700 hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0">
                 <CheckCircle2 size={12} /> Record Client Response
               </button>
             )}
@@ -204,11 +205,11 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
         </div>
       )}
       {clientApproved && (
-        <div className="flex items-start gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-          <CheckCircle2 size={15} className="text-emerald-500 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 px-4 py-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/30 rounded-xl">
+          <CheckCircle2 size={15} className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
           <div>
-            <p className="text-[12.5px] font-bold text-emerald-800">Layout Approved — Design Pipeline Active</p>
-            <p className="text-[11.5px] text-emerald-700 mt-0.5">Client approved the layout. Go to the <strong>Design Pipeline</strong> tab to add drawings, assign architects, and track progress.</p>
+            <p className="text-[12.5px] font-bold text-emerald-800 dark:text-emerald-300">Layout Approved — Design Pipeline Active</p>
+            <p className="text-[11.5px] text-emerald-700 dark:text-emerald-400 mt-0.5">Client approved the layout. Go to the <strong>Design Pipeline</strong> tab to add drawings, assign architects, and track progress.</p>
           </div>
         </div>
       )}
@@ -315,17 +316,29 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
                         {d.layoutFeedback?.length > 0 && (() => {
                           const latest = d.layoutFeedback[0];
                           return latest.notes || latest.fileUrl ? (
-                            <div className={`mt-1 p-2.5 rounded-lg border text-[11.5px] ${latest.response === 'REVISION_REQUIRED' ? 'bg-orange-50 border-orange-200' : 'bg-teal-50 border-teal-200'}`}>
-                              <div className="flex items-center gap-1.5 mb-1">
-                                <MessageSquare size={10} className={latest.response === 'REVISION_REQUIRED' ? 'text-orange-500' : 'text-teal-500'} />
-                                <span className={`font-semibold text-[10px] ${latest.response === 'REVISION_REQUIRED' ? 'text-orange-700' : 'text-teal-700'}`}>
+                            <div className={`mt-2 p-3 rounded-lg border text-[11.5px] backdrop-blur-xs ${
+                              latest.response === 'REVISION_REQUIRED'
+                                ? 'bg-amber-500/5 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/30'
+                                : 'bg-emerald-500/5 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/30'
+                            }`}>
+                              <div className="flex items-center gap-1.5 mb-1.5">
+                                <MessageSquare size={10} className={latest.response === 'REVISION_REQUIRED' ? 'text-amber-500' : 'text-emerald-500'} />
+                                <span className={`font-bold text-[9px] uppercase tracking-wider ${
+                                  latest.response === 'REVISION_REQUIRED' ? 'text-amber-800 dark:text-amber-400' : 'text-emerald-800 dark:text-emerald-400'
+                                }`}>
                                   Client Feedback — {latest.createdBy?.name}
                                 </span>
                               </div>
-                              {latest.notes && <p className="text-stone-700 leading-snug">{latest.notes}</p>}
+                              {latest.notes && (
+                                <p className={`leading-relaxed text-[11.5px] ${
+                                  latest.response === 'REVISION_REQUIRED' ? 'text-amber-900 dark:text-amber-200' : 'text-emerald-900 dark:text-emerald-200'
+                                }`}>
+                                  {latest.notes}
+                                </p>
+                              )}
                               {latest.fileUrl && (
                                 <button onClick={() => setDocViewer({ url: fileUrl(latest.fileUrl), fileName: latest.fileName || 'Feedback file' })}
-                                  className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-[#b89047] hover:underline cursor-pointer border-0 bg-transparent p-0">
+                                  className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[#b89047] hover:underline cursor-pointer border-0 bg-transparent p-0">
                                   <Eye size={9} /> View Attached Feedback
                                 </button>
                               )}
@@ -346,11 +359,6 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
                       {canSend && d.status === 'APPROVED' && !d.designEmailSentAt && (
                         <button onClick={() => { setShowSend(d); setSendForm({ notes: '' }); }} className={btnPrimary}>
                           <Send size={11} /> Send
-                        </button>
-                      )}
-                      {canRecordClientResp && d.clientStatus === 'PENDING_CLIENT' && (
-                        <button onClick={() => { setShowClientResponse(d); setClientResponseForm({ response: 'APPROVED', notes: '' }); }} className={btnPrimary}>
-                          <MessageSquare size={11} /> Client Response
                         </button>
                       )}
                     </div>
@@ -374,7 +382,11 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
                 maxSizeMb={30}
                 label="Click or drag a layout file here"
                 value={uploadForm.fileUrl ? { url: uploadForm.fileUrl, fileName: uploadForm.fileName } : null}
-                onSuccess={(url, fileName) => setUploadForm({ fileUrl: url, fileName })}
+                onSuccess={(url, rawName) => {
+                  const nextVersion = (drafts.length + 1);
+                  const unique = makeUniqueFileName(rawName, `Layout_v${nextVersion}`);
+                  setUploadForm({ fileUrl: url, fileName: unique });
+                }}
                 onError={msg => showToast(msg, 'error')}
                 onClear={() => setUploadForm({ fileUrl: '', fileName: '' })}
               />
