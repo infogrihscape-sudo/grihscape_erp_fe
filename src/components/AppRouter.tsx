@@ -55,6 +55,9 @@ const OutflowDetail = React.lazy(() =>
 const AccountsMasters = React.lazy(() =>
   import('../pages/accounts/AccountsMasters.js').then((m) => ({ default: m.AccountsMasters }))
 );
+const ConstructionPayments = React.lazy(() =>
+  import('../pages/accounts/ConstructionPayments.js').then((m) => ({ default: m.ConstructionPayments }))
+);
 const DelayAnalysisPage = React.lazy(() =>
   import('../pages/construction/DelayAnalysisPage.js').then((m) => ({ default: m.DelayAnalysisPage }))
 );
@@ -66,11 +69,11 @@ interface AppRouterProps {
 const VALID_PATHS = [
   '/overview', '/users', '/roles', '/logs', '/prospects', '/leads',
   '/contracts', '/tenders', '/projects', '/delay-analysis',
-  '/accounts/inflow', '/accounts/outflow', '/accounts/masters',
+  '/accounts/inflow', '/accounts/outflow', '/accounts/construction-payments', '/accounts/masters',
 ];
 
 // Accounts sub-routes covered by the __accounts_payments__ group key in ROLE_ROUTES
-const ACCOUNTS_PAYMENT_ROUTES = new Set(['/accounts/inflow', '/accounts/outflow']);
+const ACCOUNTS_PAYMENT_ROUTES = new Set(['/accounts/inflow', '/accounts/outflow', '/accounts/construction-payments']);
 
 const roleLabel = (r: string) => r;
 
@@ -98,6 +101,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
   const isProjects       = path === '/projects';
   const isInflowList     = path === '/accounts/inflow';
   const isOutflowList    = path === '/accounts/outflow';
+  const isConstPayments  = path === '/accounts/construction-payments';
   const isAccMasters     = path === '/accounts/masters';
   const isDelayAnalysis  = path === '/delay-analysis';
 
@@ -248,6 +252,10 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
         ) : isOutflowList ? (
           <Suspense fallback={<PageLoader text="Loading Outflow…" />}>
             <OutflowList currentUser={user} />
+          </Suspense>
+        ) : isConstPayments ? (
+          <Suspense fallback={<PageLoader text="Loading Construction Payments…" />}>
+            <ConstructionPayments currentUser={user} />
           </Suspense>
         ) : isAccMasters ? (
           <Suspense fallback={<PageLoader text="Loading Masters…" />}>

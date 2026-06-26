@@ -87,17 +87,17 @@ export const InflowList: React.FC<Props> = ({ currentUser }) => {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--card-bg)]">
+      <div className="table-container flex-1">
         {loading ? (
           <div className="flex items-center justify-center h-40 text-[11px] text-[var(--text-muted)]">Loading…</div>
         ) : challans.length === 0 ? (
           <div className="flex items-center justify-center h-40 text-[11px] text-[var(--text-muted)]">No challans found.</div>
         ) : (
-          <table className="w-full text-[11px]">
+          <table className="erp-table">
             <thead>
-              <tr className="border-b border-[var(--border)] text-[var(--text-muted)] text-left">
-                {['Sr#', 'Challan No', 'Date', 'Client', 'Site', 'Amount', 'Tax', 'Final', 'Mode', 'Status', 'Doc', ''].map(h => (
-                  <th key={h} className="px-4 py-3 font-semibold">{h}</th>
+              <tr className="text-[var(--text-muted)]">
+                {['Sr#', 'Challan No', 'Date', 'Client', 'Site', 'Purpose', 'Amount', 'Tax', 'Final', 'Mode', 'Status', 'Doc', ''].map(h => (
+                  <th key={h} >{h}</th>
                 ))}
               </tr>
             </thead>
@@ -105,25 +105,26 @@ export const InflowList: React.FC<Props> = ({ currentUser }) => {
               {challans.map(c => (
                 <tr
                   key={c.id}
-                  className="border-b border-[var(--border)] hover:bg-white/3 transition-colors"
+                  
                 >
-                  <td className="px-4 py-3 text-[var(--text-muted)]">{c.srNo}</td>
+                  <td >{c.srNo}</td>
                   <td className="px-4 py-3 font-mono font-semibold text-[var(--text-primary)]">{c.challanNo}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{new Date(c.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                  <td >{new Date(c.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                   <td className="px-4 py-3 text-[var(--text-primary)] font-medium">{c.clientName}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{c.siteName ?? '—'}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">₹{Number(c.amount).toLocaleString('en-IN')}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">
+                  <td >{c.siteName ?? '—'}</td>
+                  <td >{c.purpose?.name ?? '—'}</td>
+                  <td >₹{Number(c.amount).toLocaleString('en-IN')}</td>
+                  <td >
                     {c.isTaxApplicable ? `${c.taxPercent}% ${c.taxType}` : '—'}
                   </td>
                   <td className="px-4 py-3 font-semibold text-emerald-400">₹{Number(c.finalAmount).toLocaleString('en-IN')}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{MODE_LABELS[c.modeOfPayment]}</td>
-                  <td className="px-4 py-3">
+                  <td >{MODE_LABELS[c.modeOfPayment]}</td>
+                  <td >
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${STATUS_COLORS[c.status]}`}>
                       {c.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td >
                     {c.supportingDocUrl ? (
                       <a
                         href={c.supportingDocUrl.startsWith('http') ? c.supportingDocUrl : fileUrl(c.supportingDocUrl)}
@@ -138,7 +139,7 @@ export const InflowList: React.FC<Props> = ({ currentUser }) => {
                       <span className="px-2 text-[var(--text-muted)] opacity-30"><Paperclip size={13} /></span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td >
                     <button
                       onClick={() => navigate(`/accounts/inflow/${c.id}`)}
                       className="p-1.5 rounded-lg hover:bg-white/8 text-stone-400 hover:text-stone-200 transition-colors"

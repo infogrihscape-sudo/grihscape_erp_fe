@@ -1018,11 +1018,11 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                   </p>
                 </div>
               ) : (
-                <table className="w-full border-collapse text-left min-w-[700px]">
+                <table className="erp-table min-w-[700px]">
                   <thead>
-                    <tr className="bg-[var(--table-head)]/80 sticky top-0 z-10 backdrop-blur-xs">
+                    <tr className="sticky top-0 z-10 backdrop-blur-xs">
                       {['S.No.', 'Full Name', 'Phone Number', 'City', 'Platform', 'Services Requested', 'Campaign Name', 'Adset Name', 'Ad Name', 'Feed Type', 'Lead Response', 'Date Added', 'Actions'].map((h) => (
-                        <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-[var(--text-muted)] border-b border-[rgba(197,168,128,0.18)] bg-[var(--table-head)] text-center whitespace-nowrap">{h}</th>
+                        <th key={h} className="whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -1034,8 +1034,8 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
 
                       return (
                       <tr key={lead.id} className={`transition-colors ${lead.isDuplicate30Days ? 'bg-rose-50/30 hover:bg-rose-50/50' : 'hover:bg-[var(--hover-bg)]/40'}`}>
-                        <td className="px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12px] font-medium text-[var(--text-muted)] text-center">{indexStart + index + 1}</td>
-                        <td className="px-4 py-3.5 border-b border-[rgba(197,168,128,0.12)] text-[12.5px] font-semibold text-[var(--text-primary)] text-center whitespace-nowrap">
+                        <td >{indexStart + index + 1}</td>
+                        <td className="font-semibold text-[var(--text-primary)] whitespace-nowrap">
                           <div className="flex flex-col items-center gap-0.5">
                             <span>{lead.fullName}</span>
                             {lead.isDuplicate30Days && (
@@ -1326,9 +1326,9 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                   <p className="text-xs italic">Upload a spreadsheet file to preview, validate, and inspect your leads list.</p>
                 </div>
               ) : (
-                <table className="w-full border-collapse text-left min-w-[700px]">
+                <table className="erp-table min-w-[700px]">
                   <thead>
-                    <tr className="bg-[var(--table-head)]/80 sticky top-0 z-10 backdrop-blur-xs">
+                    <tr className="sticky top-0 z-10 backdrop-blur-xs">
                       {['S.No.', 'Full Name', 'Phone Number', 'City', 'Platform Source', 'Services', 'Campaign', 'Errors / Warnings'].map((h) => (
                         <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-[var(--text-muted)] border-b border-[rgba(184,144,71,0.18)] bg-[var(--table-head)] text-center">{h}</th>
                       ))}

@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 export type AppTab = 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders' | 'projects'
-  | 'inflow' | 'outflow' | 'accountsMasters' | 'delayAnalysis';
+  | 'inflow' | 'outflow' | 'constructionPayments' | 'accountsMasters' | 'delayAnalysis';
 
 export interface SidebarItem {
   id: AppTab;
@@ -35,10 +35,11 @@ export const TAB_TO_ROUTE: Record<AppTab, string> = {
   contracts:       '/contracts',
   tenders:         '/tenders',
   projects:        '/projects',
-  inflow:          '/accounts/inflow',
-  outflow:         '/accounts/outflow',
-  accountsMasters: '/accounts/masters',
-  delayAnalysis:   '/delay-analysis',
+  inflow:               '/accounts/inflow',
+  outflow:              '/accounts/outflow',
+  constructionPayments: '/accounts/construction-payments',
+  accountsMasters:      '/accounts/masters',
+  delayAnalysis:        '/delay-analysis',
 };
 
 // Route path → active sidebar tab (/roles and /logs are under the users tab)
@@ -52,10 +53,11 @@ export const ROUTE_TO_TAB: Record<string, AppTab> = {
   '/contracts':        'contracts',
   '/tenders':          'tenders',
   '/projects':         'projects',
-  '/accounts/inflow':  'inflow',
-  '/accounts/outflow': 'outflow',
-  '/accounts/masters': 'accountsMasters',
-  '/delay-analysis':   'delayAnalysis',
+  '/accounts/inflow':               'inflow',
+  '/accounts/outflow':              'outflow',
+  '/accounts/construction-payments': 'constructionPayments',
+  '/accounts/masters':              'accountsMasters',
+  '/delay-analysis':                'delayAnalysis',
 };
 
 export interface PageInfo {
@@ -77,10 +79,11 @@ export const PAGE_INFO: Record<string, PageInfo> = {
   detail:           { icon: <FileText size={15} />,        title: 'Prospect Workflow',      subtitle: 'Detailed client project workflow and stage management',                  iconBg: 'rgba(16,185,129,0.12)',  iconColor: '#10b981' },
   projects:         { icon: <HardHat size={15} />,         title: 'Projects',               subtitle: 'Post-sales project lifecycle — assignment, site verification, design & delivery', iconBg: 'rgba(234,88,12,0.12)', iconColor: '#ea580c' },
   projectDetail:    { icon: <HardHat size={15} />,         title: 'Project Detail',         subtitle: 'Site verification, CDRF, design review & delivery',                    iconBg: 'rgba(234,88,12,0.12)', iconColor: '#ea580c' },
-  inflow:           { icon: <ArrowDownLeft size={15} />,   title: 'Inflow — Payments Received', subtitle: 'Challans, tax handling, and approval workflow',                    iconBg: 'rgba(16,185,129,0.12)', iconColor: '#10b981' },
-  outflow:          { icon: <ArrowUpRight size={15} />,    title: 'Outflow — Expenses',     subtitle: 'Advances, contractor, purchase, salary & office expenses',              iconBg: 'rgba(239,68,68,0.12)',  iconColor: '#ef4444' },
-  accountsMasters:  { icon: <Settings size={15} />,        title: 'Accounts Masters',       subtitle: 'Purpose and expense category master data',                             iconBg: 'rgba(139,92,246,0.12)', iconColor: '#8b5cf6' },
-  delayAnalysis:    { icon: <TrendingDown size={15} />,    title: 'Delay Analysis',         subtitle: 'Auto-generated delay breakdown across all assigned projects',          iconBg: 'rgba(239,68,68,0.12)',  iconColor: '#ef4444' },
+  inflow:               { icon: <ArrowDownLeft size={15} />,   title: 'Inflow — Payments Received', subtitle: 'Challans, tax handling, and approval workflow',                    iconBg: 'rgba(16,185,129,0.12)', iconColor: '#10b981' },
+  outflow:              { icon: <ArrowUpRight size={15} />,    title: 'Outflow — Expenses',     subtitle: 'Advances, contractor, purchase, salary & office expenses',              iconBg: 'rgba(239,68,68,0.12)',  iconColor: '#ef4444' },
+  constructionPayments: { icon: <HardHat size={15} />,         title: 'Construction Payments',  subtitle: 'Review, update & process payment requests from sites',                  iconBg: 'rgba(234,88,12,0.12)', iconColor: '#ea580c' },
+  accountsMasters:      { icon: <Settings size={15} />,        title: 'Accounts Masters',       subtitle: 'Purpose and expense category master data',                             iconBg: 'rgba(139,92,246,0.12)', iconColor: '#8b5cf6' },
+  delayAnalysis:        { icon: <TrendingDown size={15} />,    title: 'Delay Analysis',         subtitle: 'Auto-generated delay breakdown across all assigned projects',          iconBg: 'rgba(239,68,68,0.12)',  iconColor: '#ef4444' },
 };
 
 // Extracts project id from /projects/:id path; returns null otherwise

@@ -178,6 +178,15 @@ export const outflowApi = {
 
   stats: () =>
     api.get<{ success: boolean; data: any }>('/accounts/outflow/stats'),
+
+  listConstructionPayments: (params?: { status?: string }) =>
+    api.get<{ success: boolean; data: any[] }>('/accounts/construction-payments', { params }),
+
+  processConstructionPayment: (sprId: string, data: any) =>
+    api.post<{ success: boolean; data: any }>(`/accounts/construction-payments/${sprId}/process`, data),
+
+  rejectConstructionPayment: (sprId: string, data: { remarks: string }) =>
+    api.post<{ success: boolean; data: any }>(`/accounts/construction-payments/${sprId}/reject`, data),
 };
 
 // ── Masters API ───────────────────────────────────────────────────────────────

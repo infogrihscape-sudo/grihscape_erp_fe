@@ -52,8 +52,9 @@ const PROJECT_STAGE_CONFIG = [
   { key: 'ASSIGNED',           label: 'Team Assigned',      short: 'Assigned', gradient: 'from-blue-400 to-blue-500',     bg: 'bg-blue-50 dark:bg-blue-950/30',      text: 'text-blue-600 dark:text-blue-400',     pill: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
   { key: 'SITE_VERIFICATION',  label: 'Site Verification',  short: 'On-Site',  gradient: 'from-purple-400 to-purple-500', bg: 'bg-purple-50 dark:bg-purple-950/30',  text: 'text-purple-600 dark:text-purple-400', pill: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
   { key: 'CDRF_PENDING',       label: 'CDRF Pending',       short: 'CDRF',     gradient: 'from-orange-400 to-orange-500', bg: 'bg-orange-50 dark:bg-orange-950/30',  text: 'text-orange-600 dark:text-orange-400', pill: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800' },
-  { key: 'DESIGN_REVIEW',      label: 'Design Review',      short: 'Design',   gradient: 'from-indigo-400 to-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-950/30',  text: 'text-indigo-600 dark:text-indigo-400', pill: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
-  { key: 'COMPLETED',          label: 'Completed',          short: 'Done',     gradient: 'from-emerald-400 to-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/30', text: 'text-emerald-600 dark:text-emerald-400', pill: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+  { key: 'DESIGN_REVIEW',            label: 'Design Review',    short: 'Design',       gradient: 'from-indigo-400 to-indigo-500',  bg: 'bg-indigo-50 dark:bg-indigo-950/30',  text: 'text-indigo-600 dark:text-indigo-400',  pill: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
+  { key: 'CONSTRUCTION_IN_PROGRESS', label: 'Construction',     short: 'Construction', gradient: 'from-yellow-400 to-yellow-500',  bg: 'bg-yellow-50 dark:bg-yellow-950/30',  text: 'text-yellow-600 dark:text-yellow-400',  pill: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800' },
+  { key: 'COMPLETED',                label: 'Completed',         short: 'Done',         gradient: 'from-emerald-400 to-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/30', text: 'text-emerald-600 dark:text-emerald-400', pill: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
 ];
 
 const SERVICE_SH: Record<string, string> = {
@@ -73,8 +74,9 @@ function getStageCount(key: string, kpis: any): number {
     case 'ASSIGNED':           return assignedOnly;
     case 'SITE_VERIFICATION':  return kpis.siteCheck;
     case 'CDRF_PENDING':       return kpis.cdrf;
-    case 'DESIGN_REVIEW':      return kpis.design;
-    case 'COMPLETED':          return kpis.done;
+    case 'DESIGN_REVIEW':            return kpis.design;
+    case 'CONSTRUCTION_IN_PROGRESS': return kpis.construction;
+    case 'COMPLETED':                return kpis.done;
     default: return 0;
   }
 }
@@ -747,15 +749,19 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
     const active = (projectStatusCounts['ASSIGNED'] ?? 0)
                  + (projectStatusCounts['SITE_VERIFICATION'] ?? 0)
                  + (projectStatusCounts['CDRF_PENDING'] ?? 0)
-                 + (projectStatusCounts['DESIGN_REVIEW'] ?? 0);
+                 + (projectStatusCounts['DESIGN_REVIEW'] ?? 0)
+                 + (projectStatusCounts['LAYOUT_APPROVED'] ?? 0)
+                 + (projectStatusCounts['DESIGN_IN_PROGRESS'] ?? 0)
+                 + (projectStatusCounts['CONSTRUCTION_IN_PROGRESS'] ?? 0);
     return {
       total,
-      pending:   projectStatusCounts['PENDING_ASSIGNMENT'] ?? 0,
+      pending:      projectStatusCounts['PENDING_ASSIGNMENT'] ?? 0,
       active,
-      siteCheck: projectStatusCounts['SITE_VERIFICATION'] ?? 0,
-      cdrf:      projectStatusCounts['CDRF_PENDING'] ?? 0,
-      design:    projectStatusCounts['DESIGN_REVIEW'] ?? 0,
-      done:      projectStatusCounts['COMPLETED'] ?? 0,
+      siteCheck:    projectStatusCounts['SITE_VERIFICATION'] ?? 0,
+      cdrf:         projectStatusCounts['CDRF_PENDING'] ?? 0,
+      design:       projectStatusCounts['DESIGN_REVIEW'] ?? 0,
+      construction: projectStatusCounts['CONSTRUCTION_IN_PROGRESS'] ?? 0,
+      done:         projectStatusCounts['COMPLETED'] ?? 0,
     };
   }, [projectStatusCounts]);
 
@@ -1312,22 +1318,22 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                 </span>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-[12px] border-collapse min-w-[700px]">
+              <div className="table-container">
+                <table className="erp-table min-w-[700px]">
                   <thead>
-                    <tr className="bg-[var(--table-head)] text-[var(--text-muted)] font-bold uppercase tracking-wider text-[10px]">
-                      <th className="px-4 py-2.5 border-b border-[var(--border)]">Sales Representative</th>
-                      <th className="px-4 py-2.5 border-b border-[var(--border)] text-center">Status</th>
-                      <th className="px-4 py-2.5 border-b border-[var(--border)] text-center">Leads</th>
-                      <th className="px-4 py-2.5 border-b border-[var(--border)] text-center">Prospects</th>
-                      <th className="px-4 py-2.5 border-b border-[var(--border)] text-center">Won%</th>
-                      <th className="px-4 py-2.5 border-b border-[var(--border)] text-right">Pipeline Value</th>
+                    <tr >
+                      <th >Sales Representative</th>
+                      <th >Status</th>
+                      <th >Leads</th>
+                      <th >Prospects</th>
+                      <th >Won%</th>
+                      <th >Pipeline Value</th>
                     </tr>
                   </thead>
                   <tbody>
                     {repsLeaderboard.map((rep, idx) => (
-                      <tr key={rep.id} className="hover:bg-[var(--hover-bg)] transition-colors duration-100">
-                        <td className="px-4 py-3 border-b border-[var(--border-subtle)] font-semibold text-[var(--text-primary)]">
+                      <tr key={rep.id} >
+                        <td className="font-semibold text-[var(--text-primary)]">
                           <div className="flex items-center gap-2.5">
                             <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${
                               idx === 0 ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-300/50' :
@@ -1342,7 +1348,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 border-b border-[var(--border-subtle)] text-center">
+                        <td >
                           {rep.isOnline ? (
                             <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
                               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
@@ -1352,12 +1358,12 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                             <span className="text-[var(--text-muted)] text-[11px]">Offline</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 border-b border-[var(--border-subtle)] text-center font-semibold text-[var(--text-secondary)]">{rep.leadsCount}</td>
-                        <td className="px-4 py-3 border-b border-[var(--border-subtle)] text-center font-semibold text-[var(--text-secondary)]">{rep.prospectsCount}</td>
-                        <td className="px-4 py-3 border-b border-[var(--border-subtle)] text-center">
+                        <td >{rep.leadsCount}</td>
+                        <td >{rep.prospectsCount}</td>
+                        <td >
                           <span className="font-bold text-[var(--text-primary)]">{rep.conversionRate.toFixed(0)}%</span>
                         </td>
-                        <td className="px-4 py-3 border-b border-[var(--border-subtle)] text-right font-bold text-[#b89047]">
+                        <td className="font-bold text-[#b89047]">
                           {formatBudget(rep.pipelineValue)}
                         </td>
                       </tr>

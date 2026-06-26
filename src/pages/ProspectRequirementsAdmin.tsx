@@ -90,34 +90,6 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
   const [selectedBudgetService, setSelectedBudgetService] = useState('ARCHITECTURAL_CONSULTATION');
   const [tempBudgetInput, setTempBudgetInput] = useState('');
 
-  // Edit requests panel
-  const [editRequests, setEditRequests] = useState<any[]>([]);
-  const [editRequestsLoading, setEditRequestsLoading] = useState(false);
-  const [showEditRequestsPanel, setShowEditRequestsPanel] = useState(false);
-  const [resolvingId, setResolvingId] = useState<string | null>(null);
-  const [editRequestNotes, setEditRequestNotes] = useState<Record<string, string>>({});
-
-  const fetchEditRequests = async () => {
-    if (!isAdminOrSuperAdmin) return;
-    setEditRequestsLoading(true);
-    try {
-      const res = await prospectApi.getAllEditRequests('PENDING');
-      setEditRequests(res.data.requests || []);
-    } catch { /* non-critical */ }
-    finally { setEditRequestsLoading(false); }
-  };
-
-  const handleResolveEditRequest = async (requestId: string, action: 'approve' | 'reject') => {
-    setResolvingId(requestId);
-    try {
-      await prospectApi.resolveEditRequest(requestId, action, editRequestNotes[requestId]);
-      showToast(`Request ${action === 'approve' ? 'approved' : 'rejected'} successfully.`, 'success');
-      setEditRequestNotes(n => { const c = { ...n }; delete c[requestId]; return c; });
-      fetchEditRequests();
-    } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to resolve request.', 'error');
-    } finally { setResolvingId(null); }
-  };
 
   const fetchProspects = async () => {
     setLoading(true); setError(null);
@@ -137,7 +109,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
     } catch { /* non-critical */ }
   };
 
-  useEffect(() => { fetchProspects(); fetchBudgets(); fetchEditRequests(); }, []);
+  useEffect(() => { fetchProspects(); fetchBudgets(); }, []);
 
   const handleApproveStatus = async (id: string, newStatus: string) => {
     setError(null); setSuccess(null);
@@ -297,20 +269,6 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
     <div className="animate-fade-in flex flex-col h-full min-h-0 p-4">
       {/* Actions Bar */}
       <div className="flex flex-wrap items-center justify-end gap-2 mb-4 shrink-0">
-        {isAdminOrSuperAdmin && (
-          <button
-            onClick={() => { setShowEditRequestsPanel(true); fetchEditRequests(); }}
-            className={`${btnSecondary} relative`}
-          >
-            <Clock size={14} />
-            <span>Edit Requests</span>
-            {editRequests.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center px-1">
-                {editRequests.length}
-              </span>
-            )}
-          </button>
-        )}
         <button onClick={handleExportCSV} className={btnSecondary} disabled={filteredProspects.length === 0}>
           <FileText size={14} /><span>Export Report</span>
         </button>
@@ -368,12 +326,12 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
           </div>
 
           <div className={`${card} flex-1 overflow-y-auto overflow-x-auto scrollbar-thin flex flex-col justify-between`}>
-            <div className="overflow-x-auto min-w-full">
-              <table className="w-full border-collapse text-left min-w-[850px]">
+            <div className="table-container min-w-full">
+              <table className="erp-table min-w-[850px]">
                 <thead>
-                  <tr className="bg-stone-50/80 sticky top-0 z-10 backdrop-blur-xs">
+                  <tr className="sticky top-0 z-10 backdrop-blur-xs">
                     {['S.No.', 'Client Name', 'Mobile Number', 'Email', 'Preferred Comm.', 'State', 'District', 'Locality / Area', 'Pincode', 'Services Requested', 'Workflow', 'Status', 'Actions'].map(h => (
-                      <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center whitespace-nowrap">{h}</th>
+                      <th key={h} className="whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -381,19 +339,19 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                   {paginatedProspects.length === 0 ? (
                     <tr><td colSpan={13} className="text-center py-10 text-[12px] text-stone-400 italic">No prospects found.</td></tr>
                   ) : paginatedProspects.map((p, i) => (
-                    <tr key={p.id} className="hover:bg-stone-50/40 transition-colors">
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] font-medium text-stone-500 text-center">{indexStart + i + 1}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] font-semibold text-stone-900 text-center whitespace-nowrap">{p.clientName}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-600 font-medium text-center whitespace-nowrap">{p.mobileNo}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-600 font-medium text-center whitespace-nowrap">{p.email || '—'}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] font-medium text-stone-700 text-center whitespace-nowrap">
+                    <tr key={p.id}>
+                      <td>{indexStart + i + 1}</td>
+                      <td className="font-semibold text-[var(--text-primary)] whitespace-nowrap">{p.clientName}</td>
+                      <td className="whitespace-nowrap">{p.mobileNo}</td>
+                      <td className="whitespace-nowrap">{p.email || '—'}</td>
+                      <td className="whitespace-nowrap">
                         {p.preferredCommunication === 'PHONE_CALL' ? 'Phone Call' : p.preferredCommunication === 'WHATSAPP' ? 'Whatsapp' : 'Email'}
                       </td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-700 font-medium text-center whitespace-nowrap">{p.state || '—'}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-700 font-medium text-center whitespace-nowrap">{p.district || '—'}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-700 font-medium text-center truncate max-w-[150px]" title={p.locality}>{p.locality}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-700 font-medium text-center whitespace-nowrap">{p.pincode || '—'}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
+                      <td className="whitespace-nowrap">{p.state || '—'}</td>
+                      <td className="whitespace-nowrap">{p.district || '—'}</td>
+                      <td className="truncate max-w-[150px]" title={p.locality}>{p.locality}</td>
+                      <td className="whitespace-nowrap">{p.pincode || '—'}</td>
+                      <td >
                         <div className="flex flex-wrap gap-1.5 justify-center max-w-[200px] mx-auto">
                           {(p.serviceType || '').split(',').filter(Boolean).map((s: string, sIdx: number, arr: string[]) => (
                             <span key={s} className="text-[#7e5a20] text-[12px] font-semibold">
@@ -402,19 +360,19 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                           ))}
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
+                      <td >
                         <span className={`text-[12px] font-semibold uppercase tracking-wide ${workflowStageBadgeClasses[p.workflowStage || 'LEAD_CAPTURED'] || 'text-stone-600'}`}>
                           {(p.workflowStage || 'LEAD_CAPTURED').replace(/_/g, ' ')}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
+                      <td >
                         {p.status && p.status !== 'ACTIVE' ? (
                           <span className={`text-[11.5px] font-bold uppercase tracking-wide ${statusBadgeClasses[p.status] || 'text-stone-500'}`}>
                             {p.status === 'PENDING_DELETE' ? 'Pending Delete' : p.status}
                           </span>
                         ) : <span className="text-[12px] text-stone-400">—</span>}
                       </td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
+                      <td >
                         <div className="inline-flex gap-1 justify-center">
                           {userCanWrite && p.status === 'PENDING_DELETE' && (
                             <>
@@ -581,87 +539,6 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                 </button>
               </div>
             )}
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Edit Requests Review Panel */}
-      {showEditRequestsPanel && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowEditRequestsPanel(false)}>
-          <div className="animate-scale-in w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-amber-200 flex flex-col overflow-hidden max-h-[calc(100svh-48px)]" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 shrink-0">
-              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
-                <Clock size={16} className="text-amber-600 shrink-0" />
-                Capture Brief Edit Requests
-                {editRequests.length > 0 && (
-                  <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-bold">{editRequests.length} pending</span>
-                )}
-              </h3>
-              <button onClick={() => setShowEditRequestsPanel(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin">
-              {editRequestsLoading ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 size={22} className="animate-spin text-amber-500" />
-                </div>
-              ) : editRequests.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-stone-400 gap-3">
-                  <ShieldCheck size={32} className="text-emerald-300" />
-                  <p className="text-[13px] font-medium">No pending edit requests</p>
-                </div>
-              ) : editRequests.map(req => (
-                <div key={req.id} className="border border-amber-100 rounded-xl p-4 bg-amber-50/30">
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div>
-                      <p className="text-[13px] font-bold text-stone-900">{req.prospect?.clientName || '—'}</p>
-                      <p className="text-[11px] text-stone-500 mt-0.5">{req.prospect?.mobileNo} · {req.prospect?.serviceType?.split(',')[0]}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-[11px] font-semibold text-stone-700">{req.requestedBy?.name || req.requestedBy?.email || '—'}</p>
-                      <p className="text-[10px] text-stone-400 mt-0.5">{new Date(req.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                    </div>
-                  </div>
-
-                  {req.reason && (
-                    <div className="flex items-start gap-2 p-2.5 rounded-lg bg-white border border-amber-100 mb-3">
-                      <AlertTriangle size={12} className="text-amber-500 shrink-0 mt-0.5" />
-                      <p className="text-[12px] text-stone-600 leading-snug">{req.reason}</p>
-                    </div>
-                  )}
-
-                  <textarea
-                    placeholder="Optional: add notes for the requester..."
-                    value={editRequestNotes[req.id] || ''}
-                    onChange={e => setEditRequestNotes(n => ({ ...n, [req.id]: e.target.value }))}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-stone-200 rounded-lg text-[12px] outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300/40 resize-none text-stone-700 placeholder-stone-400 mb-3"
-                  />
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleResolveEditRequest(req.id, 'reject')}
-                      disabled={resolvingId === req.id}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 disabled:opacity-50 cursor-pointer transition-colors"
-                    >
-                      {resolvingId === req.id ? <Loader2 size={12} className="animate-spin" /> : <XCircle size={12} />}
-                      Reject
-                    </button>
-                    <button
-                      onClick={() => handleResolveEditRequest(req.id, 'approve')}
-                      disabled={resolvingId === req.id}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 disabled:opacity-50 cursor-pointer transition-colors"
-                    >
-                      {resolvingId === req.id ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
-                      Approve
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>,
         document.body

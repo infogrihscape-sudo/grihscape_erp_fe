@@ -10,8 +10,9 @@ const STATUS_COLORS: Record<string, string> = {
   CDRF_PENDING:       'text-orange-700 bg-orange-50 border-orange-200',
   DESIGN_REVIEW:      'text-indigo-700 bg-indigo-50 border-indigo-200',
   LAYOUT_APPROVED:    'text-teal-700 bg-teal-50 border-teal-200',
-  DESIGN_IN_PROGRESS: 'text-sky-700 bg-sky-50 border-sky-200',
-  COMPLETED:          'text-emerald-700 bg-emerald-50 border-emerald-200',
+  DESIGN_IN_PROGRESS:       'text-sky-700 bg-sky-50 border-sky-200',
+  CONSTRUCTION_IN_PROGRESS: 'text-yellow-700 bg-yellow-50 border-yellow-200',
+  COMPLETED:                'text-emerald-700 bg-emerald-50 border-emerald-200',
 
   // ── CDRF Meetings ───────────────────────────────────────────────────────────
   PENDING_PM_APPROVAL: 'text-violet-700 bg-violet-50 border-violet-200',

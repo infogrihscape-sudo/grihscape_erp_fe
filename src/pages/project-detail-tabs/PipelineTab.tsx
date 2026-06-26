@@ -9,7 +9,7 @@ import { FileUploadZone } from '../../components/ui/FileUploadZone.js';
 import { StatusBadge } from '../../components/ui/StatusBadge.js';
 import {
   AlertTriangle, CheckCircle2, Check, Clock, Plus, Users, Loader2,
-  Upload, X, XCircle, Trash2, Eye, Download, FileText, ImageIcon,
+  Upload, X, XCircle, Trash2, Eye, Download, FileText, ImageIcon, Send, MessageSquare,
 } from 'lucide-react';
 import {
   card, inputBase, btnPrimary, btnSecondary, btnDanger, label, Modal,
@@ -49,6 +49,16 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
   const [statusChangeRequest, setStatusChangeRequest] = useState<{ drawingId: string; status: string; currentStatus: string; drawingName: string; notes: string; } | null>(null);
   const [statusChangeComment, setStatusChangeComment] = useState('');
 
+  const [sendToSEModal, setSendToSEModal] = useState<any>(null);
+  const [sendToSEMessage, setSendToSEMessage] = useState('');
+  const [sendingToSE, setSendingToSE] = useState(false);
+
+  const [remarksModal, setRemarksModal] = useState<any>(null); // drawing object
+  const [remarkLogs, setRemarkLogs] = useState<any[]>([]);
+  const [remarkText, setRemarkText] = useState('');
+  const [loadingRemarks, setLoadingRemarks] = useState(false);
+  const [submittingRemark, setSubmittingRemark] = useState(false);
+
   const isAdmin        = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
   const isSuperAdmin   = isAdmin; // Admin has same pipeline authority as Super Admin
   const isRealSuperAdmin = currentUser.role === 'Super Admin';
@@ -58,6 +68,8 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
   const isAssignedArch = (currentUser.role === 'Project Architect' && project.assignment?.projectArchitect?.id === currentUser.id) ||
                          (currentUser.role === 'Junior Architect'   && project.assignment?.juniorArchitect?.id  === currentUser.id);
   const canManage      = isAdmin || isPM;
+  const canSendToSE    = isAdmin || isPM || currentUser.role === 'Project Architect';
+  const canSeeRemarks  = isAdmin || isPM || isArch;
   const hasAnyApproval = pipeline?.approvedByPM || pipeline?.approvedByAdmin;
   const canAddDrawings = !isCompleted && (
     isRealSuperAdmin || (!hasAnyApproval && (canManage || isAssignedArch))
@@ -346,6 +358,64 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
       setUploadError(err.response?.data?.error?.message ?? err.response?.data?.message ?? 'Failed to add file.');
     }
     finally { setSubmitting(false); }
+  };
+
+  const openRemarksModal = async (drawing: any) => {
+    setRemarksModal(drawing);
+    setRemarkLogs([]);
+    setRemarkText('');
+    setLoadingRemarks(true);
+    try {
+      const res = await projectApi.getDrawingSeRemarks(project.id, drawing.id);
+      setRemarkLogs(res.data.logs ?? []);
+    } catch {
+      showToast('Failed to load remarks.', 'error');
+    } finally {
+      setLoadingRemarks(false);
+    }
+  };
+
+  const handleAddRemark = async () => {
+    if (!remarkText.trim() || !remarksModal) return;
+    setSubmittingRemark(true);
+    try {
+      // Use the first transmittal log for this drawing to attach the remark
+      if (remarkLogs.length === 0) {
+        showToast('No issued drawing log found to attach the remark to.', 'error');
+        return;
+      }
+      const logId = remarkLogs[remarkLogs.length - 1].id; // most recent issue
+      await projectApi.addDrawingRemark(project.id, logId, remarkText.trim());
+      setRemarkText('');
+      // Refresh remarks
+      const res = await projectApi.getDrawingSeRemarks(project.id, remarksModal.id);
+      setRemarkLogs(res.data.logs ?? []);
+      showToast('Remark posted.', 'success');
+    } catch (err: any) {
+      showToast(err?.response?.data?.message ?? 'Failed to post remark.', 'error');
+    } finally {
+      setSubmittingRemark(false);
+    }
+  };
+
+  const handleSendToSE = async () => {
+    if (!sendToSEModal) return;
+    const fileUrls = sendToSEModal.files.map((f: any) => fileUrl(f.fileUrl));
+    setSendingToSE(true);
+    try {
+      await projectApi.sendDrawingToSiteEngineer(project.id, {
+        projectDrawingId: sendToSEModal.id,
+        fileUrls,
+        message: sendToSEMessage.trim() || undefined,
+      });
+      showToast('Drawing sent to site engineer.', 'success');
+      setSendToSEModal(null);
+      setSendToSEMessage('');
+    } catch (err: any) {
+      showToast(err?.response?.data?.message ?? 'Failed to send drawing.', 'error');
+    } finally {
+      setSendingToSE(false);
+    }
   };
 
   if (loading) return <div className="p-4"><ShimmerTable rows={6} cols={3} /></div>;
@@ -678,13 +748,33 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
                             <Upload size={10} /> File
                           </button>
                         )}
-                        
+
                         {canManage && (
                           <button onClick={() => { setShowAssignModal(d); setAssignForm({ assignedArchitectId: d.assignedArchitect?.id ?? '', juniorArchitectId: d.juniorArchitect?.id ?? '', notes: '' }); }} className={`${btnSecondary} flex-1 justify-center py-1 text-[11px]`}>
                             <Users size={10} /> Team
                           </button>
                         )}
                       </div>
+
+                      {canSendToSE && d.files?.length > 0 && (
+                        <button
+                          onClick={() => { setSendToSEModal(d); setSendToSEMessage(''); }}
+                          className="inline-flex items-center justify-center gap-1 w-full px-2 py-1.5 rounded-lg text-[10px] font-bold text-sky-700 bg-sky-50 border border-sky-200 hover:bg-sky-100 cursor-pointer transition-colors"
+                          title="Send this drawing to the assigned site engineer"
+                        >
+                          <Send size={10} /> Send to SE
+                        </button>
+                      )}
+
+                      {canSeeRemarks && (
+                        <button
+                          onClick={() => openRemarksModal(d)}
+                          className="inline-flex items-center justify-center gap-1 w-full px-2 py-1.5 rounded-lg text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-200 hover:bg-violet-100 cursor-pointer transition-colors"
+                          title="View and add remarks on this drawing"
+                        >
+                          <MessageSquare size={10} /> Remarks
+                        </button>
+                      )}
                       
                       <div className="flex items-center gap-1.5 w-full justify-end md:justify-stretch mt-auto">
                         {isSuperAdmin && d.pendingDelete && (
@@ -933,6 +1023,155 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Remarks modal — visible to PM / Admin / Arch / Junior Arch */}
+      {remarksModal && (
+        <Modal
+          title="Drawing Remarks"
+          subtitle={`${remarksModal.drawingMaster?.name}${remarksModal.roomName ? ` — ${remarksModal.roomName}` : ''}`}
+          onClose={() => { setRemarksModal(null); setRemarkLogs([]); setRemarkText(''); }}
+        >
+          <div className="p-5 space-y-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+            {loadingRemarks ? (
+              <div className="flex items-center justify-center py-8 gap-2 text-[var(--text-muted)]">
+                <Loader2 size={14} className="animate-spin" /> Loading remarks…
+              </div>
+            ) : remarkLogs.length === 0 ? (
+              <div className="text-center py-8">
+                <MessageSquare size={28} className="mx-auto text-[var(--text-muted)] opacity-30 mb-2" />
+                <p className="text-[12px] text-[var(--text-muted)]">No remarks yet for this drawing.</p>
+                <p className="text-[11px] text-[var(--text-muted)] mt-1">This drawing must be sent to the site engineer first.</p>
+              </div>
+            ) : (
+              remarkLogs.map((log: any) => (
+                <div key={log.id} className="space-y-3">
+                  {/* Issuance header */}
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-sky-50 border border-sky-100">
+                    <Send size={10} className="text-sky-600 shrink-0" />
+                    <span className="text-[10.5px] text-sky-700">
+                      Issued by <strong>{log.sentBy?.name}</strong> on{' '}
+                      {new Date(log.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {log.message && <> · <em className="font-normal">{log.message}</em></>}
+                    </span>
+                  </div>
+
+                  {/* Remarks thread */}
+                  {log.remarks?.length > 0 ? (
+                    <div className="pl-3 border-l-2 border-[rgba(184,144,71,0.25)] space-y-2">
+                      {log.remarks.map((r: any) => (
+                        <div key={r.id}>
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-[10px] font-bold text-[var(--text-primary)]">{r.author?.name}</span>
+                            <span className="text-[9px] font-semibold text-[var(--text-muted)] bg-[var(--border)] px-1.5 py-0.5 rounded-full">{r.author?.role?.name}</span>
+                            <span className="text-[9.5px] text-[var(--text-muted)]">
+                              · {new Date(r.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <p className="text-[11.5px] text-[var(--text-secondary)] leading-relaxed bg-[rgba(184,144,71,0.04)] border border-[rgba(184,144,71,0.1)] rounded-lg px-3 py-2">
+                            {r.message}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[10.5px] text-[var(--text-muted)] italic pl-3">No remarks on this issuance yet.</p>
+                  )}
+                </div>
+              ))
+            )}
+
+            {/* Add remark form */}
+            {remarkLogs.length > 0 && (
+              <div className="pt-3 border-t border-[var(--border)] space-y-2">
+                <label className={label}>Add Your Remark</label>
+                <textarea
+                  className={`${inputBase} resize-none`}
+                  rows={3}
+                  value={remarkText}
+                  onChange={e => setRemarkText(e.target.value)}
+                  placeholder="Type your remark, response, or clarification for the site engineer…"
+                />
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => { setRemarksModal(null); setRemarkLogs([]); setRemarkText(''); }} className={btnSecondary}>Close</button>
+                  <button onClick={handleAddRemark} disabled={submittingRemark || !remarkText.trim()} className={btnPrimary}>
+                    {submittingRemark ? <Loader2 size={12} className="animate-spin" /> : <MessageSquare size={12} />}
+                    {submittingRemark ? 'Posting…' : 'Post Remark'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {remarkLogs.length === 0 && !loadingRemarks && (
+              <div className="flex justify-end">
+                <button onClick={() => { setRemarksModal(null); }} className={btnSecondary}>Close</button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* Send drawing to site engineer modal */}
+      {sendToSEModal && (
+        <Modal
+          title="Send Drawing to Site Engineer"
+          subtitle={`${sendToSEModal.drawingMaster?.name}${sendToSEModal.roomName ? ` — ${sendToSEModal.roomName}` : ''}`}
+          onClose={() => { setSendToSEModal(null); setSendToSEMessage(''); }}
+        >
+          <div className="p-5 space-y-4">
+            {project.assignment?.siteEngineer ? (
+              <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-sky-50 border border-sky-200">
+                <div className="w-7 h-7 rounded-full bg-sky-100 border border-sky-200 flex items-center justify-center shrink-0">
+                  <Send size={12} className="text-sky-600" />
+                </div>
+                <div>
+                  <p className="text-[11.5px] font-bold text-sky-800">{project.assignment.siteEngineer.name}</p>
+                  <p className="text-[10px] text-sky-600">{project.assignment.siteEngineer.email ?? 'No email on record'}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11.5px] font-semibold text-amber-700">
+                No site engineer assigned to this project yet.
+              </div>
+            )}
+
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1.5">Files to send ({sendToSEModal.files.length})</p>
+              <div className="space-y-1">
+                {sendToSEModal.files.map((f: any) => (
+                  <div key={f.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[rgba(184,144,71,0.04)] border border-[rgba(184,144,71,0.12)]">
+                    <FileText size={11} className="text-[#b89047] shrink-0" />
+                    <span className="text-[11px] text-[var(--text-secondary)] truncate">{f.fileName}</span>
+                    <span className="text-[9px] font-bold text-[var(--text-muted)] bg-[var(--border)] px-1.5 py-0.5 rounded-full shrink-0">{f.fileType}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className={label}>Instructions for Site Engineer <span className="normal-case font-normal text-[var(--text-muted)]">(optional)</span></label>
+              <textarea
+                className={`${inputBase} resize-none`}
+                rows={3}
+                value={sendToSEMessage}
+                onChange={e => setSendToSEMessage(e.target.value)}
+                placeholder="Any site-specific notes or instructions…"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button onClick={() => { setSendToSEModal(null); setSendToSEMessage(''); }} className={btnSecondary}>Cancel</button>
+              <button
+                onClick={handleSendToSE}
+                disabled={sendingToSE || !project.assignment?.siteEngineer?.email}
+                className={btnPrimary}
+              >
+                {sendingToSE ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                {sendingToSE ? 'Sending…' : 'Send Drawing'}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* Status change comment modal */}

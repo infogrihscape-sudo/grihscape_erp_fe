@@ -991,42 +991,42 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
             </div>
           </div>
         ) : (
-          <div className="flex-1 overflow-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="table-container flex-1">
+            <table className="erp-table">
               <thead>
-                <tr className="border-b border-[var(--border)] bg-stone-50/20 text-[10.5px] font-bold uppercase tracking-wider text-[var(--text-muted)] select-none">
-                  <th className="px-4 py-3">Bid Number</th>
-                  <th className="px-4 py-3">Bid Date</th>
-                  <th className="px-4 py-3">Ministry / Department</th>
-                  <th className="px-4 py-3">Category</th>
-                  <th className="px-4 py-3 text-right">Value (INR)</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-center">Actions</th>
+                <tr >
+                  <th >Bid Number</th>
+                  <th >Bid Date</th>
+                  <th >Ministry / Department</th>
+                  <th >Category</th>
+                  <th >Value (INR)</th>
+                  <th >Status</th>
+                  <th >Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--border-subtle)] text-[12.5px] text-[var(--text-secondary)]">
+              <tbody >
                 {tenders.map((tender) => (
-                  <tr key={tender.id} className="hover:bg-[var(--hover-bg)] transition-colors">
-                    <td className="px-4 py-3.5 font-bold text-[var(--text-primary)]">
+                  <tr key={tender.id} >
+                    <td className="font-bold text-[var(--text-primary)]">
                       {tender.bidNumber}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td >
                       {new Date(tender.bidDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
-                    <td className="px-4 py-3.5 max-w-xs truncate">
+                    <td className="max-w-xs truncate">
                       <p className="font-semibold text-[var(--text-primary)] truncate">{tender.ministryStateName}</p>
                       <span className="text-[10px] text-[var(--text-muted)] block truncate">{tender.departmentName}</span>
                     </td>
-                    <td className="px-4 py-3.5 truncate max-w-[150px]">
+                    <td className="truncate max-w-[150px]">
                       {tender.itemCategory}
                     </td>
                     <td className="px-4 py-3.5 text-right font-extrabold text-[#b89047]">
                       ₹ {tender.estimatedBidValue.toLocaleString('en-IN')}
                     </td>
-                    <td className="px-4 py-3.5 text-center">
+                    <td >
                       {getStatusBadge(tender.status)}
                     </td>
-                    <td className="px-4 py-3.5 text-center">
+                    <td >
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           onClick={() => navigate(`/tenders/${tender.id}`)}

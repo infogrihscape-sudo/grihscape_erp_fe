@@ -67,39 +67,45 @@ export const OutflowDetail: React.FC<Props> = ({ currentUser, expenseId }) => {
         </span>
       </div>
 
-      {/* Info card */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-5 grid grid-cols-2 gap-4 text-[11px]">
-        <Row label="Date" value={new Date(expense.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })} />
-        <Row label="Category" value={expense.category?.name} />
-        <Row label="Type" value={expense.expenseType} />
-        <Row label="Purpose" value={expense.purpose?.name} />
-        <Row label="Amount" value={<span className="font-bold text-red-400">₹{Number(expense.amount).toLocaleString('en-IN')}</span>} />
-        <Row label="Mode of Payment" value={expense.modeOfPayment} />
-        {expense.projectManager && <Row label="Project Manager" value={expense.projectManager.name} />}
-        {expense.siteName && <Row label="Site" value={expense.siteName} />}
-        {expense.employeeName && <Row label="Employee" value={expense.employeeName} />}
-        {expense.salaryMonth && <Row label="Salary Month" value={expense.salaryMonth} />}
-        {expense.salaryPayStatus && <Row label="Salary Status" value={expense.salaryPayStatus} />}
-        {expense.expenseName && <Row label="Expense Item" value={expense.expenseName} />}
-        {expense.department && <Row label="Department" value={expense.department} />}
-        {expense.description && <Row label="Description" value={expense.description} span />}
-        <Row label="Created By" value={expense.createdBy?.name} />
-        {expense.approvedBy && <Row label="Approved By" value={expense.approvedBy.name} />}
-        {expense.rejectionReason && <Row label="Rejection Reason" value={<span className="text-red-400">{expense.rejectionReason}</span>} span />}
-
-        {/* Supporting Doc */}
-        <div className="col-span-2">
-          <p className="text-[10px] text-[var(--text-muted)] uppercase font-semibold tracking-wide mb-1">Supporting Document</p>
-          <a
-            href={expense.supportingDocUrl.startsWith('http') ? expense.supportingDocUrl : fileUrl(expense.supportingDocUrl)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[11px] text-blue-400 hover:underline font-medium"
-          >
-            <ExternalLink size={12} />
-            {expense.supportingDocName}
-          </a>
-        </div>
+      {/* Info table */}
+      <div className="table-container">
+        <table className="erp-table">
+          <tbody>
+            <DetailRow label="Date" value={new Date(expense.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })} />
+            <DetailRow label="Category" value={expense.category?.name} />
+            <DetailRow label="Type" value={expense.expenseType} />
+            <DetailRow label="Purpose" value={expense.purpose?.name ?? '—'} />
+            <DetailRow label="Amount" value={<span className="font-bold text-red-400">₹{Number(expense.amount).toLocaleString('en-IN')}</span>} />
+            <DetailRow label="Mode of Payment" value={expense.modeOfPayment} />
+            {expense.projectManager && <DetailRow label="Project Manager" value={expense.projectManager.name} />}
+            {expense.siteName && <DetailRow label="Site" value={expense.siteName} />}
+            {expense.employeeName && <DetailRow label="Employee" value={expense.employeeName} />}
+            {expense.salaryMonth && <DetailRow label="Salary Month" value={expense.salaryMonth} />}
+            {expense.salaryPayStatus && <DetailRow label="Salary Status" value={expense.salaryPayStatus} />}
+            {expense.expenseName && <DetailRow label="Expense Item" value={expense.expenseName} />}
+            {expense.department && <DetailRow label="Department" value={expense.department} />}
+            {expense.description && <DetailRow label="Description" value={expense.description} />}
+            <DetailRow label="Created By" value={expense.createdBy?.name} />
+            {expense.approvedBy && <DetailRow label="Approved By" value={expense.approvedBy.name} />}
+            {expense.rejectionReason && <DetailRow label="Rejection Reason" value={<span className="text-red-400">{expense.rejectionReason}</span>} />}
+            {expense.supportingDocUrl && (
+              <DetailRow
+                label="Supporting Document"
+                value={
+                  <a
+                    href={expense.supportingDocUrl.startsWith('http') ? expense.supportingDocUrl : fileUrl(expense.supportingDocUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-blue-400 hover:underline font-medium"
+                  >
+                    <ExternalLink size={12} />
+                    {expense.supportingDocName ?? 'View Document'}
+                  </a>
+                }
+              />
+            )}
+          </tbody>
+        </table>
       </div>
 
       {expense.status === 'REJECTED' && (
@@ -191,11 +197,15 @@ export const OutflowDetail: React.FC<Props> = ({ currentUser, expenseId }) => {
   );
 };
 
-function Row({ label, value, span }: { label: string; value: React.ReactNode; span?: boolean }) {
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className={span ? 'col-span-2' : ''}>
-      <p className="text-[10px] text-[var(--text-muted)] uppercase font-semibold tracking-wide mb-0.5">{label}</p>
-      <p className="text-[var(--text-primary)] font-medium">{value}</p>
-    </div>
+    <tr className="border-b border-[var(--border)] last:border-b-0 hover:bg-white/2 transition-colors">
+      <td className="px-4 py-3 font-semibold text-[var(--text-muted)] w-1/3 bg-stone-50/5 dark:bg-slate-900/10 uppercase tracking-wide text-[9px] border-r border-[var(--border)]">
+        {label}
+      </td>
+      <td className="px-4 py-3 text-[var(--text-primary)] font-medium whitespace-pre-wrap break-all">
+        {value}
+      </td>
+    </tr>
   );
 }

@@ -132,36 +132,38 @@ export const OutflowList: React.FC<Props> = ({ currentUser }) => {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--card-bg)]">
+      <div className="table-container flex-1">
         {loading ? (
           <div className="flex items-center justify-center h-40 text-[11px] text-[var(--text-muted)]">Loading…</div>
         ) : expenses.length === 0 ? (
           <div className="flex items-center justify-center h-40 text-[11px] text-[var(--text-muted)]">No expenses found.</div>
         ) : (
-          <table className="w-full text-[11px]">
+          <table className="erp-table">
             <thead>
-              <tr className="border-b border-[var(--border)] text-[var(--text-muted)] text-left">
-                {['Date', 'Paid To', 'Category', 'Type', 'Amount', 'Mode', 'PM', 'Status', 'Doc', ''].map(h => (
-                  <th key={h} className="px-4 py-3 font-semibold">{h}</th>
+              <tr className="text-[var(--text-muted)]">
+                {['Date', 'Paid To', 'Category', 'Type', 'Site', 'Purpose', 'Amount', 'Mode', 'PM', 'Status', 'Doc', ''].map(h => (
+                  <th key={h} >{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {expenses.map(e => (
-                <tr key={e.id} className="border-b border-[var(--border)] hover:bg-white/3 transition-colors">
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{new Date(e.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                <tr key={e.id} >
+                  <td >{new Date(e.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                   <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{e.name}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{e.category?.name}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{e.expenseType}</td>
+                  <td >{e.category?.name}</td>
+                  <td >{e.expenseType}</td>
+                  <td >{e.siteName ?? '—'}</td>
+                  <td >{e.purpose?.name ?? '—'}</td>
                   <td className="px-4 py-3 font-semibold text-red-400">₹{Number(e.amount).toLocaleString('en-IN')}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{e.modeOfPayment}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{e.projectManager?.name ?? '—'}</td>
-                  <td className="px-4 py-3">
+                  <td >{e.modeOfPayment}</td>
+                  <td >{e.projectManager?.name ?? '—'}</td>
+                  <td >
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${STATUS_COLORS[e.status]}`}>
                       {e.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td >
                     {e.supportingDocUrl ? (
                       <a
                         href={e.supportingDocUrl.startsWith('http') ? e.supportingDocUrl : fileUrl(e.supportingDocUrl)}
@@ -176,7 +178,7 @@ export const OutflowList: React.FC<Props> = ({ currentUser }) => {
                       <span className="px-2 text-[var(--text-muted)] opacity-30"><Paperclip size={13} /></span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td >
                     <button
                       onClick={() => navigate(`/accounts/outflow/${e.id}`)}
                       className="p-1.5 rounded-lg hover:bg-white/8 text-stone-400 hover:text-stone-200 transition-colors"

@@ -66,8 +66,9 @@ const PIPELINE_STAGES = [
   { key: 'CDRF_PENDING',       label: 'CDRF Pending',       short: 'CDRF',       icon: <ClipboardCheck size={14} />, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-300 dark:border-orange-700', ring: 'ring-orange-300' },
   { key: 'DESIGN_REVIEW',      label: 'Design Review',      short: 'Layout',     icon: <Palette size={14} />,      color: 'text-indigo-600',   bg: 'bg-indigo-50 dark:bg-indigo-950/30', border: 'border-indigo-300 dark:border-indigo-700', ring: 'ring-indigo-300' },
   { key: 'LAYOUT_APPROVED',    label: 'Layout Approved',    short: 'Approved',   icon: <CheckCircle2 size={14} />, color: 'text-cyan-600',     bg: 'bg-cyan-50 dark:bg-cyan-950/30',     border: 'border-cyan-300 dark:border-cyan-700',     ring: 'ring-cyan-300' },
-  { key: 'DESIGN_IN_PROGRESS', label: 'Design In Progress', short: 'Drawing',    icon: <Layers size={14} />,       color: 'text-violet-600',   bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-300 dark:border-violet-700', ring: 'ring-violet-300' },
-  { key: 'COMPLETED',          label: 'Completed',           short: 'Done',       icon: <CheckCircle2 size={14} />, color: 'text-emerald-600',  bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-300 dark:border-emerald-700', ring: 'ring-emerald-300' },
+  { key: 'DESIGN_IN_PROGRESS',       label: 'Design In Progress',    short: 'Drawing',      icon: <Layers size={14} />,       color: 'text-violet-600',   bg: 'bg-violet-50 dark:bg-violet-950/30',  border: 'border-violet-300 dark:border-violet-700',  ring: 'ring-violet-300' },
+  { key: 'CONSTRUCTION_IN_PROGRESS', label: 'Under Construction',    short: 'Construction', icon: <HardHat size={14} />,      color: 'text-yellow-600',   bg: 'bg-yellow-50 dark:bg-yellow-950/30', border: 'border-yellow-300 dark:border-yellow-700', ring: 'ring-yellow-300' },
+  { key: 'COMPLETED',                label: 'Completed',              short: 'Done',         icon: <CheckCircle2 size={14} />, color: 'text-emerald-600',  bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-300 dark:border-emerald-700', ring: 'ring-emerald-300' },
 ];
 
 const SERVICE_LABELS: Record<string, string> = {
@@ -639,8 +640,9 @@ function PipelineBar({ statusCounts, filterStatus, onFilter }: {
               SITE_VERIFICATION:  'bg-purple-400',
               CDRF_PENDING:       'bg-orange-400',
               DESIGN_REVIEW:      'bg-indigo-400',
-              LAYOUT_APPROVED:    'bg-cyan-400',
-              DESIGN_IN_PROGRESS: 'bg-violet-400',
+              LAYOUT_APPROVED:          'bg-cyan-400',
+              DESIGN_IN_PROGRESS:       'bg-violet-400',
+              CONSTRUCTION_IN_PROGRESS: 'bg-yellow-400',
               COMPLETED:          'bg-emerald-400',
             };
             return <div key={s.key} className={`${colorMap[s.key]} transition-all`} style={{ width: `${pct}%` }} />;
@@ -649,7 +651,7 @@ function PipelineBar({ statusCounts, filterStatus, onFilter }: {
       )}
 
       {/* Stage cards */}
-      <div className="grid grid-cols-4 lg:grid-cols-8 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-1.5 lg:gap-2">
         {PIPELINE_STAGES.map((s, idx) => {
           const count = statusCounts[s.key] ?? 0;
           const isActive = filterStatus === s.key;
@@ -659,7 +661,7 @@ function PipelineBar({ statusCounts, filterStatus, onFilter }: {
               key={s.key}
               onClick={() => onFilter(isActive ? '' : s.key)}
               className={[
-                'relative flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all cursor-pointer text-center',
+                'relative flex flex-col items-center gap-1 p-2 lg:p-2.5 rounded-xl border transition-all cursor-pointer text-center',
                 isActive
                   ? `${s.bg} ${s.border} ring-2 ${s.ring} ring-offset-1`
                   : 'bg-[var(--card-bg)] border-[var(--border)] hover:border-[#b89047]/40 hover:bg-[rgba(184,144,71,0.04)]',
@@ -667,17 +669,17 @@ function PipelineBar({ statusCounts, filterStatus, onFilter }: {
             >
               {/* Connector arrow for non-last */}
               {!isLast && (
-                <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 z-10 text-stone-300 dark:text-stone-600 hidden md:block">
+                <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 z-10 text-stone-300 dark:text-stone-600 hidden lg:block">
                   <ArrowRight size={10} />
                 </div>
               )}
-              <div className={`p-1.5 rounded-lg ${s.bg} ${s.color}`}>
+              <div className={`p-1 lg:p-1.5 rounded-lg ${s.bg} ${s.color}`}>
                 {s.icon}
               </div>
-              <span className={`text-[18px] font-black leading-none ${count > 0 ? s.color : 'text-[var(--text-muted)]'}`}>
+              <span className={`text-[15px] lg:text-[18px] font-black leading-none ${count > 0 ? s.color : 'text-[var(--text-muted)]'}`}>
                 {count}
               </span>
-              <span className="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)] leading-tight">
+              <span className="text-[8px] lg:text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)] leading-tight">
                 {s.short}
               </span>
             </button>
@@ -832,7 +834,7 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
 
   const totalAll      = Object.values(statusCounts).reduce((a, b) => a + b, 0);
   const pendingCount  = statusCounts['PENDING_ASSIGNMENT'] ?? 0;
-  const activeCount   = (statusCounts['ASSIGNED'] ?? 0) + (statusCounts['SITE_VERIFICATION'] ?? 0) + (statusCounts['CDRF_PENDING'] ?? 0) + (statusCounts['DESIGN_REVIEW'] ?? 0) + (statusCounts['LAYOUT_APPROVED'] ?? 0) + (statusCounts['DESIGN_IN_PROGRESS'] ?? 0);
+  const activeCount   = (statusCounts['ASSIGNED'] ?? 0) + (statusCounts['SITE_VERIFICATION'] ?? 0) + (statusCounts['CDRF_PENDING'] ?? 0) + (statusCounts['DESIGN_REVIEW'] ?? 0) + (statusCounts['LAYOUT_APPROVED'] ?? 0) + (statusCounts['DESIGN_IN_PROGRESS'] ?? 0) + (statusCounts['CONSTRUCTION_IN_PROGRESS'] ?? 0);
   const completedCount = statusCounts['COMPLETED'] ?? 0;
 
   const handlePipelineFilter = (s: string) => {

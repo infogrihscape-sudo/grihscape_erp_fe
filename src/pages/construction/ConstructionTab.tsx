@@ -4,7 +4,7 @@ import {
   Plus, ChevronDown, ChevronRight, AlertCircle, AlertTriangle,
   CheckCircle2, Clock, Pause, TrendingDown,
   FileText, Send, X, Loader2, RefreshCw,
-  Pencil, Paperclip, ExternalLink,
+  Pencil, Paperclip, ExternalLink, Upload,
 } from 'lucide-react';
 import { constructionApi } from '../../services/construction.api';
 import { api } from '../../services/api';
@@ -1183,77 +1183,141 @@ function SPRForm({ projectId, onClose, onSaved, showToast }: any) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
-          <h3 className="font-semibold text-stone-800">New Site Payment Request</h3>
-          <button onClick={onClose} className="p-1 rounded hover:bg-stone-100"><X size={16} /></button>
-        </div>
-        <div className="p-5 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Expense Type *">
-              <select value={form.expenseType} onChange={e => set('expenseType', e.target.value)}
-                className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#b89047]">
-                {Object.entries(EXPENSE_TYPE_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Amount (₹) *">
-              <input type="number" min="0" value={form.amount} onChange={e => set('amount', e.target.value)}
-                className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#b89047]"
-                placeholder="0.00" />
-            </Field>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg max-h-[95vh] flex flex-col border border-stone-200 dark:border-slate-800">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-stone-100 dark:border-slate-800">
+          <div>
+            <h3 className="font-bold text-[14px] text-stone-800 dark:text-stone-100">Submit Site Payment Request</h3>
+            <p className="text-[10.5px] text-stone-400 dark:text-stone-500 mt-0.5">Request funds for site operations, direct purchases, or vendor payouts</p>
           </div>
-          <Field label="Description *">
-            <textarea value={form.description} onChange={e => set('description', e.target.value)}
-              rows={3} className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#b89047] resize-none"
-              placeholder="Purpose and details of this payment request..." />
-          </Field>
-          <Field label="Vendor / Supplier Name">
-            <input value={form.vendorName} onChange={e => set('vendorName', e.target.value)}
-              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#b89047]"
-              placeholder="e.g. Ravi Construction Co." />
-          </Field>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-stone-100 dark:hover:bg-slate-800 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors">
+            <X size={16} />
+          </button>
+        </div>
 
-          {/* Supporting documents */}
-          <Field label="Supporting Documents">
-            <div className="space-y-2">
-              {docs.map((d, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs bg-stone-50 border border-stone-200 rounded-lg px-3 py-2">
-                  <Paperclip size={11} className="text-stone-400 shrink-0" />
-                  <span className="flex-1 truncate text-stone-700">{d.name}</span>
-                  <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-[#b89047] hover:underline shrink-0">
-                    <ExternalLink size={11} />
-                  </a>
-                  <button onClick={() => removeDoc(i)} className="text-red-400 hover:text-red-600 shrink-0"><X size={11} /></button>
+        {/* Content */}
+        <div className="p-6 overflow-y-auto space-y-4.5 flex-1 scrollbar-thin">
+          {/* Section 1: Financial Details */}
+          <div className="bg-stone-50/50 dark:bg-slate-950/20 border border-stone-200 dark:border-slate-800 rounded-xl p-4 space-y-4">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500">Financial Details</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <Field label="Expense Type *">
+                <select 
+                  value={form.expenseType} 
+                  onChange={e => set('expenseType', e.target.value)}
+                  className="w-full bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#b89047] text-[var(--text-secondary)] font-medium cursor-pointer"
+                >
+                  {Object.entries(EXPENSE_TYPE_LABELS).map(([k, v]) => (
+                    <option key={k} value={k}>{v}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Amount (₹) *">
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs text-stone-400 font-semibold">₹</span>
+                  <input 
+                    type="number" 
+                    min="0" 
+                    value={form.amount} 
+                    onChange={e => set('amount', e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-800 rounded-lg pl-7 pr-3 py-2 text-xs focus:outline-none focus:border-[#b89047] text-[var(--text-secondary)] font-semibold"
+                    placeholder="0.00" 
+                  />
                 </div>
-              ))}
+              </Field>
+            </div>
+          </div>
+
+          {/* Section 2: Vendor & Description */}
+          <div className="border border-stone-200 dark:border-slate-800 rounded-xl p-4 space-y-4">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500">Vendor & Purpose</h4>
+            <div className="space-y-3.5">
+              <Field label="Vendor / Payee Name (Optional)">
+                <input 
+                  value={form.vendorName} 
+                  onChange={e => set('vendorName', e.target.value)}
+                  className="w-full bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#b89047] text-[var(--text-secondary)]"
+                  placeholder="e.g. Ravi Cement Agency, Local Labor Supervisor" 
+                />
+              </Field>
+              <Field label="Description & Justification *">
+                <textarea 
+                  value={form.description} 
+                  onChange={e => set('description', e.target.value)}
+                  rows={3} 
+                  className="w-full bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[#b89047] text-[var(--text-secondary)] resize-none"
+                  placeholder="Please justify this request — specify items, quantities, or labor wages details..." 
+                />
+              </Field>
+            </div>
+          </div>
+
+          {/* Section 3: Attachments */}
+          <div className="border border-stone-200 dark:border-slate-800 rounded-xl p-4 space-y-4">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500">Supporting Documents</h4>
+            <div className="space-y-3">
+              {docs.length > 0 && (
+                <div className="grid grid-cols-1 gap-2">
+                  {docs.map((d, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs bg-stone-50 dark:bg-slate-955/20 border border-stone-200 dark:border-slate-800 rounded-lg px-3 py-2 shadow-2xs">
+                      <Paperclip size={11} className="text-stone-400 shrink-0" />
+                      <span className="flex-1 truncate text-stone-700 dark:text-stone-300 font-medium">{d.name}</span>
+                      <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-[#b89047] hover:underline shrink-0">
+                        <ExternalLink size={11} />
+                      </a>
+                      <button type="button" onClick={() => removeDoc(i)} className="text-red-400 hover:text-red-650 shrink-0 cursor-pointer">
+                        <X size={11} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                className="flex items-center gap-1.5 text-xs text-stone-500 border border-dashed border-stone-300 rounded-lg px-3 py-2 hover:border-[#b89047] hover:text-[#b89047] transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-1.5 text-xs text-stone-500 dark:text-stone-400 border border-dashed border-stone-300 dark:border-slate-800 rounded-lg px-3 py-2.5 hover:border-[#b89047] hover:text-[#b89047] transition-all disabled:opacity-50 cursor-pointer hover:bg-stone-50/50 dark:hover:bg-slate-950/10"
               >
-                {uploading ? <Loader2 size={12} className="animate-spin" /> : <Paperclip size={12} />}
-                {uploading ? 'Uploading…' : 'Attach document'}
+                {uploading ? <Loader2 size={12} className="animate-spin text-[#b89047]" /> : <Upload size={12} />}
+                <span>{uploading ? 'Uploading receipt…' : 'Upload Receipt / Invoice / Bill'}</span>
               </button>
-              <input ref={fileRef} type="file" className="hidden" onChange={handleFileChange}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" />
+              <input 
+                ref={fileRef} 
+                type="file" 
+                className="hidden" 
+                onChange={handleFileChange}
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" 
+              />
             </div>
-          </Field>
+          </div>
 
-          <p className="text-[11px] text-stone-400">
-            Requests ≤ ₹10,000 need PM approval only. Above that requires Super Admin sign-off.
-            An outflow expense is automatically created upon final approval.
-          </p>
+          {/* Guidelines info block */}
+          <div className="bg-amber-500/5 border border-[#b89047]/20 rounded-xl p-3.5 space-y-1 text-[11px] text-[var(--text-secondary)]">
+            <span className="font-bold text-stone-700 dark:text-stone-300 block mb-0.5">Approval Guide:</span>
+            <ul className="list-disc pl-4.5 space-y-1">
+              <li>Site Payment Requests (SPRs) ≤ ₹10,000 require **Project Manager** approval.</li>
+              <li>Requests &gt; ₹10,000 escalate to **Super Admin** for final authorization.</li>
+              <li>Approved requests are processed by Accounts, generating outflow expenses that follow the standard Admin approval thread.</li>
+            </ul>
+          </div>
         </div>
-        <div className="flex justify-end gap-2 px-5 py-4 border-t border-stone-100">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-stone-600 hover:bg-stone-100">Cancel</button>
-          <button onClick={save} disabled={saving || uploading}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-br from-[#b89047] to-[#8f6d2e] text-white hover:brightness-110 disabled:opacity-50 flex items-center gap-1.5">
+
+        {/* Footer Actions */}
+        <div className="flex justify-end gap-2 px-6 py-4.5 border-t border-stone-100 dark:border-slate-800 bg-stone-50/30 dark:bg-slate-950/5">
+          <button 
+            onClick={onClose} 
+            className="px-4 py-2 rounded-lg text-xs font-semibold text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-slate-800 cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={save} 
+            disabled={saving || uploading}
+            className="px-4.5 py-2 rounded-lg text-xs font-bold bg-gradient-to-br from-[#b89047] to-[#8f6d2e] text-white hover:brightness-110 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-sm"
+          >
             {saving && <Loader2 size={13} className="animate-spin" />}
-            <Send size={13} /> Submit Request
+            <Send size={12} /> Submit Request
           </button>
         </div>
       </div>

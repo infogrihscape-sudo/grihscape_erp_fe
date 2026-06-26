@@ -507,3 +507,61 @@ input.border-red-300:focus,
 /* ── Misc utility ── */
 .dark .ring-stone-200                 { --tw-ring-color: var(--border); }
 .dark .ring-stone-100                 { --tw-ring-color: var(--border-subtle); }
+
+/* ── Premium Unified Table Design (Centered & Bordered) ── */
+.table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background-color: var(--card-bg);
+  box-shadow: var(--shadow-card);
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.erp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  line-height: 1.25rem;
+}
+
+.erp-table thead {
+  background-color: var(--table-head);
+  color: var(--text-muted);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.erp-table th, .erp-table td {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.erp-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.erp-table tbody tr:hover {
+  background-color: var(--hover-bg);
+}
+
+.erp-table td {
+  color: var(--text-secondary);
+}
+
+.erp-table td.primary-cell {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.erp-table td.mono-cell {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}

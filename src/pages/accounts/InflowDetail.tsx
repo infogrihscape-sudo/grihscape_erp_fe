@@ -67,36 +67,41 @@ export const InflowDetail: React.FC<Props> = ({ currentUser, challanId }) => {
         </span>
       </div>
 
-      {/* Info card */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-5 grid grid-cols-2 gap-4 text-[11px]">
-        <Row label="Date" value={new Date(challan.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })} />
-        <Row label="Client" value={challan.clientName} />
-        <Row label="Site" value={challan.siteName ?? '—'} />
-        <Row label="Purpose" value={challan.purpose?.name} />
-        <Row label="Mode of Payment" value={challan.modeOfPayment} />
-        <Row label="Payment Status" value={challan.paymentStatus} />
-        <Row label="Amount" value={`₹${Number(challan.amount).toLocaleString('en-IN')}`} />
-        <Row label="Tax" value={challan.isTaxApplicable ? `${challan.taxPercent}% (${challan.taxType}) = ₹${Number(challan.taxAmount).toLocaleString('en-IN')}` : '—'} />
-        <Row label="Final Amount" value={<span className="font-bold text-emerald-400">₹{Number(challan.finalAmount).toLocaleString('en-IN')}</span>} />
-        {challan.description && <Row label="Description" value={challan.description} span />}
-        <Row label="Created By" value={challan.createdBy?.name} />
-        {challan.approvedBy && <Row label="Approved By" value={challan.approvedBy.name} />}
-        {challan.rejectionReason && <Row label="Rejection Reason" value={<span className="text-red-400">{challan.rejectionReason}</span>} span />}
-
-        {challan.supportingDocUrl && (
-          <div className="col-span-2">
-            <p className="text-[10px] text-[var(--text-muted)] uppercase font-semibold tracking-wide mb-1">Supporting Document</p>
-            <a
-              href={challan.supportingDocUrl.startsWith('http') ? challan.supportingDocUrl : fileUrl(challan.supportingDocUrl)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[11px] text-blue-400 hover:underline font-medium"
-            >
-              <ExternalLink size={12} />
-              {challan.supportingDocName ?? 'View Document'}
-            </a>
-          </div>
-        )}
+      {/* Info table */}
+      <div className="table-container">
+        <table className="erp-table">
+          <tbody>
+            <DetailRow label="Date" value={new Date(challan.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })} />
+            <DetailRow label="Client" value={challan.clientName} />
+            <DetailRow label="Site" value={challan.siteName ?? '—'} />
+            <DetailRow label="Purpose" value={challan.purpose?.name ?? '—'} />
+            <DetailRow label="Mode of Payment" value={challan.modeOfPayment} />
+            <DetailRow label="Payment Status" value={challan.paymentStatus} />
+            <DetailRow label="Amount" value={`₹${Number(challan.amount).toLocaleString('en-IN')}`} />
+            <DetailRow label="Tax" value={challan.isTaxApplicable ? `${challan.taxPercent}% (${challan.taxType}) = ₹${Number(challan.taxAmount).toLocaleString('en-IN')}` : '—'} />
+            <DetailRow label="Final Amount" value={<span className="font-bold text-emerald-400">₹{Number(challan.finalAmount).toLocaleString('en-IN')}</span>} />
+            {challan.description && <DetailRow label="Description" value={challan.description} />}
+            <DetailRow label="Created By" value={challan.createdBy?.name} />
+            {challan.approvedBy && <DetailRow label="Approved By" value={challan.approvedBy.name} />}
+            {challan.rejectionReason && <DetailRow label="Rejection Reason" value={<span className="text-red-400">{challan.rejectionReason}</span>} />}
+            {challan.supportingDocUrl && (
+              <DetailRow
+                label="Supporting Document"
+                value={
+                  <a
+                    href={challan.supportingDocUrl.startsWith('http') ? challan.supportingDocUrl : fileUrl(challan.supportingDocUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-blue-400 hover:underline font-medium"
+                  >
+                    <ExternalLink size={12} />
+                    {challan.supportingDocName ?? 'View Document'}
+                  </a>
+                }
+              />
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Rejection info */}
@@ -197,11 +202,15 @@ export const InflowDetail: React.FC<Props> = ({ currentUser, challanId }) => {
   );
 };
 
-function Row({ label, value, span }: { label: string; value: React.ReactNode; span?: boolean }) {
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className={span ? 'col-span-2' : ''}>
-      <p className="text-[10px] text-[var(--text-muted)] uppercase font-semibold tracking-wide mb-0.5">{label}</p>
-      <p className="text-[var(--text-primary)] font-medium">{value}</p>
-    </div>
+    <tr className="border-b border-[var(--border)] last:border-b-0 hover:bg-white/2 transition-colors">
+      <td className="px-4 py-3 font-semibold text-[var(--text-muted)] w-1/3 bg-stone-50/5 dark:bg-slate-900/10 uppercase tracking-wide text-[9px] border-r border-[var(--border)]">
+        {label}
+      </td>
+      <td className="px-4 py-3 text-[var(--text-primary)] font-medium whitespace-pre-wrap break-all">
+        {value}
+      </td>
+    </tr>
   );
 }

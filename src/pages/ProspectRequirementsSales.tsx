@@ -10,7 +10,7 @@ import { useRouter } from '../context/RouterContext.js';
 import {
   ClipboardList, Search, RefreshCw, ChevronLeft, ChevronRight, X,
   Plus, Trash2, Eye, Phone, Mail, Check, FileText, UserPlus, Loader2,
-  Edit2, AlertTriangle, Clock,
+  Edit2, AlertTriangle,
 } from 'lucide-react';
 import { clientApi } from '../services/api.js';
 import { ShimmerTable } from '../components/Shimmer.js';
@@ -68,27 +68,9 @@ export const ProspectRequirementsSales: React.FC<Props> = (_props) => {
   const [serviceBudgets, setServiceBudgets] = useState<Record<string, string[]>>({});
   const [formKey, setFormKey] = useState(0);
 
-  // Edit-request workflow
-  const [editRequestProspect, setEditRequestProspect] = useState<any | null>(null);
-  const [editReason, setEditReason] = useState('');
-  const [submittingEditRequest, setSubmittingEditRequest] = useState(false);
-  const [editingProspect, setEditingProspect] = useState<any | null>(null); // prospect with approved edit
+  // Edit prospect directly (no approval required)
+  const [editingProspect, setEditingProspect] = useState<any | null>(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
-
-  const handleRequestEdit = async () => {
-    if (!editRequestProspect) return;
-    setSubmittingEditRequest(true);
-    try {
-      await prospectApi.requestEdit(editRequestProspect.id, editReason.trim() || undefined);
-      showToast('Edit request submitted. Awaiting admin approval.', 'success');
-      setEditRequestProspect(null);
-      setEditReason('');
-    } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to submit edit request.', 'error');
-    } finally {
-      setSubmittingEditRequest(false);
-    }
-  };
 
   const handleEditProspectSubmit = async (data: ProspectFormData) => {
     if (!editingProspect) return;
@@ -103,24 +85,6 @@ export const ProspectRequirementsSales: React.FC<Props> = (_props) => {
       throw err;
     } finally {
       setEditSubmitting(false);
-    }
-  };
-
-  const handleOpenEditWithApproval = async (prospect: any) => {
-    try {
-      const res = await prospectApi.getEditRequest(prospect.id);
-      const req = res.data?.editRequest;
-      if (req?.status === 'APPROVED') {
-        setEditingProspect(prospect);
-      } else if (req?.status === 'PENDING') {
-        showToast('Edit request already submitted and is pending admin approval.', 'success');
-      } else {
-        setEditReason('');
-        setEditRequestProspect(prospect);
-      }
-    } catch {
-      setEditReason('');
-      setEditRequestProspect(prospect);
     }
   };
 
@@ -353,12 +317,12 @@ export const ProspectRequirementsSales: React.FC<Props> = (_props) => {
           </div>
 
           <div className={`${card} flex-1 overflow-y-auto overflow-x-auto scrollbar-thin flex flex-col justify-between`}>
-            <div className="overflow-x-auto min-w-full">
-              <table className="w-full border-collapse text-left min-w-[850px]">
+            <div className="table-container min-w-full">
+              <table className="erp-table min-w-[850px]">
                 <thead>
-                  <tr className="bg-stone-50/80 sticky top-0 z-10 backdrop-blur-xs">
+                  <tr className="sticky top-0 z-10 backdrop-blur-xs">
                     {['S.No.', 'Client Name', 'Mobile Number', 'Email', 'Preferred Comm.', 'State', 'District', 'Locality / Area', 'Pincode', 'Services Requested', 'Workflow', 'Status', 'Actions'].map(h => (
-                      <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center whitespace-nowrap">{h}</th>
+                      <th key={h} className="whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -366,19 +330,19 @@ export const ProspectRequirementsSales: React.FC<Props> = (_props) => {
                   {paginatedProspects.length === 0 ? (
                     <tr><td colSpan={13} className="text-center py-10 text-[12px] text-stone-400 italic">No prospects found.</td></tr>
                   ) : paginatedProspects.map((p, i) => (
-                    <tr key={p.id} className="hover:bg-stone-50/40 transition-colors">
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] font-medium text-stone-500 text-center">{indexStart + i + 1}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] font-semibold text-stone-900 text-center whitespace-nowrap">{p.clientName}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-600 font-medium text-center whitespace-nowrap">{p.mobileNo}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-600 font-medium text-center whitespace-nowrap">{p.email || '—'}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] font-medium text-stone-700 text-center whitespace-nowrap">
+                    <tr key={p.id}>
+                      <td>{indexStart + i + 1}</td>
+                      <td className="font-semibold text-[var(--text-primary)] whitespace-nowrap">{p.clientName}</td>
+                      <td className="whitespace-nowrap">{p.mobileNo}</td>
+                      <td className="whitespace-nowrap">{p.email || '—'}</td>
+                      <td className="whitespace-nowrap">
                         {p.preferredCommunication === 'PHONE_CALL' ? 'Phone Call' : p.preferredCommunication === 'WHATSAPP' ? 'Whatsapp' : 'Email'}
                       </td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-700 font-medium text-center whitespace-nowrap">{p.state || '—'}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-700 font-medium text-center whitespace-nowrap">{p.district || '—'}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-700 font-medium text-center truncate max-w-[150px]" title={p.locality}>{p.locality}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-700 font-medium text-center whitespace-nowrap">{p.pincode || '—'}</td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
+                      <td className="whitespace-nowrap">{p.state || '—'}</td>
+                      <td className="whitespace-nowrap">{p.district || '—'}</td>
+                      <td className="truncate max-w-[150px]" title={p.locality}>{p.locality}</td>
+                      <td className="whitespace-nowrap">{p.pincode || '—'}</td>
+                      <td >
                         <div className="flex flex-wrap gap-1.5 justify-center max-w-[200px] mx-auto">
                           {(p.serviceType || '').split(',').filter(Boolean).map((s: string, sIdx: number, arr: string[]) => (
                             <span key={s} className="text-[#7e5a20] text-[12px] font-semibold">
@@ -387,29 +351,29 @@ export const ProspectRequirementsSales: React.FC<Props> = (_props) => {
                           ))}
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
+                      <td >
                         <span className={`text-[12px] font-semibold uppercase tracking-wide ${workflowStageBadgeClasses[p.workflowStage || 'LEAD_CAPTURED'] || 'text-stone-600'}`}>
                           {(p.workflowStage || 'LEAD_CAPTURED').replace(/_/g, ' ')}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
+                      <td >
                         {p.status && p.status !== 'ACTIVE' ? (
                           <span className={`text-[11.5px] font-bold uppercase tracking-wide ${statusBadgeClasses[p.status] || 'text-stone-500'}`}>
                             {p.status === 'PENDING_DELETE' ? 'Pending Delete' : p.status}
                           </span>
                         ) : <span className="text-[12px] text-stone-400">—</span>}
                       </td>
-                      <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
+                      <td >
                         <div className="inline-flex gap-1 justify-center flex-wrap">
                           <button onClick={() => navigate(`/prospects/${p.id}`)} className={btnSecondary} style={{ padding: '5px 8px' }} title="View pipeline">
                             <Eye size={11} />
                           </button>
                           {p.status !== 'PENDING_DELETE' && p.status !== 'DELETED' && (
                             <button
-                              onClick={() => handleOpenEditWithApproval(p)}
+                              onClick={() => setEditingProspect(p)}
                               className={`${btnSecondary} text-amber-700 border-amber-200 hover:bg-amber-50`}
                               style={{ padding: '5px 8px' }}
-                              title="Request edit approval"
+                              title="Edit brief"
                             >
                               <Edit2 size={11} />
                             </button>
@@ -551,53 +515,7 @@ export const ProspectRequirementsSales: React.FC<Props> = (_props) => {
         document.body
       )}
 
-      {/* Request Edit Approval Modal */}
-      {editRequestProspect && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => { setEditRequestProspect(null); setEditReason(''); }}>
-          <div className="animate-scale-in w-full max-w-[420px] bg-white rounded-2xl shadow-xl border border-amber-200 p-6" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
-                <Edit2 size={16} className="text-amber-600" />
-              </div>
-              <div>
-                <h3 className="text-[15px] font-bold text-stone-900">Request Edit Approval</h3>
-                <p className="text-[11.5px] text-stone-500 mt-0.5 leading-tight">
-                  {editRequestProspect.clientName}
-                </p>
-              </div>
-            </div>
-            <p className="text-[12.5px] text-stone-500 leading-relaxed mb-4">
-              An Admin or Super Admin must approve your request before you can edit this brief. Please provide a reason for the edit.
-            </p>
-            <textarea
-              value={editReason}
-              onChange={e => setEditReason(e.target.value)}
-              placeholder="Reason for editing this brief..."
-              rows={3}
-              className="w-full px-3 py-2.5 border border-stone-200 rounded-lg text-[13px] outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300/40 resize-none text-stone-800 placeholder-stone-400"
-            />
-            <div className="flex gap-2.5 mt-4">
-              <button
-                onClick={() => { setEditRequestProspect(null); setEditReason(''); }}
-                className={`${btnSecondary} flex-1 justify-center`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRequestEdit}
-                disabled={submittingEditRequest || !editReason.trim()}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50 transition-all border-0 cursor-pointer"
-              >
-                {submittingEditRequest ? <Loader2 size={13} className="animate-spin" /> : <Clock size={13} />}
-                Submit Request
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Edit Brief Modal (after approval) */}
+      {/* Edit Brief Modal */}
       {editingProspect && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setEditingProspect(null)}>
           <div className="animate-scale-in w-full max-w-5xl lg:max-w-6xl bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-[rgba(184,144,71,0.3)] flex flex-col overflow-hidden h-[100dvh] sm:h-auto sm:max-h-[calc(100svh-40px)]" onClick={e => e.stopPropagation()}>

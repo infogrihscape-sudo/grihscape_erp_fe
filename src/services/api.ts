@@ -321,8 +321,8 @@ export const projectApi = {
   }) => api.post('/projects/onboard-existing', data),
 
   // Site verification
-  assignSiteEngineer: (projectId: string, siteEngineerId: string) =>
-    api.post(`/projects/${projectId}/site-verification/assign-engineer`, { siteEngineerId }),
+  assignFieldStaff: (projectId: string, data: { siteEngineerId?: string; constructionHeadId?: string }) =>
+    api.post(`/projects/${projectId}/site-verification/assign-engineer`, data),
   getSiteVerification: (projectId: string) =>
     api.get(`/projects/${projectId}/site-verification`),
   submitSiteVerification: (projectId: string, data: any) =>
@@ -425,6 +425,16 @@ export const projectApi = {
     api.get(`/projects/${projectId}/transmittals`),
   sendTransmittal: (projectId: string, data: { fileType: 'SINGLE' | 'FULL_PROJECT' | 'LAYOUT'; projectDrawingId?: string; message?: string; fileUrls: string[] }) =>
     api.post(`/projects/${projectId}/transmittals`, data),
+  sendDrawingToSiteEngineer: (projectId: string, data: { projectDrawingId: string; fileUrls: string[]; message?: string }) =>
+    api.post(`/projects/${projectId}/transmittals/site-engineer`, data),
+  getIssuedDrawings: (projectId: string) =>
+    api.get(`/projects/${projectId}/se/issued-drawings`),
+  addDrawingRemark: (projectId: string, logId: string, message: string) =>
+    api.post(`/projects/${projectId}/se/issued-drawings/${logId}/remarks`, { message }),
+  getAllSERemarks: (projectId: string) =>
+    api.get(`/projects/${projectId}/se/all-remarks`),
+  getDrawingSeRemarks: (projectId: string, drawingId: string) =>
+    api.get(`/projects/${projectId}/pipeline/drawings/${drawingId}/se-remarks`),
 
   // Client Documents (Send to Client tab)
   getClientDocuments: (projectId: string) =>

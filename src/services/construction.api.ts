@@ -12,6 +12,9 @@ export const constructionApi = {
   createTask: (projectId: string, data: any) =>
     api.post(`${base(projectId)}/tasks`, data),
 
+  bulkImportTasks: (projectId: string, tasks: any[]) =>
+    api.post(`${base(projectId)}/tasks/bulk`, { tasks }),
+
   getTask: (projectId: string, taskId: string) =>
     api.get(`${base(projectId)}/tasks/${taskId}`),
 

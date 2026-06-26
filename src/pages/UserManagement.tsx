@@ -590,45 +590,47 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
             </div>
             {/* Table skeleton */}
             <div className={`${card} flex-1 overflow-hidden`}>
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="bg-stone-50/80">
-                    {['S.No.', 'Full Name', 'Email', 'Phone Number', 'Role', 'Status', 'Session', 'Actions'].map((h) => (
-                      <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <tr key={i} className="border-b border-[rgba(184,144,71,0.12)]">
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-6 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-24 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-32 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-20 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-16 h-5 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-20 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-36 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="inline-block w-16 h-8 bg-stone-100 rounded-lg shimmer mx-auto" />
-                      </td>
+              <div className="table-container">
+                <table className="erp-table">
+                  <thead>
+                    <tr>
+                      {['S.No.', 'Full Name', 'Email', 'Phone Number', 'Role', 'Status', 'Session', 'Actions'].map((h) => (
+                        <th key={h}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <tr key={i}>
+                        <td>
+                          <div className="w-6 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-24 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-32 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-20 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-16 h-5 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-20 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-36 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="inline-block w-16 h-8 bg-stone-100 rounded-lg shimmer mx-auto" />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         ) : activeSubTab === 'roles' ? (
@@ -640,33 +642,35 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
             </div>
             {/* Table skeleton */}
             <div className={`${card} flex-1 overflow-hidden`}>
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="bg-stone-50/80">
-                    {['S.No.', 'Role Code', 'Description', 'Actions'].map((h) => (
-                      <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <tr key={i} className="border-b border-[rgba(184,144,71,0.12)]">
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-6 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-16 h-5 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-48 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="inline-block w-14 h-8 bg-stone-100 rounded-lg shimmer mx-auto" />
-                      </td>
+              <div className="table-container">
+                <table className="erp-table">
+                  <thead>
+                    <tr>
+                      {['S.No.', 'Role Code', 'Description', 'Actions'].map((h) => (
+                        <th key={h}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <tr key={i}>
+                        <td>
+                          <div className="w-6 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-16 h-5 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-48 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="inline-block w-14 h-8 bg-stone-100 rounded-lg shimmer mx-auto" />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         ) : (
@@ -678,37 +682,39 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
             </div>
             {/* Table skeleton */}
             <div className={`${card} flex-1 overflow-hidden`}>
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="bg-stone-50/80">
-                    {['S.No.', 'Timestamp', 'Operator', 'Action', 'Metadata'].map(h => (
-                      <th key={h} className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <tr key={i} className="border-b border-[rgba(184,144,71,0.12)]">
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-6 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-32 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-24 h-4 bg-stone-100 rounded shimmer mb-1 mx-auto" />
-                        <div className="w-32 h-3.5 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-40 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="w-36 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                      </td>
+              <div className="table-container">
+                <table className="erp-table">
+                  <thead>
+                    <tr>
+                      {['S.No.', 'Timestamp', 'Operator', 'Action', 'Metadata'].map(h => (
+                        <th key={h}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <tr key={i}>
+                        <td>
+                          <div className="w-6 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-32 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-24 h-4 bg-stone-100 rounded shimmer mb-1 mx-auto" />
+                          <div className="w-32 h-3.5 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-40 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                        <td>
+                          <div className="w-36 h-4 bg-stone-100 rounded shimmer mx-auto" />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )
@@ -750,76 +756,78 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
 
           {/* Users table */}
           <div className={`${card} overflow-y-auto overflow-x-auto scrollbar-thin max-h-[min(420px,55vh)]`}>
-            <table className="w-full border-collapse text-left min-w-[750px]">
-              <colgroup>
-                <col style={{ width: '44px' }} />
-                <col style={{ minWidth: '130px' }} />
-                <col style={{ minWidth: '180px' }} />
-                <col style={{ minWidth: '110px' }} />
-                <col style={{ width: '120px' }} />
-                <col style={{ width: '90px' }} />
-                <col style={{ width: '150px' }} />
-                <col style={{ width: '140px' }} />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">#</th>
-                  <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Full Name</th>
-                  <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Email</th>
-                  <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Phone Number</th>
-                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">Role</th>
-                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">Status</th>
-                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">Session</th>
-                  <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedUsers.length === 0 ? (
-                  <tr><td colSpan={8} className="text-center py-8 text-[12px] text-stone-400 italic">No users found.</td></tr>
-                ) : paginatedUsers.map((u, index) => (
-                  <tr key={u.id} className="hover:bg-stone-50/50 transition-colors">
-                    <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-[12px] font-medium text-stone-400 text-center">
-                      {userIndexStart + index + 1}
-                    </td>
-                    <td className="px-4 py-3 border-b border-[rgba(184,144,71,0.12)] text-[12.5px] font-semibold text-stone-900 leading-tight">
-                      {u.name}
-                    </td>
-                    <td className="px-4 py-3 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-600 font-medium">
-                      {u.email}
-                    </td>
-                    <td className="px-4 py-3 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-600 font-medium">
-                      {u.phone}
-                    </td>
-                    <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
-                      <span className={`text-[11.5px] font-bold ${roleBadgeClass(u.role)}`}>{roleLabel(u.role)}</span>
-                    </td>
-                    <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
-                      {u.isBlocked
-                        ? <span className="inline-flex items-center gap-1 text-[11.5px] font-medium text-rose-500"><Ban size={11} />Blocked</span>
-                        : <span className="inline-flex items-center gap-1 text-[11.5px] font-medium text-emerald-600"><ShieldCheck size={11} />Active</span>}
-                    </td>
-                    <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-center text-[11.5px] text-stone-600 whitespace-nowrap">{getSessionLabel(u)}</td>
-                    <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
-                      {u.id === currentUser.id
-                        ? <span className="text-[11px] italic text-stone-400 font-medium">You</span>
-                        : (currentUser.role === 'Admin' && u.role === 'Super Admin')
-                          ? <span className="text-[11px] italic text-stone-400 font-medium">Protected</span>
-                          : <div className="inline-flex items-center gap-1">
-                              <button onClick={() => handleOpenEditUser(u)} className={btnEdit} title="Edit user">
-                                <Edit2 size={10} />Edit
-                              </button>
-                              <button onClick={() => handleToggleBlock(u)} className={u.isBlocked ? btnSuccess : btnWarn} title={u.isBlocked ? 'Unblock user' : 'Block user'}>
-                                {u.isBlocked ? <><Unlock size={10} />Unblock</> : <><Ban size={10} />Block</>}
-                              </button>
-                              <button onClick={() => setShowDeleteConfirm(u.id)} className={btnDanger} title="Delete user">
-                                <Trash2 size={10} />Delete
-                              </button>
-                            </div>}
-                    </td>
+            <div className="table-container">
+              <table className="erp-table min-w-[750px]">
+                <colgroup>
+                  <col style={{ width: '44px' }} />
+                  <col style={{ minWidth: '130px' }} />
+                  <col style={{ minWidth: '180px' }} />
+                  <col style={{ minWidth: '110px' }} />
+                  <col style={{ width: '120px' }} />
+                  <col style={{ width: '90px' }} />
+                  <col style={{ width: '150px' }} />
+                  <col style={{ width: '140px' }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th className="sticky top-0 z-10">#</th>
+                    <th className="sticky top-0 z-10">Full Name</th>
+                    <th className="sticky top-0 z-10">Email</th>
+                    <th className="sticky top-0 z-10">Phone Number</th>
+                    <th className="sticky top-0 z-10">Role</th>
+                    <th className="sticky top-0 z-10">Status</th>
+                    <th className="sticky top-0 z-10">Session</th>
+                    <th className="sticky top-0 z-10">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedUsers.length === 0 ? (
+                    <tr><td colSpan={8} className="text-center py-8 text-[12px] text-stone-400 italic">No users found.</td></tr>
+                  ) : paginatedUsers.map((u, index) => (
+                    <tr key={u.id}>
+                      <td className="text-stone-400">
+                        {userIndexStart + index + 1}
+                      </td>
+                      <td className="font-semibold text-[var(--text-primary)]">
+                        {u.name}
+                      </td>
+                      <td>
+                        {u.email}
+                      </td>
+                      <td>
+                        {u.phone}
+                      </td>
+                      <td className="whitespace-nowrap">
+                        <span className={`text-[11.5px] font-bold ${roleBadgeClass(u.role)}`}>{roleLabel(u.role)}</span>
+                      </td>
+                      <td className="whitespace-nowrap">
+                        {u.isBlocked
+                          ? <span className="inline-flex items-center gap-1 text-[11.5px] font-medium text-rose-500"><Ban size={11} />Blocked</span>
+                          : <span className="inline-flex items-center gap-1 text-[11.5px] font-medium text-emerald-600"><ShieldCheck size={11} />Active</span>}
+                      </td>
+                      <td className="whitespace-nowrap">{getSessionLabel(u)}</td>
+                      <td className="whitespace-nowrap">
+                        {u.id === currentUser.id
+                          ? <span className="text-[11px] italic text-stone-400 font-medium">You</span>
+                          : (currentUser.role === 'Admin' && u.role === 'Super Admin')
+                            ? <span className="text-[11px] italic text-stone-400 font-medium">Protected</span>
+                            : <div className="inline-flex items-center gap-1">
+                                <button onClick={() => handleOpenEditUser(u)} className={btnEdit} title="Edit user">
+                                  <Edit2 size={10} />Edit
+                                </button>
+                                <button onClick={() => handleToggleBlock(u)} className={u.isBlocked ? btnSuccess : btnWarn} title={u.isBlocked ? 'Unblock user' : 'Block user'}>
+                                  {u.isBlocked ? <><Unlock size={10} />Unblock</> : <><Ban size={10} />Block</>}
+                                </button>
+                                <button onClick={() => setShowDeleteConfirm(u.id)} className={btnDanger} title="Delete user">
+                                  <Trash2 size={10} />Delete
+                                </button>
+                              </div>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {filteredUsers.length > 0 && (
               <PaginationRow currentPage={usersCurrentPage} totalPages={totalUsersPages} onNext={handleNextUsers} onPrev={handlePrevUsers}
                 start={userIndexStart + 1} end={Math.min(userIndexStart + ITEMS_PER_PAGE, filteredUsers.length)} count={filteredUsers.length} />
@@ -840,51 +848,53 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
             </div>
           </div>
           <div className={`${card} overflow-y-auto overflow-x-auto scrollbar-thin max-h-[min(420px,55vh)] animate-fade-in`}>
-          <table className="w-full border-collapse text-left min-w-[480px]">
-            <colgroup>
-              <col style={{ width: '44px' }} />
-              <col style={{ width: '170px' }} />
-              <col />
-              <col style={{ width: '100px' }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">#</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Role Code</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Description</th>
-                <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedRoles.map((role, index) => (
-                <tr key={role.id} className="hover:bg-stone-50/50 transition-colors">
-                  <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-[12px] font-medium text-stone-400 text-center">
-                    {roleIndexStart + index + 1}
-                  </td>
-                  <td className="px-4 py-3 border-b border-[rgba(184,144,71,0.12)] whitespace-nowrap">
-                    <span className={`text-[12px] font-bold ${roleBadgeClass(role.name)}`}>{role.name}</span>
-                  </td>
-                  <td className="px-4 py-3 border-b border-[rgba(184,144,71,0.12)] text-[12px] text-stone-600 font-medium">
-                    {role.description || <span className="italic text-stone-400">No description configured.</span>}
-                  </td>
-                  <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
-                    {['Super Admin', 'Admin'].includes(role.name)
-                      ? <span className="inline-flex items-center gap-1 text-[11px] text-stone-400 font-medium"><Settings size={10} />System</span>
-                      : !userCanWrite
-                        ? <span className="text-[11px] italic text-stone-400 font-medium">View Only</span>
-                        : <button onClick={() => handleOpenEditRole(role)} className={btnSecondary} style={{padding:'5px 10px', fontSize:'11px'}}>
-                            <Edit2 size={10} />Edit
-                          </button>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {roles.length > 0 && (
-            <PaginationRow currentPage={rolesCurrentPage} totalPages={totalRolesPages} onNext={handleNextRoles} onPrev={handlePrevRoles}
-              start={roleIndexStart + 1} end={Math.min(roleIndexStart + ITEMS_PER_PAGE, roles.length)} count={roles.length} />
-          )}
-        </div>
+            <div className="table-container">
+              <table className="erp-table min-w-[480px]">
+                <colgroup>
+                  <col style={{ width: '44px' }} />
+                  <col style={{ width: '170px' }} />
+                  <col />
+                  <col style={{ width: '100px' }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th className="sticky top-0 z-10">#</th>
+                    <th className="sticky top-0 z-10">Role Code</th>
+                    <th className="sticky top-0 z-10">Description</th>
+                    <th className="sticky top-0 z-10">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedRoles.map((role, index) => (
+                    <tr key={role.id}>
+                      <td className="text-stone-400">
+                        {roleIndexStart + index + 1}
+                      </td>
+                      <td className="whitespace-nowrap">
+                        <span className={`text-[12px] font-bold ${roleBadgeClass(role.name)}`}>{role.name}</span>
+                      </td>
+                      <td>
+                        {role.description || <span className="italic text-stone-400">No description configured.</span>}
+                      </td>
+                      <td className="whitespace-nowrap">
+                        {['Super Admin', 'Admin'].includes(role.name)
+                          ? <span className="inline-flex items-center gap-1 text-[11px] text-stone-400 font-medium"><Settings size={10} />System</span>
+                          : !userCanWrite
+                            ? <span className="text-[11px] italic text-stone-400 font-medium">View Only</span>
+                            : <button onClick={() => handleOpenEditRole(role)} className={btnSecondary} style={{padding:'5px 10px', fontSize:'11px'}}>
+                                <Edit2 size={10} />Edit
+                              </button>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {roles.length > 0 && (
+              <PaginationRow currentPage={rolesCurrentPage} totalPages={totalRolesPages} onNext={handleNextRoles} onPrev={handlePrevRoles}
+                start={roleIndexStart + 1} end={Math.min(roleIndexStart + ITEMS_PER_PAGE, roles.length)} count={roles.length} />
+            )}
+          </div>
       </>
       ) : (
         /* Audit Logs */
@@ -909,81 +919,83 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
             </div>
           </div>
           <div className={`${card} overflow-y-auto overflow-x-auto scrollbar-thin max-h-[min(420px,55vh)] animate-fade-in`}>
-          <table className="w-full border-collapse text-left min-w-[600px]">
-            <colgroup>
-              <col style={{ width: '44px' }} />
-              <col style={{ width: '160px' }} />
-              <col style={{ width: '150px' }} />
-              <col />
-              <col style={{ width: '180px' }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th className="px-3 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 text-center sticky top-0 z-10">#</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Timestamp</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Operator</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Action</th>
-                <th className="px-4 py-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-500 border-b border-[rgba(184,144,71,0.18)] bg-stone-50 sticky top-0 z-10">Metadata</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedLogs.length === 0
-                ? <tr><td colSpan={5} className="text-center py-8 text-[12px] text-stone-400 italic">No audit logs recorded yet.</td></tr>
-                : paginatedLogs.map((log, index) => (
-                  <tr key={log.id} className="hover:bg-[rgba(184,144,71,0.05)] transition-colors">
-                    <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-[12px] font-medium text-stone-400 text-center">
-                      {logIndexStart + index + 1}
-                    </td>
-                    <td className="px-4 py-3 border-b border-[rgba(184,144,71,0.12)] whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 text-[11.5px] text-stone-600">
-                        <Calendar size={11} className="text-stone-400 shrink-0" />
-                        <span>
-                          {new Date(log.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })} · {new Date(log.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true })}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 border-b border-[rgba(184,144,71,0.12)]">
-                      <p className="text-[12.5px] font-semibold text-stone-850 leading-tight">{log.user.name}</p>
-                      <span className={`text-[10px] font-bold ${roleBadgeClass(log.user.role)}`}>{roleLabel(log.user.role)}</span>
-                    </td>
-                    <td className="px-4 py-3 border-b border-[rgba(184,144,71,0.12)]">
-                      <span className="text-[#7e5a20] text-[11.5px] font-mono font-bold break-all">{log.action}</span>
-                    </td>
-                    <td className="px-4 py-3 border-b border-[rgba(184,144,71,0.12)] text-[11px] text-stone-500">
-                      <p className="font-medium">IP: {log.ipAddress || 'Unknown'}</p>
-                      <p className="max-w-[160px] truncate text-[10.5px]" title={log.userAgent || ''}>UA: {log.userAgent || 'Unknown'}</p>
-                      {(log.action === 'USER_LOGIN_SUCCESS' || log.action === 'USER_LOGOUT') ? (
-                        <button 
-                          onClick={() => log.latitude && log.longitude && setMapData({ lat: log.latitude, lng: log.longitude, name: log.user.name })}
-                          disabled={!log.latitude || !log.longitude}
-                          className={`inline-flex items-center justify-center gap-1 text-[10px] font-semibold border-0 bg-transparent p-0 m-0 mt-0.5 ${
-                            log.latitude && log.longitude 
-                              ? 'text-[#b89047] hover:text-[#9e7735] cursor-pointer' 
-                              : 'text-stone-300 cursor-not-allowed opacity-60'
-                          }`}
-                          title={log.latitude && log.longitude ? "View Log Location" : "No location data available"}
-                        >
-                          <MapPin size={9} /> View Location
-                        </button>
-                      ) : log.latitude && log.longitude ? (
-                        <button 
-                          onClick={() => setMapData({ lat: log.latitude!, lng: log.longitude!, name: log.user.name })}
-                          className="inline-flex items-center justify-center gap-1 text-[10px] text-[#b89047] hover:text-[#9e7735] font-semibold cursor-pointer border-0 bg-transparent p-0 m-0 mt-0.5"
-                          title="View Log Location"
-                        >
-                          <MapPin size={9} /> View Location
-                        </button>
-                      ) : null}
-                    </td>
+            <div className="table-container">
+              <table className="erp-table min-w-[600px]">
+                <colgroup>
+                  <col style={{ width: '44px' }} />
+                  <col style={{ width: '160px' }} />
+                  <col style={{ width: '150px' }} />
+                  <col />
+                  <col style={{ width: '180px' }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th className="sticky top-0 z-10">#</th>
+                    <th className="sticky top-0 z-10">Timestamp</th>
+                    <th className="sticky top-0 z-10">Operator</th>
+                    <th className="sticky top-0 z-10">Action</th>
+                    <th className="sticky top-0 z-10">Metadata</th>
                   </tr>
-                ))}
-            </tbody>
-          </table>
-          {logs.length > 0 && (
-            <PaginationRow currentPage={logsCurrentPage} totalPages={totalLogsPages} onNext={handleNextLogs} onPrev={handlePrevLogs}
-              start={logIndexStart + 1} end={Math.min(logIndexStart + ITEMS_PER_PAGE, logs.length)} count={logs.length} />
-          )}
-        </div>
+                </thead>
+                <tbody>
+                  {paginatedLogs.length === 0
+                    ? <tr><td colSpan={5} className="text-center py-8 text-[12px] text-stone-400 italic">No audit logs recorded yet.</td></tr>
+                    : paginatedLogs.map((log, index) => (
+                      <tr key={log.id} className="hover:bg-[rgba(184,144,71,0.05)] transition-colors">
+                        <td className="text-stone-400">
+                          {logIndexStart + index + 1}
+                        </td>
+                        <td className="whitespace-nowrap">
+                          <div className="flex items-center justify-center gap-1.5 text-[11.5px] text-stone-600">
+                            <Calendar size={11} className="text-stone-400 shrink-0" />
+                            <span>
+                              {new Date(log.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })} · {new Date(log.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true })}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <p className="text-[12.5px] font-semibold text-stone-850 leading-tight">{log.user.name}</p>
+                          <span className={`text-[10px] font-bold ${roleBadgeClass(log.user.role)}`}>{roleLabel(log.user.role)}</span>
+                        </td>
+                        <td>
+                          <span className="text-[#7e5a20] text-[11.5px] font-mono font-bold break-all">{log.action}</span>
+                        </td>
+                        <td className="text-[11px] text-stone-500">
+                          <p className="font-medium">IP: {log.ipAddress || 'Unknown'}</p>
+                          <p className="max-w-[160px] truncate text-[10.5px] mx-auto" title={log.userAgent || ''}>UA: {log.userAgent || 'Unknown'}</p>
+                          {(log.action === 'USER_LOGIN_SUCCESS' || log.action === 'USER_LOGOUT') ? (
+                            <button 
+                              onClick={() => log.latitude && log.longitude && setMapData({ lat: log.latitude, lng: log.longitude, name: log.user.name })}
+                              disabled={!log.latitude || !log.longitude}
+                              className={`inline-flex items-center justify-center gap-1 text-[10px] font-semibold border-0 bg-transparent p-0 m-0 mt-0.5 ${
+                                log.latitude && log.longitude 
+                                  ? 'text-[#b89047] hover:text-[#9e7735] cursor-pointer' 
+                                  : 'text-stone-300 cursor-not-allowed opacity-60'
+                              }`}
+                              title={log.latitude && log.longitude ? "View Log Location" : "No location data available"}
+                            >
+                              <MapPin size={9} /> View Location
+                            </button>
+                          ) : log.latitude && log.longitude ? (
+                            <button 
+                              onClick={() => setMapData({ lat: log.latitude!, lng: log.longitude!, name: log.user.name })}
+                              className="inline-flex items-center justify-center gap-1 text-[10px] text-[#b89047] hover:text-[#9e7735] font-semibold cursor-pointer border-0 bg-transparent p-0 m-0 mt-0.5"
+                              title="View Log Location"
+                            >
+                              <MapPin size={9} /> View Location
+                            </button>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+            {logs.length > 0 && (
+              <PaginationRow currentPage={logsCurrentPage} totalPages={totalLogsPages} onNext={handleNextLogs} onPrev={handlePrevLogs}
+                start={logIndexStart + 1} end={Math.min(logIndexStart + ITEMS_PER_PAGE, logs.length)} count={logs.length} />
+            )}
+          </div>
       </>
       )}
 

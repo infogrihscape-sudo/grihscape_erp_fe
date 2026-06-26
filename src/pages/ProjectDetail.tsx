@@ -15,8 +15,9 @@ import { CdrfMeetingsTab }  from './project-detail-tabs/CdrfMeetingsTab.js';
 import { CdrfFormTab }      from './project-detail-tabs/CdrfFormTab.js';
 import { DesignTab }        from './project-detail-tabs/DesignTab.js';
 import { PipelineTab }      from './project-detail-tabs/PipelineTab.js';
-import { TransmittalsTab }  from './project-detail-tabs/TransmittalsTab.js';
-import ConstructionTab       from './construction/ConstructionTab.js';
+import { TransmittalsTab }   from './project-detail-tabs/TransmittalsTab.js';
+import { IssuedDrawingsTab } from './project-detail-tabs/IssuedDrawingsTab.js';
+import ConstructionTab        from './construction/ConstructionTab.js';
 
 interface Props { currentUser: User; projectId: string; }
 
@@ -112,8 +113,9 @@ export const ProjectDetail: React.FC<Props> = ({ currentUser, projectId }) => {
         {activeTab === 'cdrf-form'     && <CdrfFormTab      project={project} currentUser={currentUser} />}
         {activeTab === 'design'        && <DesignTab        project={project} currentUser={currentUser} onRefresh={fetchProject} />}
         {activeTab === 'pipeline'      && <PipelineTab      project={project} currentUser={currentUser} onRefresh={fetchProject} />}
-        {activeTab === 'transmittals'  && <TransmittalsTab  project={project} currentUser={currentUser} />}
-        {activeTab === 'construction'  && (
+        {activeTab === 'transmittals'    && <TransmittalsTab   project={project} currentUser={currentUser} />}
+        {activeTab === 'issued-drawings' && <IssuedDrawingsTab project={project} currentUser={currentUser} />}
+        {activeTab === 'construction'    && (
           <div className="p-4 md:p-6">
             <ConstructionTab
               projectId={project.id}

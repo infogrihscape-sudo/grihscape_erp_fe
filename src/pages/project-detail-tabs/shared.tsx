@@ -24,66 +24,71 @@ export const SERVICE_LABELS: Record<string, string> = {
 };
 
 export const STATUS_BADGE: Record<string, string> = {
-  PENDING_ASSIGNMENT: 'text-amber-700 bg-amber-50 border-amber-200',
-  ASSIGNED:           'text-blue-700 bg-blue-50 border-blue-200',
-  SITE_VERIFICATION:  'text-purple-700 bg-purple-50 border-purple-200',
-  CDRF_PENDING:       'text-orange-700 bg-orange-50 border-orange-200',
-  DESIGN_REVIEW:      'text-indigo-700 bg-indigo-50 border-indigo-200',
-  LAYOUT_APPROVED:    'text-teal-700 bg-teal-50 border-teal-200',
-  DESIGN_IN_PROGRESS: 'text-sky-700 bg-sky-50 border-sky-200',
-  COMPLETED:          'text-emerald-700 bg-emerald-50 border-emerald-200',
+  PENDING_ASSIGNMENT:       'text-amber-700 bg-amber-50 border-amber-200',
+  ASSIGNED:                 'text-blue-700 bg-blue-50 border-blue-200',
+  SITE_VERIFICATION:        'text-purple-700 bg-purple-50 border-purple-200',
+  CDRF_PENDING:             'text-orange-700 bg-orange-50 border-orange-200',
+  DESIGN_REVIEW:            'text-indigo-700 bg-indigo-50 border-indigo-200',
+  LAYOUT_APPROVED:          'text-teal-700 bg-teal-50 border-teal-200',
+  DESIGN_IN_PROGRESS:       'text-sky-700 bg-sky-50 border-sky-200',
+  CONSTRUCTION_IN_PROGRESS: 'text-yellow-700 bg-yellow-50 border-yellow-200',
+  COMPLETED:                'text-emerald-700 bg-emerald-50 border-emerald-200',
 };
 
-export type TabId = 'overview' | 'site' | 'cdrf-meetings' | 'cdrf-form' | 'design' | 'pipeline' | 'transmittals' | 'construction';
+export type TabId = 'overview' | 'site' | 'cdrf-meetings' | 'cdrf-form' | 'design' | 'pipeline' | 'transmittals' | 'construction' | 'issued-drawings';
 
 export const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
-  { id: 'overview',      label: 'Overview',          icon: <Building2 size={13} /> },
-  { id: 'site',          label: 'Site Verification',  icon: <MapPin size={13} /> },
-  { id: 'cdrf-meetings', label: 'Client Meetings',     icon: <CalendarDays size={13} /> },
-  { id: 'cdrf-form',     label: 'Client Brief',        icon: <ClipboardCheck size={13} /> },
-  { id: 'design',        label: 'Layout & Approval',  icon: <Upload size={13} /> },
-  { id: 'pipeline',      label: 'Design Pipeline',    icon: <FileText size={13} /> },
-  { id: 'transmittals',  label: 'Transmittals',       icon: <Send size={13} /> },
-  { id: 'construction',  label: 'Construction',        icon: <HardHat size={13} /> },
+  { id: 'overview',         label: 'Overview',          icon: <Building2 size={13} /> },
+  { id: 'site',             label: 'Site Verification',  icon: <MapPin size={13} /> },
+  { id: 'cdrf-meetings',    label: 'Client Meetings',    icon: <CalendarDays size={13} /> },
+  { id: 'cdrf-form',        label: 'Client Brief',       icon: <ClipboardCheck size={13} /> },
+  { id: 'design',           label: 'Layout & Approval', icon: <Upload size={13} /> },
+  { id: 'pipeline',         label: 'Design Pipeline',   icon: <FileText size={13} /> },
+  { id: 'transmittals',     label: 'Transmittals',      icon: <Send size={13} /> },
+  { id: 'construction',     label: 'Construction',       icon: <HardHat size={13} /> },
+  { id: 'issued-drawings',  label: 'Issued Drawings',   icon: <FileText size={13} /> },
 ];
 
 export const STATUS_ORDER = [
   'PENDING_ASSIGNMENT', 'ASSIGNED', 'SITE_VERIFICATION', 'CDRF_PENDING',
-  'DESIGN_REVIEW', 'LAYOUT_APPROVED', 'DESIGN_IN_PROGRESS', 'COMPLETED',
+  'DESIGN_REVIEW', 'LAYOUT_APPROVED', 'DESIGN_IN_PROGRESS', 'CONSTRUCTION_IN_PROGRESS', 'COMPLETED',
 ] as const;
 
 export const TAB_MIN_STATUS: Record<TabId, string> = {
-  overview:        'PENDING_ASSIGNMENT',
-  site:            'ASSIGNED',
-  'cdrf-meetings': 'ASSIGNED',
-  'cdrf-form':     'CDRF_PENDING',
-  design:          'DESIGN_REVIEW',
-  pipeline:        'LAYOUT_APPROVED',
-  transmittals:    'DESIGN_IN_PROGRESS',
-  construction:    'DESIGN_IN_PROGRESS',
+  overview:           'PENDING_ASSIGNMENT',
+  site:               'ASSIGNED',
+  'cdrf-meetings':    'ASSIGNED',
+  'cdrf-form':        'CDRF_PENDING',
+  design:             'DESIGN_REVIEW',
+  pipeline:           'LAYOUT_APPROVED',
+  transmittals:       'DESIGN_IN_PROGRESS',
+  construction:       'DESIGN_IN_PROGRESS',      // accessible from Drawing phase onwards (planning)
+  'issued-drawings':  'DESIGN_IN_PROGRESS',
 };
 
 // Which roles can see each tab (hidden entirely if role not listed)
 export const TAB_VISIBLE_ROLES: Record<TabId, string[]> = {
-  overview:        ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect', 'Site Engineer'],
-  site:            ['Super Admin', 'Admin', 'Project Manager', 'Site Engineer'],
-  'cdrf-meetings': ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect'],
-  'cdrf-form':     ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect'],
-  design:          ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect'],
-  pipeline:        ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect'],
-  transmittals:    ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect'],
-  construction:    ['Super Admin', 'Admin', 'Project Manager', 'Site Engineer', 'Construction Head'],
+  overview:          ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect', 'Site Engineer'],
+  site:              ['Super Admin', 'Admin', 'Project Manager', 'Site Engineer'],
+  'cdrf-meetings':   ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect'],
+  'cdrf-form':       ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect'],
+  design:            ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect'],
+  pipeline:          ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect'],
+  transmittals:      ['Super Admin', 'Admin', 'Project Manager', 'Project Architect', 'Junior Architect'],
+  construction:      ['Super Admin', 'Admin', 'Project Manager', 'Site Engineer', 'Construction Head'],
+  'issued-drawings': ['Site Engineer'],
 };
 
 export const PROJECT_PIPELINE = [
-  { key: 'PENDING_ASSIGNMENT', label: 'Pending',        icon: <Clock size={11} /> },
-  { key: 'ASSIGNED',           label: 'Team Assigned',  icon: <Users size={11} /> },
-  { key: 'SITE_VERIFICATION',  label: 'Site Check',     icon: <MapPin size={11} /> },
-  { key: 'CDRF_PENDING',       label: 'CDRF',           icon: <ClipboardCheck size={11} /> },
-  { key: 'DESIGN_REVIEW',      label: 'Layout Review',  icon: <Palette size={11} /> },
-  { key: 'LAYOUT_APPROVED',    label: 'Layout OK',      icon: <CheckCircle2 size={11} /> },
-  { key: 'DESIGN_IN_PROGRESS', label: 'Drawings',       icon: <FileText size={11} /> },
-  { key: 'COMPLETED',          label: 'Completed',      icon: <CheckCircle2 size={11} /> },
+  { key: 'PENDING_ASSIGNMENT',       label: 'Pending',        icon: <Clock size={11} /> },
+  { key: 'ASSIGNED',                 label: 'Team Assigned',  icon: <Users size={11} /> },
+  { key: 'SITE_VERIFICATION',        label: 'Site Check',     icon: <MapPin size={11} /> },
+  { key: 'CDRF_PENDING',             label: 'CDRF',           icon: <ClipboardCheck size={11} /> },
+  { key: 'DESIGN_REVIEW',            label: 'Layout Review',  icon: <Palette size={11} /> },
+  { key: 'LAYOUT_APPROVED',          label: 'Layout OK',      icon: <CheckCircle2 size={11} /> },
+  { key: 'DESIGN_IN_PROGRESS',       label: 'Drawings',       icon: <FileText size={11} /> },
+  { key: 'CONSTRUCTION_IN_PROGRESS', label: 'Construction',   icon: <HardHat size={11} /> },
+  { key: 'COMPLETED',                label: 'Completed',      icon: <CheckCircle2 size={11} /> },
 ];
 
 export function ProjectPipelineStepper({ status }: { status: string }) {

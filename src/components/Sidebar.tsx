@@ -44,7 +44,7 @@ interface SidebarItem {
 }
 
 // Routes that are sub-items of groups — sidebar skips them in the main loop
-const GROUP_CHILD_ROUTES = new Set(['/accounts/inflow', '/accounts/outflow']);
+const GROUP_CHILD_ROUTES = new Set(['/accounts/inflow', '/accounts/outflow', '/accounts/construction-payments']);
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
   { route: '/overview',          icon: <LayoutDashboard size={16} />, label: 'Profile Overview' },
@@ -62,6 +62,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     subItems: [
       { route: '/accounts/inflow',  icon: <ArrowDownLeft size={14} />,  label: 'Inflow' },
       { route: '/accounts/outflow', icon: <ArrowUpRight size={14} />,   label: 'Outflow' },
+      { route: '/accounts/construction-payments', icon: <HardHat size={14} />, label: 'Construction Payments' },
     ],
   },
   { route: '/accounts/masters',  icon: <Settings size={16} />,        label: 'Masters' },
