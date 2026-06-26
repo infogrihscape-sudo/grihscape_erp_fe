@@ -460,7 +460,7 @@ function RequirementMatrixField({ field, onChange, readOnly }: any) {
           ))}
         </div>
         {(field.items ?? []).map((item: any, idx: number) => (
-          <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 110px 120px', padding: '8px 12px', background: idx % 2 === 0 ? C.grey50 : 'white', borderTop: `1px solid ${C.grey100}`, alignItems: 'center' }}>
+          <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 110px 120px', padding: '8px 12px', background: idx % 2 === 0 ? C.grey50 : C.white, borderTop: `1px solid ${C.grey100}`, alignItems: 'center' }}>
             <span style={{ fontSize: 12, color: C.grey800 }}>{item.label}</span>
             {['must', 'nice', 'future'].map(col => (
               <div key={col} style={{ display: 'flex', justifyContent: 'center' }}>
@@ -489,12 +489,12 @@ function RatingScaleField({ field, onChange, readOnly }: any) {
           {[1,2,3,4,5].map(n => <div key={n} style={{ fontSize: 10, fontWeight: 700, color: C.grey600, textAlign: 'center' }}>{n}</div>)}
         </div>
         {(field.items ?? []).map((item: any, idx: number) => (
-          <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px 60px 60px 60px', padding: '8px 12px', background: idx % 2 === 0 ? C.grey50 : 'white', borderTop: `1px solid ${C.grey100}`, alignItems: 'center' }}>
+          <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px 60px 60px 60px', padding: '8px 12px', background: idx % 2 === 0 ? C.grey50 : C.white, borderTop: `1px solid ${C.grey100}`, alignItems: 'center' }}>
             <span style={{ fontSize: 12, color: C.grey800 }}>{item.label}</span>
             {[1,2,3,4,5].map(n => (
               <div key={n} style={{ display: 'flex', justifyContent: 'center' }}>
                 <button onClick={() => update(item.id, n)} disabled={readOnly}
-                  style={{ width: 28, height: 28, borderRadius: '50%', border: `2px solid ${item.value === n ? C.orange : C.grey200}`, background: item.value === n ? C.orange : 'white', color: item.value === n ? 'white' : C.grey400, fontSize: 11, fontWeight: 700, cursor: readOnly ? 'default' : 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ width: 28, height: 28, borderRadius: '50%', border: `2px solid ${item.value === n ? C.orange : C.grey200}`, background: item.value === n ? C.orange : C.white, color: item.value === n ? 'white' : C.grey400, fontSize: 11, fontWeight: 700, cursor: readOnly ? 'default' : 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >{n}</button>
               </div>
             ))}
@@ -519,12 +519,12 @@ function YesNoTableField({ field, onChange, readOnly }: any) {
           {['Item', 'Preferred', 'Avoid'].map((h, i) => <div key={i} style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? C.grey800 : C.grey600, textTransform: 'uppercase', textAlign: i > 0 ? 'center' : 'left' }}>{h}</div>)}
         </div>
         {(field.items ?? []).map((item: any, idx: number) => (
-          <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', padding: '8px 12px', background: idx % 2 === 0 ? C.grey50 : 'white', borderTop: `1px solid ${C.grey100}`, alignItems: 'center' }}>
+          <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', padding: '8px 12px', background: idx % 2 === 0 ? C.grey50 : C.white, borderTop: `1px solid ${C.grey100}`, alignItems: 'center' }}>
             <span style={{ fontSize: 12, color: C.grey800 }}>{item.label}</span>
             {['yes', 'no'].map(v => (
               <div key={v} style={{ display: 'flex', justifyContent: 'center' }}>
                 <button onClick={() => update(item.id, v)} disabled={readOnly}
-                  style={{ width: 28, height: 28, borderRadius: '50%', border: `2px solid ${item.value === v ? (v === 'yes' ? C.green : C.red) : C.grey200}`, background: item.value === v ? (v === 'yes' ? C.green : C.red) : 'white', cursor: readOnly ? 'default' : 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ width: 28, height: 28, borderRadius: '50%', border: `2px solid ${item.value === v ? (v === 'yes' ? C.green : C.red) : C.grey200}`, background: item.value === v ? (v === 'yes' ? C.green : C.red) : C.white, cursor: readOnly ? 'default' : 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   <span style={{ fontSize: 13, color: item.value === v ? 'white' : C.grey400 }}>{v === 'yes' ? '✓' : '✕'}</span>
                 </button>
@@ -551,16 +551,16 @@ function RoomPriorityField({ field, onChange, readOnly }: any) {
           {['Room / Space', 'Priority', 'Budget %', 'Phase', 'Notes'].map((h, i) => <div key={i} style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? C.grey800 : C.grey600, textTransform: 'uppercase', textAlign: i > 0 ? 'center' : 'left' }}>{h}</div>)}
         </div>
         {(field.rooms ?? []).map((room: any, idx: number) => (
-          <div key={room.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px 1fr', padding: '6px 12px', background: idx % 2 === 0 ? C.grey50 : 'white', borderTop: `1px solid ${C.grey100}`, alignItems: 'center', gap: 4 }}>
+          <div key={room.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px 1fr', padding: '6px 12px', background: idx % 2 === 0 ? C.grey50 : C.white, borderTop: `1px solid ${C.grey100}`, alignItems: 'center', gap: 4 }}>
             <span style={{ fontSize: 12, color: C.grey800 }}>{room.room}</span>
             {['priority', 'budget', 'phase'].map(key => (
               <input key={key} value={room[key] || ''} readOnly={readOnly} onChange={e => update(room.id, key, e.target.value)}
-                style={{ border: `1px solid ${C.grey200}`, borderRadius: 4, padding: '4px 6px', fontSize: 11, textAlign: 'center', width: '100%', boxSizing: 'border-box', outline: 'none', background: readOnly ? C.grey50 : 'white' }}
+                style={{ border: `1px solid ${C.grey200}`, borderRadius: 4, padding: '4px 6px', fontSize: 11, textAlign: 'center', width: '100%', boxSizing: 'border-box', outline: 'none', background: readOnly ? C.grey50 : C.white }}
                 onFocus={e => !readOnly && (e.target.style.borderColor = C.orange)}
                 onBlur={e => (e.target.style.borderColor = C.grey200)} />
             ))}
             <input value={room.notes || ''} readOnly={readOnly} onChange={e => update(room.id, 'notes', e.target.value)} placeholder="Notes…"
-              style={{ border: `1px solid ${C.grey200}`, borderRadius: 4, padding: '4px 6px', fontSize: 11, width: '100%', boxSizing: 'border-box', outline: 'none', background: readOnly ? C.grey50 : 'white' }}
+              style={{ border: `1px solid ${C.grey200}`, borderRadius: 4, padding: '4px 6px', fontSize: 11, width: '100%', boxSizing: 'border-box', outline: 'none', background: readOnly ? C.grey50 : C.white }}
               onFocus={e => !readOnly && (e.target.style.borderColor = C.orange)}
               onBlur={e => (e.target.style.borderColor = C.grey200)} />
           </div>
