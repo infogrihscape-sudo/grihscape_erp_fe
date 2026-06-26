@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from '../context/RouterContext.js';
 import { useToast } from '../context/ToastContext.js';
-import { tenderApi, BACKEND_BASE } from '../services/api.js';
+import { tenderApi, fileUrl } from '../services/api.js';
 import {
   Plus, Edit, Trash2, Search, Filter, RefreshCw, Eye, FileText, Upload,
   Download, Check, X, RotateCcw, AlertCircle, Calendar, Landmark, MapPin, Tag,
@@ -63,7 +63,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
 
   const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'Super Admin';
-  const isSuperAdmin = currentUser.role === 'Super Admin';
+  const isSuperAdmin = isAdmin; // Admin has same tender authority as Super Admin
 
   // ── Fetch Tenders ──────────────────────────────────────────────────────────
   const fetchTenders = useCallback(async () => {
@@ -591,7 +591,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
                       </div>
                       <div className="flex items-center gap-2">
                         <a
-                          href={`${BACKEND_BASE}${doc.url}`}
+                          href={fileUrl(doc.url)}
                           target="_blank"
                           rel="noreferrer"
                           className="p-1.5 text-stone-500 hover:text-[#b89047] hover:bg-[#b89047]/10 rounded-lg transition-colors"
@@ -842,7 +842,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
                         <span className="text-[var(--text-secondary)] font-medium truncate flex-1" title={doc.name}>{doc.name}</span>
                       </div>
                       <a
-                        href={`${BACKEND_BASE}${doc.url}`}
+                        href={fileUrl(doc.url)}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:opacity-95 transition-all text-center select-none cursor-pointer border-0"

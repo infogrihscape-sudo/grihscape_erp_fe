@@ -18,14 +18,11 @@ export const ROLE_ROUTES: Record<string, string[]> = {
   'Accounts':           ['/overview', '/prospects', '__accounts_payments__', '/accounts/inflow', '/accounts/outflow'],
 };
 
-/** Roles restricted to read-only access — no create/edit/delete/workflow actions. */
-const VIEW_ONLY_ROLES = new Set(['Admin']);
-
 /**
  * Returns true if the given role can perform write operations
  * (create, update, delete, workflow transitions).
- * Admin is view-only; Super Admin and all other roles act per their own permissions.
+ * Admin now has full write authority — same as Super Admin except for Super Admin user management.
  */
-export function canWrite(role: string): boolean {
-  return !VIEW_ONLY_ROLES.has(role);
+export function canWrite(_role: string): boolean {
+  return true;
 }

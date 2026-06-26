@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 import { inflowApi, accountsMasterApi, type InflowChallan, type PurposeMaster, type SiteNameMaster } from '../../services/accounts.api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
+import { api, fileUrl } from '../../services/api.js';
 import { SearchableSelect } from '../../components/SearchableSelect.js';
 
 interface Props {
@@ -45,6 +46,9 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [siteNames, setSiteNames] = useState<SiteNameMaster[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [supportingDocUrl, setSupportingDocUrl] = useState('');
+  const [supportingDocName, setSupportingDocName] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   const [addingSite, setAddingSite] = useState(false);
   const [newSiteName, setNewSiteName] = useState('');
@@ -97,6 +101,8 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
         modeOfPayment: existing.modeOfPayment,
         paymentStatus: existing.paymentStatus,
       });
+      setSupportingDocUrl(existing.supportingDocUrl ?? '');
+      setSupportingDocName(existing.supportingDocName ?? '');
     }
   }, [existing]);
 
@@ -123,6 +129,22 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
     } catch (e: any) {
       showToast(e?.response?.data?.message ?? 'Failed to add site name.', 'error');
     } finally { setSavingSite(false); }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    setUploading(true);
+    try {
+      const res = await api.post<{ url: string; filename: string }>('/upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data', 'x-file-type': 'design' },
+      });
+      setSupportingDocUrl(res.data.url);
+      setSupportingDocName(res.data.filename ?? file.name);
+    } catch { showToast('File upload failed.', 'error'); }
+    finally { setUploading(false); }
   };
 
   const siteOptions = [
@@ -178,6 +200,8 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
       taxType: form.isTaxApplicable ? form.taxType || undefined : undefined,
       taxPercent: form.isTaxApplicable && form.taxPercent ? Number(form.taxPercent) : undefined,
       description: form.description || undefined,
+      supportingDocUrl: supportingDocUrl || undefined,
+      supportingDocName: supportingDocName || undefined,
       purposeId: form.purposeId,
       modeOfPayment: form.modeOfPayment,
       paymentStatus: form.paymentStatus,
@@ -357,13 +381,26 @@ export const InflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => {
             <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} placeholder="Additional notes…" className={`${INPUT} resize-none`} />
           </Field>
 
+          <Field label="Supporting Document (Optional)">
+            <div className="flex items-center gap-3">
+              <label className={`flex-1 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg)] border border-dashed border-[var(--border)] text-[11px] text-[var(--text-muted)] cursor-pointer hover:border-[#b89047]/60 transition-colors ${uploading ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                <Upload size={13} />
+                {supportingDocName || (uploading ? 'Uploading…' : 'Click to upload receipt / proof')}
+                <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} accept=".pdf,.jpg,.jpeg,.png" />
+              </label>
+              {supportingDocUrl && (
+                <a href={supportingDocUrl.startsWith('http') ? supportingDocUrl : fileUrl(supportingDocUrl)} target="_blank" rel="noopener noreferrer" className="text-[11px] text-blue-400 hover:underline whitespace-nowrap">View</a>
+              )}
+            </div>
+          </Field>
+
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-[11px] font-semibold border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 transition-colors">
               Cancel
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || uploading}
               className="flex-1 py-2 rounded-xl text-[11px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting ? 'Saving…' : existing ? 'Update Challan' : 'Create Challan'}

@@ -260,6 +260,15 @@ export const BACKEND_BASE: string =
   import.meta.env.VITE_BACKEND_BASE ||
   (import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace(/\/api\/?$/, '') : '');
 
+// Builds a file URL that appends ?token=<jwt> so the browser can access
+// protected /uploads routes directly (img src, iframe, <a href>, etc.)
+export const fileUrl = (path: string): string => {
+  const sep = path.includes('?') ? '&' : '?';
+  return accessToken
+    ? `${BACKEND_BASE}${path}${sep}token=${accessToken}`
+    : `${BACKEND_BASE}${path}`;
+};
+
 export const contractApi = {
   getContracts: () => api.get('/contracts'),
   createDraft: (data: { prospectId?: string }) =>
@@ -328,6 +337,8 @@ export const projectApi = {
     api.post(`/projects/${projectId}/cdrf-meetings`, data),
   updateCdrfMeeting: (projectId: string, meetingId: string, data: any) =>
     api.put(`/projects/${projectId}/cdrf-meetings/${meetingId}`, data),
+  approveCdrfMeeting: (projectId: string, meetingId: string) =>
+    api.post(`/projects/${projectId}/cdrf-meetings/${meetingId}/approve`),
 
   // CDRF follow-up logs
   getCdrfFollowUps: (projectId: string) =>
@@ -372,6 +383,14 @@ export const projectApi = {
     api.get(`/projects/${projectId}/pipeline/drawing-master`),
   createDrawingMaster: (projectId: string, data: { name: string; category: string }) =>
     api.post(`/projects/${projectId}/pipeline/drawing-master`, data),
+  createDrawingMasterRequest: (projectId: string, data: { name: string; category: string; reason?: string }) =>
+    api.post(`/projects/${projectId}/pipeline/drawing-master-requests`, data),
+  listDrawingMasterRequests: (projectId: string) =>
+    api.get(`/projects/${projectId}/pipeline/drawing-master-requests`),
+  approveDrawingMasterRequest: (projectId: string, requestId: string) =>
+    api.post(`/projects/${projectId}/pipeline/drawing-master-requests/${requestId}/approve`),
+  rejectDrawingMasterRequest: (projectId: string, requestId: string, rejectionReason?: string) =>
+    api.post(`/projects/${projectId}/pipeline/drawing-master-requests/${requestId}/reject`, { rejectionReason }),
   addDrawing: (projectId: string, data: { drawingMasterId: string; roomName?: string; wallDirection?: string; assignedArchitectId?: string | null; juniorArchitectId?: string | null }) =>
     api.post(`/projects/${projectId}/pipeline/drawings`, data),
   addDrawingsBulk: (projectId: string, drawingMasterIds: string[], assignedArchitectId?: string | null, juniorArchitectId?: string | null) =>

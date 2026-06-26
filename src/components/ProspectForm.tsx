@@ -81,6 +81,7 @@ export interface ProspectFormData {
   // General
   additionalNotes: string | null;
   budgetComfort: string | null;
+  siteAddress: string | null;
 }
 
 export interface ProspectFormProps {
@@ -500,6 +501,7 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
   const [budgetComfort, setBudgetComfort] = useState(
     init.budgetComfort ?? (init.budgetAmount ? 'Yes' : 'No')
   );
+  const [siteAddress, setSiteAddress] = useState(init.siteAddress ?? '');
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [showConfirm, setShowConfirm] = useState(false);
@@ -736,6 +738,7 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
       etoSpecialRequirements: selectedServices.includes('END_TO_END') ? (etoSpecialRequirements.trim() || null) : null,
       additionalNotes: additionalNotes.trim() || null,
       budgetComfort: budgetComfort || null,
+      siteAddress: siteAddress.trim() || null,
     };
 
     setPendingPayload(payload);
@@ -1150,6 +1153,19 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
                   className={`${inputBase} ${formErrors.locality ? 'border-red-300' : ''}`} />
               </div>
             )}
+
+            {/* Project site address */}
+            <div className="flex flex-col gap-1.5">
+              <label className={labelBase}>Project Site Address <span className="text-stone-400 font-normal">(Optional)</span></label>
+              <input
+                type="text"
+                maxLength={500}
+                placeholder="e.g. Plot 42, DLF Phase 4, Gurugram, Haryana — where the work will happen"
+                value={siteAddress}
+                onChange={e => setSiteAddress(e.target.value)}
+                className={inputBase}
+              />
+            </div>
 
             {/* Additional notes */}
             <div className="flex flex-col gap-1.5 pt-2 border-t border-stone-100">

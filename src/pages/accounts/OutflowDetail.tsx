@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Send, Edit2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Send, Edit2, ExternalLink, FileText } from 'lucide-react';
 import { outflowApi, type OutflowExpense } from '../../services/accounts.api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useRouter } from '../../context/RouterContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { canWrite } from '../../config/permissions.js';
 import { OutflowForm } from './OutflowForm.js';
-import { BACKEND_BASE } from '../../services/api.js';
+import { fileUrl } from '../../services/api.js';
+import { printOutflowBill } from '../../utils/printBill.js';
 
 interface Props { currentUser: User; expenseId: string; }
 
@@ -47,7 +48,7 @@ export const OutflowDetail: React.FC<Props> = ({ currentUser, expenseId }) => {
   if (loading) return <div className="flex-1 flex items-center justify-center text-[11px] text-[var(--text-muted)]">Loading…</div>;
   if (!expense) return null;
 
-  const isSuperAdmin = currentUser.role === 'Super Admin';
+  const isSuperAdmin = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
   const isOwner = expense.createdById === (currentUser as any).userId;
   const canEdit = canWrite(currentUser.role) && (expense.status === 'DRAFT' || expense.status === 'REJECTED');
   const canSubmit = canWrite(currentUser.role) && (expense.status === 'DRAFT' || expense.status === 'REJECTED') && (isOwner || isSuperAdmin);
@@ -90,7 +91,7 @@ export const OutflowDetail: React.FC<Props> = ({ currentUser, expenseId }) => {
         <div className="col-span-2">
           <p className="text-[10px] text-[var(--text-muted)] uppercase font-semibold tracking-wide mb-1">Supporting Document</p>
           <a
-            href={expense.supportingDocUrl.startsWith('http') ? expense.supportingDocUrl : `${BACKEND_BASE}${expense.supportingDocUrl}`}
+            href={expense.supportingDocUrl.startsWith('http') ? expense.supportingDocUrl : fileUrl(expense.supportingDocUrl)}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-[11px] text-blue-400 hover:underline font-medium"
@@ -147,6 +148,12 @@ export const OutflowDetail: React.FC<Props> = ({ currentUser, expenseId }) => {
             </button>
           </>
         )}
+        <button
+          onClick={() => printOutflowBill(expense)}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-semibold border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 transition-colors ml-auto"
+        >
+          <FileText size={13} /> Print / PDF
+        </button>
       </div>
 
       {showRejectBox && (

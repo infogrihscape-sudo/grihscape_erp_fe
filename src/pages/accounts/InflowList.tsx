@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, Search, Filter, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { Plus, Search, Filter, ChevronLeft, ChevronRight, Eye, Paperclip } from 'lucide-react';
 import { inflowApi, type InflowChallan } from '../../services/accounts.api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useRouter } from '../../context/RouterContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { canWrite } from '../../config/permissions.js';
+import { fileUrl } from '../../services/api.js';
 import { InflowForm } from './InflowForm.js';
 
 interface Props { currentUser: User; }
@@ -95,7 +96,7 @@ export const InflowList: React.FC<Props> = ({ currentUser }) => {
           <table className="w-full text-[11px]">
             <thead>
               <tr className="border-b border-[var(--border)] text-[var(--text-muted)] text-left">
-                {['Sr#', 'Challan No', 'Date', 'Client', 'Site', 'Amount', 'Tax', 'Final', 'Mode', 'Status', ''].map(h => (
+                {['Sr#', 'Challan No', 'Date', 'Client', 'Site', 'Amount', 'Tax', 'Final', 'Mode', 'Status', 'Doc', ''].map(h => (
                   <th key={h} className="px-4 py-3 font-semibold">{h}</th>
                 ))}
               </tr>
@@ -121,6 +122,21 @@ export const InflowList: React.FC<Props> = ({ currentUser }) => {
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${STATUS_COLORS[c.status]}`}>
                       {c.status}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.supportingDocUrl ? (
+                      <a
+                        href={c.supportingDocUrl.startsWith('http') ? c.supportingDocUrl : fileUrl(c.supportingDocUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={c.supportingDocName ?? 'View document'}
+                        className="p-1.5 rounded-lg inline-flex hover:bg-blue-500/10 text-blue-400 hover:text-blue-300 transition-colors"
+                      >
+                        <Paperclip size={13} />
+                      </a>
+                    ) : (
+                      <span className="px-2 text-[var(--text-muted)] opacity-30"><Paperclip size={13} /></span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <button

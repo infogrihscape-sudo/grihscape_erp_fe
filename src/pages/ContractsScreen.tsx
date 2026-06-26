@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { contractApi, prospectApi, BACKEND_BASE } from '../services/api.js';
+import { contractApi, prospectApi, fileUrl as buildFileUrl } from '../services/api.js';
 import { useToast } from '../context/ToastContext.js';
 import type { User } from '../context/AuthContext.js';
 import {
@@ -10,6 +10,7 @@ import {
 import { useRouter } from '../context/RouterContext.js';
 import { ShimmerList } from '../components/Shimmer.js';
 import { canWrite } from '../config/permissions.js';
+import { btnPrimary } from '../components/ui/styles.js';
 
 interface Props { currentUser: User; }
 
@@ -47,12 +48,11 @@ const statusStyle: Record<ContractStatus, string> = {
 
 const ITEMS_PER_PAGE = 9;
 
-/** Prepend backend host so relative /uploads/... URLs become clickable links. */
+/** Prepend backend host + auth token so /uploads/... links open in the browser. */
 const fullUrl = (url: string | null) =>
-  url ? (url.startsWith('http') ? url : `${BACKEND_BASE}${url}`) : null;
+  url ? (url.startsWith('http') ? url : buildFileUrl(url)) : null;
 
 const card = 'bg-[var(--card-bg)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-card)]';
-const btnPrimary  = 'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none';
 const btnSecondary = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold text-[var(--text-secondary)] bg-[var(--hover-bg)] border border-[var(--border)] hover:bg-[var(--border)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed';
 const inputCls = 'w-full bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--text-primary)] text-[13px] rounded-lg px-3 py-2 outline-none focus:border-[#b89047] focus:ring-2 focus:ring-[rgba(184,144,71,0.2)] font-[inherit]';
 
@@ -82,7 +82,7 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
   const [sending,    setSending]    = useState(false);
 
   const isAdmin     = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
-  const isSuperAdmin = currentUser.role === 'Super Admin';
+  const isSuperAdmin = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
   const isAccounts  = currentUser.role === 'Accounts';
   const userCanWrite = canWrite(currentUser.role);
 
@@ -266,7 +266,7 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
   const totalPages = Math.ceil(contracts.length / ITEMS_PER_PAGE) || 1;
 
   return (
-    <div className="animate-fade-in flex flex-col h-full min-h-0">
+    <div className="animate-fade-in flex flex-col h-full min-h-0 p-4">
 
       {/* Hidden file input */}
       <input

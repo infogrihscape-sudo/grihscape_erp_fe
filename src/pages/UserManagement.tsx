@@ -6,6 +6,7 @@ import { useRouter } from '../context/RouterContext.js';
 import { SearchableSelect } from '../components/SearchableSelect.js';
 import { useToast } from '../context/ToastContext.js';
 import { canWrite } from '../config/permissions.js';
+import { btnPrimary } from '../components/ui/styles.js';
 import {
   UserPlus, Ban, Unlock, RefreshCw,
   Search, ShieldCheck, Mail, Phone, Calendar,
@@ -13,7 +14,7 @@ import {
   FileText, Trash2
 } from 'lucide-react';
 
-interface DbRole { id: string; name: string; description: string | null; createdAt: string; }
+interface DbRole { id: string; name: string; description: string | null; createdAt: string; updatedAt?: string; }
 interface AuditLog {
   id: string; userId: string; action: string;
   ipAddress: string | null; userAgent: string | null; createdAt: string;
@@ -31,7 +32,6 @@ const roleLabel = (r: string) => r;
 const inputBase = 'w-full bg-white border border-[rgba(184,144,71,0.38)] text-stone-900 text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-[rgba(184,144,71,0.2)] font-[inherit] compact-input';
 const inputInvalid = 'border-red-300 focus:border-red-400 focus:ring-red-100';
 const labelBase = 'text-[10px] font-bold uppercase tracking-wide text-stone-500';
-const btnPrimary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0';
 const btnSecondary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-stone-600 bg-stone-150/70 border border-[rgba(184,144,71,0.28)] hover:bg-stone-200 hover:text-stone-850 transition-colors duration-150 cursor-pointer';
 const btnDanger  = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-rose-600 bg-rose-50/70 border border-rose-100 hover:bg-rose-600 hover:text-white hover:-translate-y-px transition-all duration-150 cursor-pointer shadow-xs';
 const btnSuccess = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-emerald-700 bg-emerald-50/70 border border-emerald-100 hover:bg-emerald-600 hover:text-white hover:-translate-y-px transition-all duration-150 cursor-pointer shadow-xs';
@@ -64,6 +64,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleDesc, setNewRoleDesc] = useState('');
+  const [editingRoleCreatedAt, setEditingRoleCreatedAt] = useState<string | null>(null);
+  const [editingRoleUpdatedAt, setEditingRoleUpdatedAt] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [mapData, setMapData] = useState<{ lat: number; lng: number; name: string } | null>(null);
   // Edit user modal state
@@ -83,7 +85,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
 
   const availableRoles = useMemo(() =>
     currentUser.role === 'Admin'
-      ? roles.filter(r => !['Super Admin', 'Admin'].includes(r.name))
+      ? roles.filter(r => r.name !== 'Super Admin')
       : roles,
   [roles, currentUser.role]);
 
@@ -248,7 +250,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
         setSuccess(sMsg);
         showToast(sMsg, 'success');
       }
-      setShowRoleModal(false); setEditingRoleId(null); setNewRoleName(''); setNewRoleDesc('');
+      setShowRoleModal(false); setEditingRoleId(null); setNewRoleName(''); setNewRoleDesc(''); setEditingRoleCreatedAt(null); setEditingRoleUpdatedAt(null);
       fetchData(true);
     } catch (err: any) {
       const errMsg = err.response?.data?.message || 'Failed to save role.';
@@ -258,7 +260,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
   };
 
   const handleOpenEditRole = (role: DbRole) => {
-    setEditingRoleId(role.id); setNewRoleName(role.name); setNewRoleDesc(role.description || '');
+    setEditingRoleId(role.id);
+    setNewRoleName(role.name);
+    setNewRoleDesc(role.description || '');
+    setEditingRoleCreatedAt(role.createdAt);
+    setEditingRoleUpdatedAt(role.updatedAt || null);
     setShowRoleModal(true);
   };
 
@@ -530,7 +536,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
   );
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in h-full overflow-y-auto p-4">
       {/* Actions Bar */}
       <div className="flex flex-wrap items-center justify-end gap-2 mb-4 shrink-0">
         {['users', 'logs'].includes(activeSubTab) && (
@@ -543,7 +549,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
         </button>
         {userCanWrite && (
           activeSubTab === 'roles' ? (
-            <button onClick={() => { setEditingRoleId(null); setNewRoleName(''); setNewRoleDesc(''); setShowRoleModal(true); }} className={btnPrimary}>
+            <button onClick={() => { setEditingRoleId(null); setNewRoleName(''); setNewRoleDesc(''); setEditingRoleCreatedAt(null); setEditingRoleUpdatedAt(null); setShowRoleModal(true); }} className={btnPrimary}>
               <Plus size={14} /><span>Add Role</span>
             </button>
           ) : (
@@ -796,8 +802,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                     <td className="px-3 py-3 border-b border-[rgba(184,144,71,0.12)] text-center whitespace-nowrap">
                       {u.id === currentUser.id
                         ? <span className="text-[11px] italic text-stone-400 font-medium">You</span>
-                        : !userCanWrite
-                          ? <span className="text-[11px] italic text-stone-400 font-medium">View Only</span>
+                        : (currentUser.role === 'Admin' && u.role === 'Super Admin')
+                          ? <span className="text-[11px] italic text-stone-400 font-medium">Protected</span>
                           : <div className="inline-flex items-center gap-1">
                               <button onClick={() => handleOpenEditUser(u)} className={btnEdit} title="Edit user">
                                 <Edit2 size={10} />Edit
@@ -1151,8 +1157,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
             <form onSubmit={handleRoleSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className={labelBase}>Role Name</label>
-                <input type="text" placeholder="e.g. PROJECT_LEAD" value={newRoleName}
-                  onChange={e => setNewRoleName(e.target.value)} className={inputBase} required />
+                <input
+                  type="text"
+                  placeholder="e.g. PROJECT_LEAD"
+                  value={newRoleName}
+                  onChange={e => setNewRoleName(e.target.value)}
+                  className={`${inputBase} ${editingRoleId ? 'bg-stone-50 border-stone-200 text-stone-400 cursor-not-allowed font-medium' : ''}`}
+                  required
+                  disabled={!!editingRoleId}
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className={labelBase}>Description</label>
@@ -1160,6 +1173,22 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                   onChange={e => setNewRoleDesc(e.target.value)} rows={3}
                   className={`${inputBase} resize-none`} />
               </div>
+              {editingRoleId && (
+                <div className="bg-stone-50 border border-stone-100 rounded-xl p-3 flex flex-col gap-2">
+                  {editingRoleCreatedAt && (
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-stone-400 font-semibold uppercase tracking-wider">Created At</span>
+                      <span className="text-stone-700 font-medium">{new Date(editingRoleCreatedAt).toLocaleString()}</span>
+                    </div>
+                  )}
+                  {editingRoleUpdatedAt && (
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-stone-400 font-semibold uppercase tracking-wider">Updated At</span>
+                      <span className="text-stone-700 font-medium">{new Date(editingRoleUpdatedAt).toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2 pt-1">
                 <button type="button" onClick={() => setShowRoleModal(false)} className={`${btnSecondary} flex-1 justify-center`}>Cancel</button>
                 <button type="submit" disabled={submitting || !newRoleName.trim()} className={`${btnPrimary} flex-1 justify-center`}>

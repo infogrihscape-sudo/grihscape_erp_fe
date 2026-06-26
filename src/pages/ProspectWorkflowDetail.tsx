@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { prospectApi, contractApi, BACKEND_BASE } from '../services/api.js';
+import { prospectApi, contractApi, fileUrl } from '../services/api.js';
 import type { User } from '../context/AuthContext.js';
 import { SearchableSelect } from '../components/SearchableSelect.js';
 import { PROJECT_PHASES } from '../components/ProspectForm.js';
 import { useToast } from '../context/ToastContext.js';
 import { useRouter } from '../context/RouterContext.js';
 import { ShimmerTable, ShimmerCardGrid } from '../components/Shimmer.js';
+import { btnPrimary } from '../components/ui/styles.js';
 import {
   ClipboardList, RefreshCw, X, ArrowLeft, Loader2,
   MapPin, Phone, Mail, Check, FileText, DollarSign, ShieldCheck,
@@ -106,7 +107,6 @@ const workflowStageLabel = (stage?: string | null) => {
 /* ── Tailwind Shared Classes ── */
 const inputBase = 'w-full bg-white border border-[rgba(184,144,71,0.35)] text-stone-900 text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-[rgba(184,144,71,0.2)] font-[inherit] compact-input';
 const labelBase = 'text-[10px] font-bold uppercase tracking-wide text-stone-500';
-const btnPrimary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0';
 const btnSecondary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-stone-750 bg-stone-100 border border-[rgba(184,144,71,0.25)] hover:bg-stone-200 hover:text-stone-900 transition-colors duration-150 cursor-pointer';
 
 export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectId }) => {
@@ -926,7 +926,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
   const hasDraftPdf = prospect.contracts && prospect.contracts.some((c: any) => c.draftPdfUrl);
 
   return (
-    <div className="animate-fade-in flex flex-col h-full min-h-0">
+    <div className="animate-fade-in flex flex-col h-full min-h-0 p-4">
       {/* Header bar */}
       <div className="flex items-start justify-between gap-2 mb-0 shrink-0 border-b border-stone-200 pb-3">
         <div className="flex items-start gap-2 min-w-0">
@@ -1019,6 +1019,16 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                 </div>
               </div>
             </div>
+
+            {/* Project site address */}
+            {prospect.siteAddress && (
+              <div className="flex flex-col gap-1.5">
+                <label className={labelBase}>Project Site Address</label>
+                <div className="w-full bg-white border border-[rgba(184,144,71,0.22)] text-stone-850 text-[13px] rounded-lg px-3.5 py-1.5 font-semibold">
+                  {prospect.siteAddress}
+                </div>
+              </div>
+            )}
 
             {/* Site location */}
             {prospect.siteGoogleMapsLink ? (
@@ -1262,7 +1272,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                         <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 text-[10.5px] text-emerald-700 font-semibold">
                           <Check size={12} />
                           Draft PDF uploaded
-                          <a href={`${BACKEND_BASE}${contract.draftPdfUrl}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-amber-600 hover:underline font-bold text-[9.5px]">View</a>
+                          <a href={fileUrl(contract.draftPdfUrl!)} target="_blank" rel="noopener noreferrer" className="ml-auto text-amber-600 hover:underline font-bold text-[9.5px]">View</a>
                         </div>
                       )}
 
@@ -1278,7 +1288,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                         <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 text-[10.5px] text-emerald-700 font-semibold">
                           <Check size={12} />
                           Signed contract on file
-                          <a href={`${BACKEND_BASE}${contract.signedPdfUrl}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-amber-600 hover:underline font-bold text-[9.5px]">View</a>
+                          <a href={fileUrl(contract.signedPdfUrl!)} target="_blank" rel="noopener noreferrer" className="ml-auto text-amber-600 hover:underline font-bold text-[9.5px]">View</a>
                         </div>
                       )}
 
@@ -1328,8 +1338,8 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                     <ShieldCheck size={13} /> Admin Actions
                   </h4>
 
-                  {/* Approve contract — Super Admin only */}
-                  {currentUser.role === 'Super Admin' && contract && contract.status === 'PENDING' && contract.draftPdfUrl && (
+                  {/* Approve contract — Super Admin and Admin */}
+                  {(currentUser.role === 'Super Admin' || currentUser.role === 'Admin') && contract && contract.status === 'PENDING' && contract.draftPdfUrl && (
                     <button type="button" onClick={handleApproveContract}
                       className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer border-0">
                       <BadgeCheck size={12} /> Approve Contract
@@ -1342,8 +1352,8 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                     </div>
                   )}
 
-                  {/* Send contract email — Super Admin only; once only; locked after payment */}
-                  {currentUser.role === 'Super Admin' && contract?.status === 'APPROVED' && stageRank(prospect.workflowStage) < stageRank('CONTRACT_EMAILED') && stageRank(prospect.workflowStage) < stageRank('INITIAL_PAYMENT_RECEIVED') && (
+                  {/* Send contract email — Super Admin and Admin; once only; locked after payment */}
+                  {(currentUser.role === 'Super Admin' || currentUser.role === 'Admin') && contract?.status === 'APPROVED' && stageRank(prospect.workflowStage) < stageRank('CONTRACT_EMAILED') && stageRank(prospect.workflowStage) < stageRank('INITIAL_PAYMENT_RECEIVED') && (
                     <button type="button" disabled={submittingContract || !prospect.email} onClick={handleSendContractEmail}
                       className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10.5px] font-bold text-white bg-violet-600 hover:bg-violet-700 transition-colors cursor-pointer border-0 disabled:opacity-50"
                       title={!prospect.email ? 'Client has no email.' : 'Send approved contract to client'}>
@@ -1357,8 +1367,8 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                     </div>
                   )}
 
-                  {/* Verify by accounts → WON — Super Admin and Accounts only */}
-                  {(currentUser.role === 'Super Admin' || currentUser.role === 'Accounts') && stageRank(prospect.workflowStage) >= stageRank('INITIAL_PAYMENT_RECEIVED') && (
+                  {/* Verify by accounts → WON — Super Admin, Admin and Accounts */}
+                  {(currentUser.role === 'Super Admin' || currentUser.role === 'Admin' || currentUser.role === 'Accounts') && stageRank(prospect.workflowStage) >= stageRank('INITIAL_PAYMENT_RECEIVED') && (
                     <div className="space-y-2 border border-emerald-200 rounded-xl p-3 bg-emerald-50/50">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">Payment Verification</p>
                       {prospect.initialPaymentAmount ? (
@@ -1862,7 +1872,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                 {paymentDocUrl && (
                   <div className="flex items-center gap-2 text-[11px] text-emerald-700 font-semibold bg-emerald-50 p-2 rounded-lg border border-emerald-150">
                     <Check size={12} /> Document uploaded
-                    <a href={`${BACKEND_BASE}${paymentDocUrl}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-amber-600 hover:underline font-bold">View</a>
+                    <a href={fileUrl(paymentDocUrl)} target="_blank" rel="noopener noreferrer" className="ml-auto text-amber-600 hover:underline font-bold">View</a>
                   </div>
                 )}
               </div>

@@ -6,7 +6,7 @@ import {
 } from '../../services/accounts.api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
-import { api, BACKEND_BASE } from '../../services/api.js';
+import { api, fileUrl } from '../../services/api.js';
 import { SearchableSelect } from '../../components/SearchableSelect.js';
 
 interface Props {
@@ -467,7 +467,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
                 <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} accept=".pdf,.jpg,.jpeg,.png" />
               </label>
               {form.supportingDocUrl && (
-                <a href={form.supportingDocUrl.startsWith('http') ? form.supportingDocUrl : `${BACKEND_BASE}${form.supportingDocUrl}`} target="_blank" rel="noopener noreferrer" className="text-[11px] text-blue-400 hover:underline whitespace-nowrap">View</a>
+                <a href={form.supportingDocUrl.startsWith('http') ? form.supportingDocUrl : fileUrl(form.supportingDocUrl)} target="_blank" rel="noopener noreferrer" className="text-[11px] text-blue-400 hover:underline whitespace-nowrap">View</a>
               )}
             </div>
           </Field>

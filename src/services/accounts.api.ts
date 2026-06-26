@@ -18,6 +18,8 @@ export interface InflowChallan {
   taxAmount: string | null;
   finalAmount: string;
   description: string | null;
+  supportingDocUrl: string | null;
+  supportingDocName: string | null;
   purposeId: string;
   purpose: { id: string; name: string };
   modeOfPayment: 'CASH' | 'ONLINE' | 'OTHER';
@@ -82,6 +84,17 @@ export interface SiteNameMaster {
   id: string;
   name: string;
   isActive: boolean;
+}
+
+export interface DrawingMaster {
+  id: string;
+  name: string;
+  category: string;
+  sortOrder: number;
+  isActive: boolean;
+  isRoomBased: boolean;
+  isWallBased: boolean;
+  createdAt: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -176,6 +189,9 @@ export const accountsMasterApi = {
   createPurpose: (data: { name: string; module: string }) =>
     api.post<{ success: boolean; data: PurposeMaster }>('/accounts/masters/purposes', data),
 
+  updatePurpose: (id: string, data: { name: string; module: string }) =>
+    api.put<{ success: boolean; data: PurposeMaster }>(`/accounts/masters/purposes/${id}`, data),
+
   togglePurpose: (id: string) =>
     api.patch<{ success: boolean; data: PurposeMaster }>(`/accounts/masters/purposes/${id}/toggle`),
 
@@ -185,6 +201,9 @@ export const accountsMasterApi = {
   createCategory: (name: string) =>
     api.post<{ success: boolean; data: ExpenseCategoryMaster }>('/accounts/masters/expense-categories', { name }),
 
+  updateCategory: (id: string, name: string) =>
+    api.put<{ success: boolean; data: ExpenseCategoryMaster }>(`/accounts/masters/expense-categories/${id}`, { name }),
+
   toggleCategory: (id: string) =>
     api.patch<{ success: boolean; data: ExpenseCategoryMaster }>(`/accounts/masters/expense-categories/${id}/toggle`),
 
@@ -193,9 +212,28 @@ export const accountsMasterApi = {
 
   listSiteNames: () =>
     api.get<{ success: boolean; data: SiteNameMaster[] }>('/accounts/masters/site-names'),
+    
+  updateSiteName: (id: string, name: string) =>
+    api.put<{ success: boolean; data: SiteNameMaster }>(`/accounts/masters/site-names/${id}`, { name }),
+
+  toggleSiteName: (id: string) =>
+    api.patch<{ success: boolean; data: SiteNameMaster }>(`/accounts/masters/site-names/${id}/toggle`),
 
   createSiteName: (name: string) =>
     api.post<{ success: boolean; data: SiteNameMaster }>('/accounts/masters/site-names', { name }),
+
+  // ── Drawing Masters ──
+  listDrawings: (all = false) =>
+    api.get<{ success: boolean; data: DrawingMaster[] }>('/accounts/masters/drawings', { params: { all } }),
+
+  createDrawing: (data: { name: string; category: string; isRoomBased?: boolean; isWallBased?: boolean }) =>
+    api.post<{ success: boolean; data: DrawingMaster }>('/accounts/masters/drawings', data),
+
+  updateDrawing: (id: string, data: { name: string; category: string; isRoomBased?: boolean; isWallBased?: boolean }) =>
+    api.put<{ success: boolean; data: DrawingMaster }>(`/accounts/masters/drawings/${id}`, data),
+
+  toggleDrawing: (id: string) =>
+    api.patch<{ success: boolean; data: DrawingMaster }>(`/accounts/masters/drawings/${id}/toggle`),
 };
 
 // ── Dashboard API ─────────────────────────────────────────────────────────────

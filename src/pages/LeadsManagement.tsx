@@ -4,6 +4,7 @@ import { useToast } from '../context/ToastContext.js';
 import { leadApi, prospectApi } from '../services/api.js';
 import type { User } from '../context/AuthContext.js';
 import { SearchableSelect } from '../components/SearchableSelect.js';
+import { btnPrimary } from '../components/ui/styles.js';
 import { ProspectForm } from '../components/ProspectForm.js';
 import type { ProspectFormData } from '../components/ProspectForm.js';
 import { useRouter } from '../context/RouterContext.js';
@@ -143,7 +144,6 @@ const normalizeAndValidatePhone = (phone: string): { isValid: boolean; normalize
 /* â"€â"€ Shared tailwind classes â"€â"€ */
 const inputBase = 'w-full bg-[var(--input-bg)] border border-[rgba(184,144,71,0.38)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-amber-100/50 font-[inherit] compact-input';
 const labelBase = 'text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]';
-const btnPrimary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0';
 const btnSecondary = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold text-[var(--text-secondary)] bg-[var(--hover-bg)] border border-[rgba(184,144,71,0.28)] hover:opacity-80 hover:text-[var(--text-primary)] transition-colors duration-150 cursor-pointer';
 const card = 'bg-[var(--card-bg)] border border-[rgba(184,144,71,0.24)] rounded-xl shadow-xs';
 
@@ -820,7 +820,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
 
   return (
     <>
-    <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-hidden relative">
+    <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-hidden relative p-4">
       
       {/* Actions Bar */}
       <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(197,168,128,0.15)] pb-3">

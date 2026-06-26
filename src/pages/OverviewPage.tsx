@@ -29,10 +29,12 @@ const formatBudget = (valueInLakhs: number): string => {
   return `₹${valueInLakhs.toFixed(0)} L`;
 };
 
-const fmtAcc = (n: number): string =>
-  n >= 1e7 ? `₹${(n / 1e7).toFixed(2)} Cr`
-  : n >= 1e5 ? `₹${(n / 1e5).toFixed(1)} L`
-  : `₹${n.toLocaleString('en-IN')}`;
+const fmtAcc = (n: number): string => {
+  const v = isNaN(n) || !isFinite(n) ? 0 : n;
+  return v >= 1e7 ? `₹${(v / 1e7).toFixed(2)} Cr`
+    : v >= 1e5 ? `₹${(v / 1e5).toFixed(1)} L`
+    : `₹${v.toLocaleString('en-IN')}`;
+};
 
 const serviceLabels: Record<string, string> = {
   ARCHITECTURAL_CONSULTATION: 'Architectural Consultation',
@@ -418,7 +420,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
         promises.push(userApi.getUsers().catch(() => ({ data: { users: [] } })));
         promises.push(userApi.getRoles().catch(() => ({ data: { roles: [] } })));
       }
-      if (isSuperAdmin) {
+      if (isAdmin) {
         promises.push(userApi.getLogs().catch(() => ({ data: { logs: [] } })));
       }
       if (hasProjectAccess) {
@@ -439,7 +441,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
         setAllRoles(results[index + 1]?.data?.roles || []);
         index += 2;
       }
-      if (isSuperAdmin) {
+      if (isAdmin) {
         setAllLogs(results[index]?.data?.logs || []);
         index++;
       }
@@ -768,7 +770,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
 
   if (isProjectRole) {
     return (
-      <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-y-auto">
+      <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-y-auto p-4">
         {dataLoading ? (
           <div className="flex-1 flex flex-col gap-4 py-1">
             <ShimmerCardGrid cards={6} />
@@ -788,7 +790,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
 
   if (isAccountsRole) {
     return (
-      <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-y-auto">
+      <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-y-auto p-4">
         {dataLoading ? (
           <div className="flex-1 flex flex-col gap-4 py-1">
             <ShimmerCardGrid cards={4} />
@@ -801,7 +803,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
   }
 
   return (
-    <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-y-auto">
+    <div className="animate-fade-in w-full h-full flex flex-col gap-4 min-h-0 overflow-y-auto p-4">
       {/* Controls Bar */}
       <div className="shrink-0 flex flex-wrap items-center justify-end gap-2 border-b border-[var(--border)] pb-3">
         {/* Timeframe Filter */}
@@ -833,7 +835,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                 type="date"
                 value={customStart}
                 onChange={e => setCustomStart(e.target.value)}
-                className="px-2 py-1 text-[11px] rounded-md border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-primary)] outline-none focus:border-[#b89047] cursor-pointer"
+                className="px-2 py-1 text-[11px] rounded-md border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-primary)] outline-none focus:border-[#b89047] focus:ring-2 focus:ring-[rgba(184,144,71,0.2)] cursor-pointer transition-all"
               />
               <span className="text-[11px] text-[var(--text-muted)] font-medium">to</span>
               <input
@@ -841,7 +843,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                 value={customEnd}
                 min={customStart}
                 onChange={e => setCustomEnd(e.target.value)}
-                className="px-2 py-1 text-[11px] rounded-md border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-primary)] outline-none focus:border-[#b89047] cursor-pointer"
+                className="px-2 py-1 text-[11px] rounded-md border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-primary)] outline-none focus:border-[#b89047] focus:ring-2 focus:ring-[rgba(184,144,71,0.2)] cursor-pointer transition-all"
               />
             </div>
           )}
@@ -1430,7 +1432,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                 {[
                   'Read operational modules and details',
                   ...(showAdminTab ? ['Register and edit organization members', 'Manage member access states (Block/Unblock)'] : []),
-                  ...(user.role === 'Super Admin' ? ['Audit comprehensive platform event logs'] : []),
+                  ...(showAdminTab ? ['Audit comprehensive platform event logs'] : []),
                 ].map(priv => (
                   <div key={priv} className="flex items-start gap-2">
                     <div className="p-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0">
@@ -1485,8 +1487,8 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
             </div>
           </div>
 
-          {/* Audit Logs (Super Admin) */}
-          {user.role === 'Super Admin' && allLogs.length > 0 && (
+          {/* Audit Logs (Super Admin + Admin) */}
+          {(user.role === 'Super Admin' || user.role === 'Admin') && allLogs.length > 0 && (
             <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-card)] p-4 md:col-span-2 lg:col-span-3">
               <div className="flex items-center gap-1.5 border-b border-[var(--border-subtle)] pb-2 mb-3">
                 <Database size={15} className="text-[#b89047]" />

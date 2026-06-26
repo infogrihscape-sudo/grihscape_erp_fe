@@ -292,7 +292,7 @@ export const ProspectRequirementsSales: React.FC<Props> = (_props) => {
   const totalPages = useMemo(() => Math.ceil(filteredProspects.length / ITEMS_PER_PAGE) || 1, [filteredProspects]);
 
   return (
-    <div className="animate-fade-in flex flex-col h-full min-h-0">
+    <div className="animate-fade-in flex flex-col h-full min-h-0 p-4">
       {/* Actions Bar */}
       <div className="flex flex-wrap items-center justify-end gap-2 mb-4 shrink-0">
         <button onClick={handleExportCSV} className={btnSecondary} disabled={filteredProspects.length === 0}>

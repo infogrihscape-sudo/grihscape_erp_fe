@@ -11,6 +11,7 @@ import {
   MapPin, ClipboardCheck, Palette, ArrowRight, Phone, PlusCircle, Layers,
 } from 'lucide-react';
 import { SearchableSelect } from '../components/SearchableSelect.js';
+import { btnPrimary, btnSecondary, inputBase } from '../components/ui/styles.js';
 
 interface Props { currentUser: User; }
 
@@ -55,13 +56,7 @@ interface Project {
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
-const card = 'bg-[var(--card-bg)] border border-[var(--border)] rounded-xl shadow-xs';
-const inputBase =
-  'w-full bg-[var(--card-bg)] border border-[var(--border)] text-[var(--text-primary)] text-[13px] rounded-lg px-3.5 py-1.5 outline-none transition focus:border-[#b89047] focus:ring-2 focus:ring-[rgba(184,144,71,0.2)] font-[inherit]';
-const btnPrimary =
-  'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0';
-const btnSecondary =
-  'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12px] font-semibold text-[var(--text-secondary)] bg-[var(--card-bg)] border border-[var(--border)] hover:border-[#b89047] hover:text-[#b89047] transition-all duration-200 cursor-pointer disabled:opacity-50';
+const card = 'bg-[var(--card-bg)] border border-[var(--border)] rounded-xl shadow-sm';
 
 // ─── Pipeline stages ──────────────────────────────────────────────────────────
 const PIPELINE_STAGES = [
@@ -756,21 +751,18 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
   };
 
   return (
-    <div className="flex flex-col h-full gap-3 p-3 overflow-y-auto">
+    <div className="flex flex-col h-full gap-4 p-4 overflow-y-auto">
 
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-[rgba(184,144,71,0.12)] text-[#b89047]">
-              <HardHat size={16} />
-            </div>
-            <h1 className="text-[15px] font-bold text-[var(--text-primary)]">Projects</h1>
+      {/* ── Header (mobile-only title; desktop title rendered by AppRouter top bar) ── */}
+      <div className="flex items-center justify-between gap-3 shrink-0">
+        <div className="flex md:hidden items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-[rgba(184,144,71,0.12)] text-[#b89047]">
+            <HardHat size={16} />
           </div>
-          <p className="text-[11px] text-[var(--text-muted)] mt-0.5 ml-9">Post-sales project lifecycle — assignment, site verification, design & delivery</p>
+          <h1 className="text-base font-bold text-[var(--text-primary)]">Projects</h1>
         </div>
         {isSuperAdmin && (
-          <button onClick={() => setShowOnboard(true)} className={btnPrimary}>
+          <button onClick={() => setShowOnboard(true)} className={`${btnPrimary} ml-auto`}>
             <PlusCircle size={13} />
             Add Existing Project
           </button>
@@ -778,7 +770,7 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
       </div>
 
       {/* ── Stat cards ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           {
             label: 'Total Projects', value: totalAll,
@@ -806,7 +798,7 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
             sub: totalAll > 0 ? `${Math.round((completedCount / totalAll) * 100)}% rate` : '—',
           },
         ].map(s => (
-          <div key={s.label} className={`${card} p-4 relative overflow-hidden`}>
+          <div key={s.label} className={`${card} p-4 relative overflow-hidden hover:shadow-md transition-all duration-200`}>
             {/* Gradient accent bar */}
             <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${s.accent}`} />
             <div className="flex items-start justify-between">
@@ -887,9 +879,9 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
       {/* ── Project list ── */}
       <div className={`${card} flex flex-col`}>
         {/* List header */}
-        <div className="hidden md:grid grid-cols-4 gap-4 px-4 py-2.5 border-b border-[var(--border)] bg-[var(--card-bg)] rounded-t-xl">
+        <div className="hidden md:grid grid-cols-4 gap-4 px-4 py-2.5 border-b border-[var(--border)] bg-[var(--table-head)] rounded-t-xl">
           {['Client / Service', 'Contact & Location', 'Team', 'Status'].map(h => (
-            <p key={h} className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">{h}</p>
+            <p key={h} className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">{h}</p>
           ))}
         </div>
 

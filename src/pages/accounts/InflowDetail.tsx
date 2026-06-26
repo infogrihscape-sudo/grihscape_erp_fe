@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Send, Edit2, FileText } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Send, Edit2, FileText, ExternalLink } from 'lucide-react';
 import { inflowApi, type InflowChallan } from '../../services/accounts.api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useRouter } from '../../context/RouterContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { canWrite } from '../../config/permissions.js';
+import { fileUrl } from '../../services/api.js';
 import { InflowForm } from './InflowForm.js';
+import { printInflowBill } from '../../utils/printBill.js';
 
 interface Props { currentUser: User; challanId: string; }
 
@@ -46,7 +48,7 @@ export const InflowDetail: React.FC<Props> = ({ currentUser, challanId }) => {
   if (loading) return <div className="flex-1 flex items-center justify-center text-[11px] text-[var(--text-muted)]">Loading…</div>;
   if (!challan) return null;
 
-  const isSuperAdmin = currentUser.role === 'Super Admin';
+  const isSuperAdmin = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';
   const isOwner = challan.createdById === (currentUser as any).userId;
   const canEdit = canWrite(currentUser.role) && (challan.status === 'DRAFT' || challan.status === 'REJECTED');
   const canSubmit = canWrite(currentUser.role) && (challan.status === 'DRAFT' || challan.status === 'REJECTED') && (isOwner || isSuperAdmin);
@@ -80,6 +82,21 @@ export const InflowDetail: React.FC<Props> = ({ currentUser, challanId }) => {
         <Row label="Created By" value={challan.createdBy?.name} />
         {challan.approvedBy && <Row label="Approved By" value={challan.approvedBy.name} />}
         {challan.rejectionReason && <Row label="Rejection Reason" value={<span className="text-red-400">{challan.rejectionReason}</span>} span />}
+
+        {challan.supportingDocUrl && (
+          <div className="col-span-2">
+            <p className="text-[10px] text-[var(--text-muted)] uppercase font-semibold tracking-wide mb-1">Supporting Document</p>
+            <a
+              href={challan.supportingDocUrl.startsWith('http') ? challan.supportingDocUrl : fileUrl(challan.supportingDocUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-[11px] text-blue-400 hover:underline font-medium"
+            >
+              <ExternalLink size={12} />
+              {challan.supportingDocName ?? 'View Document'}
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Rejection info */}
@@ -137,7 +154,7 @@ export const InflowDetail: React.FC<Props> = ({ currentUser, challanId }) => {
         )}
 
         <button
-          onClick={() => window.print()}
+          onClick={() => printInflowBill(challan)}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-semibold border border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/5 transition-colors ml-auto"
         >
           <FileText size={13} /> Print / PDF
