@@ -425,6 +425,14 @@ export const projectApi = {
     api.get(`/projects/${projectId}/transmittals`),
   sendTransmittal: (projectId: string, data: { fileType: 'SINGLE' | 'FULL_PROJECT' | 'LAYOUT'; projectDrawingId?: string; message?: string; fileUrls: string[] }) =>
     api.post(`/projects/${projectId}/transmittals`, data),
+
+  // Client Documents (Send to Client tab)
+  getClientDocuments: (projectId: string) =>
+    api.get(`/projects/${projectId}/client-documents`),
+  sendClientDocuments: (projectId: string, data: { fileUrls: string[]; fileNames: string[]; message?: string }) =>
+    api.post(`/projects/${projectId}/client-documents/send`, data),
+  downloadClientDocumentsZip: (projectId: string, filePaths: string[]) =>
+    api.post(`/projects/${projectId}/client-documents/zip`, { filePaths }, { responseType: 'blob' }),
 };
 
 export const tenderApi = {
