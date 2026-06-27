@@ -217,11 +217,8 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
     const isNameValid = fullName.trim().length >= 2;
     const isPhoneValid = normalizeAndValidatePhone(phoneNumber).isValid;
     const isServicesValid = selectedServices.length > 0;
-    const isCampaignValid = campaignName.trim().length > 0;
-    const isAdsetValid = adsetName.trim().length > 0;
-    const isAdNameValid = adName.trim().length > 0;
-    return isNameValid && isPhoneValid && isServicesValid && isCampaignValid && isAdsetValid && isAdNameValid;
-  }, [fullName, phoneNumber, selectedServices, campaignName, adsetName, adName]);
+    return isNameValid && isPhoneValid && isServicesValid;
+  }, [fullName, phoneNumber, selectedServices]);
 
   const phoneHint = useMemo(() => {
     if (!phoneNumber) return '';
@@ -385,9 +382,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
       errors.services = 'Select at least one service';
     }
 
-    if (!campaignName.trim()) errors.campaignName = 'Campaign Name is required';
-    if (!adsetName.trim()) errors.adsetName = 'Adset Name is required';
-    if (!adName.trim()) errors.adName = 'Ad Name is required';
+    // Campaign Name, Adset Name, Ad Name are optional
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -829,7 +824,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
         </span>
 
         <div className="flex items-center gap-2">
-          {currentUser.role === 'Sales & Marketing' && (
+          {(['Sales & Marketing', 'Admin', 'Super Admin'] as string[]).includes(currentUser.role) && (
             <button
               onClick={handleOpenDrawer}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-gradient-to-br from-[#b89047] to-[#8f6d2e] hover:-translate-y-px hover:shadow-md transition-all duration-200 cursor-pointer border-0"
@@ -1603,7 +1598,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             {/* Campaign Name */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                Campaign Name <span className="text-rose-500">*</span>
+                Campaign Name <span className="text-stone-400 font-normal normal-case">(optional)</span>
               </label>
               <input
                 type="text"
@@ -1620,7 +1615,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             {/* Adset Name */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                Adset Name <span className="text-rose-500">*</span>
+                Adset Name <span className="text-stone-400 font-normal normal-case">(optional)</span>
               </label>
               <input
                 type="text"
@@ -1637,7 +1632,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
             {/* Ad Name */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                Ad Name <span className="text-rose-500">*</span>
+                Ad Name <span className="text-stone-400 font-normal normal-case">(optional)</span>
               </label>
               <input
                 type="text"
