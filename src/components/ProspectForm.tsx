@@ -1079,7 +1079,7 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
 
             <div className="flex flex-col gap-1.5">
               <label className={labelBase}>Client Name *</label>
-              <input type="text" maxLength={20} placeholder="John Doe" value={clientName}
+              <input type="text" maxLength={100} placeholder="John Doe" value={clientName}
                 onChange={e => { setClientName(e.target.value); if (e.target.value) setFormErrors(p => ({ ...p, clientName: '' })); }}
                 className={`${inputBase} ${formErrors.clientName ? 'border-red-300' : ''}`} />
               {formErrors.clientName && <span className="text-[11px] font-semibold text-red-500">{formErrors.clientName}</span>}

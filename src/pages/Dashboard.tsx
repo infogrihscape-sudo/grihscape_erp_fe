@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.js';
 import { Sidebar } from '../components/Sidebar.js';
 import { Menu } from 'lucide-react';
 import { AppRouter } from '../components/AppRouter.js';
+import { ErrorBoundary } from '../components/ErrorBoundary.js';
 
 export const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -58,7 +59,9 @@ export const Dashboard: React.FC = () => {
           </div>
         </header>
 
-        <AppRouter user={user} />
+        <ErrorBoundary>
+          <AppRouter user={user} />
+        </ErrorBoundary>
       </div>
     </div>
   );

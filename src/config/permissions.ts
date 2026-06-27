@@ -18,11 +18,13 @@ export const ROLE_ROUTES: Record<string, string[]> = {
   'Accounts':           ['/overview', '/prospects', '__accounts_payments__', '/accounts/inflow', '/accounts/outflow', '/accounts/construction-payments'],
 };
 
+const WRITE_ROLES = new Set(['Super Admin', 'Admin', 'Sales & Marketing', 'Accounts']);
+
 /**
  * Returns true if the given role can perform write operations
- * (create, update, delete, workflow transitions).
- * Admin now has full write authority — same as Super Admin except for Super Admin user management.
+ * (create, update, delete, workflow transitions) in management screens.
+ * Fine-grained module checks (e.g. construction tasks) are handled inline per page.
  */
-export function canWrite(_role: string): boolean {
-  return true;
+export function canWrite(role: string): boolean {
+  return WRITE_ROLES.has(role);
 }

@@ -991,13 +991,13 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                   Manage <ArrowRight size={10} />
                 </button>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              <div className="grid grid-cols-7 gap-1">
                 {PROJECT_STAGE_CONFIG.map(s => {
                   const cnt = allProjects.filter((p: any) => p.status === s.key).length;
                   return (
-                    <button key={s.key} onClick={() => navigate('/projects')} className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-[rgba(184,144,71,0.06)] transition-colors cursor-pointer border-0 bg-transparent">
-                      <span className={`text-[20px] font-black ${cnt > 0 ? s.text : 'text-[var(--text-muted)]'}`}>{cnt}</span>
-                      <span className="text-[8.5px] font-semibold text-[var(--text-muted)] uppercase tracking-wide text-center leading-tight">{s.short}</span>
+                    <button key={s.key} onClick={() => navigate('/projects')} className="flex flex-col items-center gap-0.5 p-1.5 rounded-lg hover:bg-[rgba(184,144,71,0.06)] transition-colors cursor-pointer border-0 bg-transparent">
+                      <span className={`text-[15px] font-black ${cnt > 0 ? s.text : 'text-[var(--text-muted)]'}`}>{cnt}</span>
+                      <span className="text-[8px] font-semibold text-[var(--text-muted)] uppercase tracking-wide text-center leading-tight">{s.short}</span>
                     </button>
                   );
                 })}

@@ -18,7 +18,7 @@ export const Login: React.FC = () => {
   const [timer, setTimer] = useState(0);
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  const isPhoneValid = phone.trim().length === 10;
+  const isPhoneValid = /^[6-9]\d{9}$/.test(phone.trim());
   const isStep1Disabled = loading || !isPhoneValid;
   const isOtpValid = otp.trim().length === 6;
   const isStep2Disabled = loading || !isOtpValid;
@@ -101,9 +101,9 @@ export const Login: React.FC = () => {
   const handleSendOtp = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     const trimmedPhone = phone.trim();
-    if (!trimmedPhone || trimmedPhone.length !== 10) {
-      setError('Phone number must be exactly 10 digits.');
-      showToast('Phone number must be exactly 10 digits.', 'error');
+    if (!isPhoneValid) {
+      setError('Enter a valid 10-digit Indian mobile number.');
+      showToast('Enter a valid 10-digit Indian mobile number.', 'error');
       return;
     }
     setLoading(true); setError(null); setSuccessMsg(null);

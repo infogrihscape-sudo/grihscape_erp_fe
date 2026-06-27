@@ -1,4 +1,4 @@
-import { api } from './api';
+import { api } from './http';
 
 const base = (projectId: string) => `/projects/${projectId}/construction`;
 

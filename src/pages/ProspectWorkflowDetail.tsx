@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { prospectApi, contractApi, fileUrl } from '../services/api.js';
+import { prospectApi, contractApi, fileUrl, BACKEND_BASE } from '../services/api.js';
 import type { User } from '../context/AuthContext.js';
 import { SearchableSelect } from '../components/SearchableSelect.js';
 import { PROJECT_PHASES } from '../components/ProspectForm.js';
@@ -691,7 +691,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
           <div className="mt-1.5 flex items-center gap-2 text-[12px] text-emerald-700 font-semibold bg-emerald-50/60 p-2 rounded-lg border border-emerald-150">
             <Check size={14} />
             <span>File uploaded successfully!</span>
-            <a href={`http://localhost:5000${fileUrl}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-amber-600 hover:text-amber-700 underline flex items-center gap-1 font-bold">
+            <a href={`${BACKEND_BASE}${fileUrl}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-amber-600 hover:text-amber-700 underline flex items-center gap-1 font-bold">
               View Document
             </a>
           </div>
@@ -1441,7 +1441,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                       {log.attachmentUrl && (
                         <div className="mt-1.5">
                           <a 
-                            href={`http://localhost:5000${log.attachmentUrl}`} 
+                            href={`${BACKEND_BASE}${log.attachmentUrl}`}
                             target="_blank" 
                             rel="noopener noreferrer" 
                             className="inline-flex items-center gap-1 text-[10px] font-bold text-[#b89047] hover:text-[#9e7735] hover:underline"

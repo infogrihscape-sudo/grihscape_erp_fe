@@ -1017,9 +1017,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between items-center">
                   <label className={labelBase}>Full Name</label>
-                  <span className={`text-[10px] ${editUserName.length >= 20 ? 'text-red-500' : 'text-stone-400'}`}>{editUserName.length}/20</span>
+                  <span className={`text-[10px] ${editUserName.length >= 100 ? 'text-red-500' : 'text-stone-400'}`}>{editUserName.length}/100</span>
                 </div>
-                <input type="text" maxLength={20} placeholder="John Doe" value={editUserName}
+                <input type="text" maxLength={100} placeholder="John Doe" value={editUserName}
                   onChange={e => { setEditUserName(e.target.value); if (e.target.value.trim()) setEditFormErrors(p => ({...p, name: undefined})); }}
                   className={`${inputBase} ${editFormErrors.name ? inputInvalid : ''}`} />
                 {editFormErrors.name && <span className="text-[11px] font-semibold text-red-500">{editFormErrors.name}</span>}
@@ -1108,9 +1108,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between items-center">
                   <label className={labelBase}>Full Name</label>
-                  <span className={`text-[10px] ${newUserName.length >= 20 ? 'text-red-500' : 'text-stone-400'}`}>{newUserName.length}/20</span>
+                  <span className={`text-[10px] ${newUserName.length >= 100 ? 'text-red-500' : 'text-stone-400'}`}>{newUserName.length}/100</span>
                 </div>
-                <input type="text" maxLength={20} placeholder="John Doe" value={newUserName}
+                <input type="text" maxLength={100} placeholder="John Doe" value={newUserName}
                   onChange={e => { setNewUserName(e.target.value); if (e.target.value.trim()) setFormErrors(p => ({...p, name: undefined})); }}
                   className={`${inputBase} ${formErrors.name ? inputInvalid : ''}`} />
                 {formErrors.name && <span className="text-[11px] font-semibold text-red-500">{formErrors.name}</span>}
