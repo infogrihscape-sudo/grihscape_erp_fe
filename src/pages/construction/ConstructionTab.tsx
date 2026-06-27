@@ -1137,17 +1137,87 @@ function PaymentsPanel({ projectId, canCreate, canPMReview, canAdminReview, show
       ) : sprs.length === 0 ? (
         <div className="text-center py-12 text-stone-400 text-sm">No payment requests yet.</div>
       ) : (
-        <div className="space-y-2">
-          {sprs.map(spr => (
-            <SPRCard
-              key={spr.id}
-              spr={spr}
-              canPMReview={canPMReview && spr.status === 'PENDING_PM'}
-              canAdminReview={canAdminReview && spr.status === 'PENDING_ADMIN'}
-              onPMReview={() => setReviewModal({ spr, level: 'pm' })}
-              onAdminReview={() => setReviewModal({ spr, level: 'admin' })}
-            />
-          ))}
+        <div className="table-container">
+          <table className="erp-table">
+            <thead>
+              <tr>
+                <th>SPR No</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Vendor</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Requested By</th>
+                <th>Documents</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sprs.map(spr => {
+                const meta = SPR_STATUS_META[spr.status] ?? { label: spr.status, color: 'text-stone-500 bg-stone-50' };
+                let parsedDocs: { url: string; name: string }[] = [];
+                try { parsedDocs = spr.documents ? JSON.parse(spr.documents) : []; } catch {}
+                return (
+                  <tr key={spr.id}>
+                    <td className="mono-cell">{spr.sprNo}</td>
+                    <td>
+                      <span className="text-[10px] bg-stone-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-stone-600 dark:text-stone-300 font-medium">
+                        {EXPENSE_TYPE_LABELS[spr.expenseType] ?? spr.expenseType}
+                      </span>
+                    </td>
+                    <td className="text-left px-4 max-w-[200px]">
+                      <p className="text-xs text-[var(--text-primary)] line-clamp-2">{spr.description}</p>
+                    </td>
+                    <td className="text-xs text-stone-500">{spr.vendorName || '—'}</td>
+                    <td className="font-semibold text-stone-800 dark:text-stone-100">{fmtCurrency(spr.amount)}</td>
+                    <td>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${meta.color}`}>{meta.label}</span>
+                    </td>
+                    <td>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-xs text-stone-600 dark:text-stone-300">{spr.requestedBy.name}</span>
+                        <span className="text-[10px] text-stone-400">{fmt(spr.createdAt)}</span>
+                      </div>
+                    </td>
+                    <td>
+                      {parsedDocs.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          {parsedDocs.map((d, i) => (
+                            <a key={i} href={d.url} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-[10px] bg-stone-50 dark:bg-slate-800 border border-stone-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[#b89047] hover:bg-stone-100 transition-colors">
+                              <Paperclip size={9} />{d.name}
+                            </a>
+                          ))}
+                        </div>
+                      ) : <span className="text-stone-300 text-xs">—</span>}
+                    </td>
+                    <td>
+                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                        {spr.outflowExpenseId && (
+                          <span className="text-[10px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full whitespace-nowrap">Outflow created</span>
+                        )}
+                        {spr.pmRemarks && (
+                          <span className="text-[10px] text-stone-500 bg-stone-50 dark:bg-slate-800 px-1.5 py-0.5 rounded" title={`PM: ${spr.pmRemarks}`}>PM noted</span>
+                        )}
+                        {canPMReview && spr.status === 'PENDING_PM' && (
+                          <button onClick={() => setReviewModal({ spr, level: 'pm' })}
+                            className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg hover:bg-amber-100 font-medium whitespace-nowrap cursor-pointer">
+                            PM Review
+                          </button>
+                        )}
+                        {canAdminReview && spr.status === 'PENDING_ADMIN' && (
+                          <button onClick={() => setReviewModal({ spr, level: 'admin' })}
+                            className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 font-medium whitespace-nowrap cursor-pointer">
+                            Admin Review
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 

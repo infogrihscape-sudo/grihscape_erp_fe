@@ -61,6 +61,9 @@ const ConstructionPayments = React.lazy(() =>
 const DelayAnalysisPage = React.lazy(() =>
   import('../pages/construction/DelayAnalysisPage.js').then((m) => ({ default: m.DelayAnalysisPage }))
 );
+const LabourManagement = React.lazy(() =>
+  import('../pages/LabourManagement.js')
+);
 
 interface AppRouterProps {
   user: User;
@@ -68,7 +71,7 @@ interface AppRouterProps {
 
 const VALID_PATHS = [
   '/overview', '/users', '/roles', '/logs', '/prospects', '/leads',
-  '/contracts', '/tenders', '/projects', '/delay-analysis',
+  '/contracts', '/tenders', '/projects', '/delay-analysis', '/labour',
   '/accounts/inflow', '/accounts/outflow', '/accounts/construction-payments', '/accounts/masters',
 ];
 
@@ -104,6 +107,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
   const isConstPayments  = path === '/accounts/construction-payments';
   const isAccMasters     = path === '/accounts/masters';
   const isDelayAnalysis  = path === '/delay-analysis';
+  const isLabour         = path === '/labour';
 
   const userRoutes = ROLE_ROUTES[user.role] ?? [];
 
@@ -264,6 +268,10 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
         ) : isDelayAnalysis ? (
           <Suspense fallback={<PageLoader text="Loading Delay Analysis…" />}>
             <DelayAnalysisPage user={user} />
+          </Suspense>
+        ) : isLabour ? (
+          <Suspense fallback={<PageLoader text="Loading Labour Management…" />}>
+            <LabourManagement />
           </Suspense>
         ) : (
           <Suspense fallback={<PageLoader text="Loading Operations Console…" />}>

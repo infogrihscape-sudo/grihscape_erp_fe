@@ -2,11 +2,11 @@ import React from 'react';
 import {
   LayoutDashboard, Users, ClipboardList, Database, ScrollText,
   Sparkles, FileText, Award, HardHat, ArrowDownLeft, ArrowUpRight, Settings,
-  TrendingDown,
+  TrendingDown, HardHat as LabourIcon, Users2,
 } from 'lucide-react';
 
 export type AppTab = 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders' | 'projects'
-  | 'inflow' | 'outflow' | 'constructionPayments' | 'accountsMasters' | 'delayAnalysis';
+  | 'inflow' | 'outflow' | 'constructionPayments' | 'accountsMasters' | 'delayAnalysis' | 'labour';
 
 export interface SidebarItem {
   id: AppTab;
@@ -24,6 +24,7 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
   { id: 'contracts', route: '/contracts', icon: <ScrollText size={16} />,      label: 'Contracts' },
   { id: 'tenders',   route: '/tenders',   icon: <Award size={16} />,           label: 'Tender Management' },
   { id: 'projects',  route: '/projects',  icon: <HardHat size={16} />,         label: 'Projects' },
+  { id: 'labour',    route: '/labour',    icon: <Users2 size={16} />,          label: 'Labour Management' },
 ];
 
 // Tab id → canonical route path for navigation
@@ -35,6 +36,7 @@ export const TAB_TO_ROUTE: Record<AppTab, string> = {
   contracts:       '/contracts',
   tenders:         '/tenders',
   projects:        '/projects',
+  labour:          '/labour',
   inflow:               '/accounts/inflow',
   outflow:              '/accounts/outflow',
   constructionPayments: '/accounts/construction-payments',
@@ -53,6 +55,7 @@ export const ROUTE_TO_TAB: Record<string, AppTab> = {
   '/contracts':        'contracts',
   '/tenders':          'tenders',
   '/projects':         'projects',
+  '/labour':           'labour',
   '/accounts/inflow':               'inflow',
   '/accounts/outflow':              'outflow',
   '/accounts/construction-payments': 'constructionPayments',
@@ -84,6 +87,7 @@ export const PAGE_INFO: Record<string, PageInfo> = {
   constructionPayments: { icon: <HardHat size={15} />,         title: 'Construction Payments',  subtitle: 'Review, update & process payment requests from sites',                  iconBg: 'rgba(234,88,12,0.12)', iconColor: '#ea580c' },
   accountsMasters:      { icon: <Settings size={15} />,        title: 'Accounts Masters',       subtitle: 'Purpose and expense category master data',                             iconBg: 'rgba(139,92,246,0.12)', iconColor: '#8b5cf6' },
   delayAnalysis:        { icon: <TrendingDown size={15} />,    title: 'Delay Analysis',         subtitle: 'Auto-generated delay breakdown across all assigned projects',          iconBg: 'rgba(239,68,68,0.12)',  iconColor: '#ef4444' },
+  labour:               { icon: <Users2 size={15} />,          title: 'Labour Management',      subtitle: 'Attendance, daily reports, and wage payout for site labourers',        iconBg: 'rgba(234,88,12,0.12)', iconColor: '#ea580c' },
 };
 
 // Extracts project id from /projects/:id path; returns null otherwise
