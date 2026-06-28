@@ -114,7 +114,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
 
   useEffect(() => {
     const isKnown =
-      VALID_PATHS.includes(path) ||
+      (VALID_PATHS as readonly string[]).includes(path) ||
       getProspectDetailId(path) ||
       getTenderDetailId(path) ||
       getProjectDetailId(path) ||
