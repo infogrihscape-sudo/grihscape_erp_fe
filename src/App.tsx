@@ -34,8 +34,7 @@ const LoaderScreen: React.FC<{ message: string; logoOnly?: boolean }> = ({ messa
           />
         </div>
         <style>{`@keyframes logo-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.45;transform:scale(0.9)} }`}</style>
-      </>
-    ) : (
+      </> ) : (
       <div style={{ position: 'relative', width: 48, height: 48 }}>
         <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid rgba(197,168,128,0.18)' }} />
         <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid transparent', borderTopColor: '#c5a880', borderRightColor: '#b89047', animation: 'gs-spin 0.75s linear infinite' }} />
@@ -79,7 +78,7 @@ const MainApp: React.FC = () => {
   // Authenticated → show the CRM dashboard
   if (isAuthenticated) {
     return (
-      <Suspense fallback={<LoaderScreen message="Preparing Operations Terminal…" />}>
+      <Suspense fallback={<LoaderScreen message="" logoOnly />}>
         <Dashboard />
       </Suspense>
     );
@@ -88,7 +87,7 @@ const MainApp: React.FC = () => {
   // Not authenticated → public routes
   if (isLoginPath) {
     return (
-      <Suspense fallback={<LoaderScreen message="Initializing Security Check…" />}>
+      <Suspense fallback={<LoaderScreen message="" logoOnly />}>
         <Login />
       </Suspense>
     );
@@ -96,7 +95,7 @@ const MainApp: React.FC = () => {
 
   // Default: public portfolio site
   return (
-    <Suspense fallback={<LoaderScreen message="Loading Grihscape…" />}>
+    <Suspense fallback={<LoaderScreen message="" logoOnly />}>
       <PortfolioApp />
     </Suspense>
   );

@@ -7,6 +7,7 @@ import { outflowApi, accountsMasterApi, type ExpenseCategoryMaster, type Purpose
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { api } from '../../services/api.js';
+import { ShimmerTable } from '../../components/Shimmer.js';
 
 interface Props { currentUser: User; }
 
@@ -261,7 +262,7 @@ export const ConstructionPayments: React.FC<Props> = ({ currentUser }) => {
 
       {/* Main Table */}
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-stone-400" /></div>
+        <ShimmerTable rows={8} cols={6} />
       ) : filteredRequests.length === 0 ? (
         <div className="text-center py-16 text-stone-400 text-xs italic bg-[var(--card-bg)] border border-[var(--border)] rounded-xl">
           No payment requests match the current filters.

@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import { labourApi, projectApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { ShimmerTable, ShimmerBox } from '../components/Shimmer.js';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -444,6 +445,7 @@ function LabourRegisterTab({ projectId, role, siteName }: { projectId: string; r
       </div>
 
       {/* Table */}
+      {loading ? <ShimmerTable rows={6} cols={canWrite ? 8 : 7} /> : (
       <div className="table-container">
         <table className="erp-table">
           <thead>
@@ -454,12 +456,10 @@ function LabourRegisterTab({ projectId, role, siteName }: { projectId: string; r
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr><td colSpan={canWrite ? 8 : 7} className="py-10 text-center"><Loader2 className="animate-spin mx-auto" size={20} /></td></tr>
-            ) : filtered.length === 0 ? (
+            {filtered.length === 0 ? (
               <tr><td colSpan={canWrite ? 8 : 7} className="py-10 text-center text-[var(--text-muted)] text-[13px]">{search ? 'No labourers match your search.' : 'No labourers registered for this site yet.'}</td></tr>
             ) : filtered.map((l, i) => (
-              <tr key={l.id} className={!l.isActive ? 'opacity-50' : ''}>
+              <tr key={l.id} className={`row-enter${!l.isActive ? ' opacity-50' : ''}`} style={{ '--row-index': i } as React.CSSProperties}>
                 <td>{i + 1}</td>
                 <td>
                   <div className="font-semibold text-[var(--text-primary)]">{l.name}</div>
@@ -492,6 +492,7 @@ function LabourRegisterTab({ projectId, role, siteName }: { projectId: string; r
           </tbody>
         </table>
       </div>
+      )}
 
       <LabourDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} projectId={projectId} editData={editData} onSaved={load} />
     </div>
@@ -634,6 +635,7 @@ function AttendanceTab({ projectId, role }: { projectId: string; role: string })
       {saved && <div className="flex items-center gap-2 text-emerald-400 text-[13px] bg-emerald-400/10 rounded-xl px-4 py-3 border border-emerald-400/20"><CheckCircle size={14} />Attendance saved successfully!</div>}
 
       {/* Attendance grid */}
+      {loading ? <ShimmerTable rows={6} cols={10} /> : (
       <div className="table-container">
         <table className="erp-table">
           <thead>
@@ -647,12 +649,10 @@ function AttendanceTab({ projectId, role }: { projectId: string; role: string })
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr><td colSpan={10} className="py-10 text-center"><Loader2 className="animate-spin mx-auto" size={20} /></td></tr>
-            ) : rows.length === 0 ? (
+            {rows.length === 0 ? (
               <tr><td colSpan={10} className="py-8 text-center text-[var(--text-muted)] text-[13px]">No active labourers found for this site. Add labourers in the Labour Register tab.</td></tr>
             ) : rows.map((r, i) => (
-              <tr key={r.labourId}>
+              <tr key={r.labourId} className="row-enter" style={{ '--row-index': i } as React.CSSProperties}>
                 <td>{i + 1}</td>
                 <td className="font-semibold text-[var(--text-primary)]">{r.name}</td>
                 <td><span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400">{r.trade}</span></td>
@@ -759,6 +759,7 @@ function AttendanceTab({ projectId, role }: { projectId: string; role: string })
           </tbody>
         </table>
       </div>
+      )}
 
       {canWrite && !isFuture && rows.length > 0 && (
         <div className="flex justify-end">
@@ -851,7 +852,7 @@ function ReportsTab({ projectId, role }: { projectId: string; role: string }) {
 
       {error && <div className="flex items-center gap-2 text-red-400 text-[13px] bg-red-400/10 rounded-xl px-4 py-3"><AlertCircle size={14} />{error}</div>}
 
-      {loading && <div className="flex justify-center py-12"><Loader2 className="animate-spin text-amber-400" size={24} /></div>}
+      {loading && <ShimmerTable rows={5} cols={5} />}
 
       {/* ── Daily Report ── */}
       {!loading && report && subTab === 'daily' && (
@@ -1149,13 +1150,12 @@ function OverviewTab() {
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search site or client…" className="w-full pl-8 pr-3 py-2 bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] text-[12px] rounded-lg outline-none focus:border-[#c5a880]" />
       </div>
 
+      {loading ? <ShimmerTable rows={5} cols={9} /> : (
       <div className="table-container">
         <table className="erp-table">
           <thead><tr><th>Sr.</th><th>Site / Client</th><th>Project Status</th><th>Total Labourers</th><th>Today Present</th><th>Today Absent</th><th>Half Day</th><th>On Leave</th><th>Attendance %</th></tr></thead>
           <tbody>
-            {loading ? (
-              <tr><td colSpan={9} className="py-10 text-center"><Loader2 className="animate-spin mx-auto" size={20} /></td></tr>
-            ) : filtered.length === 0 ? (
+            {filtered.length === 0 ? (
               <tr><td colSpan={9} className="py-10 text-center text-[var(--text-muted)]">No sites found.</td></tr>
             ) : filtered.map((o, i) => (
               <tr key={o.projectId}>
@@ -1185,6 +1185,7 @@ function OverviewTab() {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 }
@@ -1293,7 +1294,7 @@ function ChartsTab({ projectId }: { projectId: string }) {
       </div>
 
       {error && <div className="flex items-center gap-2 text-red-400 text-[13px] bg-red-400/10 rounded-xl px-4 py-3"><AlertCircle size={14} />{error}</div>}
-      {loading && <div className="flex justify-center py-16"><Loader2 className="animate-spin text-amber-400" size={28} /></div>}
+      {loading && <ShimmerTable rows={6} cols={5} />}
 
       {data && !loading && (
         <div className="space-y-6">
@@ -1482,7 +1483,7 @@ export default function LabourManagement() {
           <div className="flex items-center gap-2">
             <Building2 size={13} className="text-[var(--text-muted)]" />
             {loadingProjects ? (
-              <Loader2 size={14} className="animate-spin text-[var(--text-muted)]" />
+              <ShimmerBox className="h-8 w-48 rounded-lg" />
             ) : projects.length === 0 ? (
               <span className="text-[12px] text-[var(--text-muted)]">No sites assigned</span>
             ) : (

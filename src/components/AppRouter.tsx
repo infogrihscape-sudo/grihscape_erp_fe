@@ -183,6 +183,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden flex flex-col min-h-0">
+        <div key={path} className="page-enter flex-1 flex flex-col min-h-0 overflow-hidden">
         {!isAuthorized ? (
           <div className="animate-fade-in w-full max-w-lg mx-auto h-full flex flex-col items-center justify-center text-center gap-5">
             <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50 shadow-sm">
@@ -278,6 +279,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
             <OverviewPage user={user} />
           </Suspense>
         )}
+        </div>
       </main>
     </>
   );

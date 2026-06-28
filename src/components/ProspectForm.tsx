@@ -1318,7 +1318,7 @@ export const ProspectForm: React.FC<ProspectFormProps> = ({
                 <AlertTriangle size={16} className="text-amber-600" />
               </div>
               <div>
-                <h3 className="text-[14px] font-bold text-stone-900">Confirm Details</h3>
+                <h3 className="text-[14px] font-bold text-[var(--text-primary)]">Confirm Details</h3>
                 <p className="text-[11px] text-stone-500 mt-0.5">Please verify before submitting</p>
               </div>
             </div>

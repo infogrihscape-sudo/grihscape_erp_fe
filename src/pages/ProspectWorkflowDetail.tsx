@@ -910,7 +910,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
           <ArrowLeft size={20} />
         </div>
         <div>
-          <h3 className="text-md font-bold text-stone-900">Prospect Load Error</h3>
+          <h3 className="text-md font-bold text-[var(--text-primary)]">Prospect Load Error</h3>
           <p className="text-[12px] text-stone-500 mt-1.5 max-w-sm leading-relaxed">{error || 'Prospect brief requirements could not be located in system.'}</p>
         </div>
         <button onClick={() => navigate('/prospects')} className={btnSecondary}>
@@ -935,7 +935,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
           </button>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <h2 className="text-[15px] font-bold text-stone-900 tracking-tight truncate max-w-[200px] sm:max-w-none">{prospect.clientName}</h2>
+              <h2 className="text-[15px] font-bold text-[var(--text-primary)] tracking-tight truncate max-w-[200px] sm:max-w-none">{prospect.clientName}</h2>
               <span className={`text-[11px] uppercase tracking-wider font-bold shrink-0 ${workflowStageBadgeClasses[prospect.workflowStage || 'LEAD_CAPTURED'] || 'text-stone-600'}`}>
                 {workflowStageLabel(prospect.workflowStage)}
               </span>
@@ -1383,6 +1383,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                         <input
                           type="number"
                           min="0"
+                          max="99999999"
                           step="0.01"
                           placeholder={prospect.initialPaymentAmount ? String(prospect.initialPaymentAmount) : 'Amount'}
                           value={revisedPaymentAmount}
@@ -1467,7 +1468,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs" onClick={() => setShowLogFollowUpModal(false)}>
           <div className="animate-scale-in w-full max-w-[480px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
-              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-[var(--text-primary)]">
                 <ClipboardList size={16} className="text-[#b89047]" /> Log Activity / Meeting
               </h3>
               <button onClick={() => setShowLogFollowUpModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
@@ -1545,7 +1546,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs" onClick={() => setShowSendProposalModal(false)}>
           <div className="animate-scale-in w-full max-w-[540px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
-              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-[var(--text-primary)]">
                 <Mail size={16} className="text-[#b89047]" /> Send Proposal Email
               </h3>
               <button onClick={() => setShowSendProposalModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
@@ -1616,7 +1617,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs" onClick={() => setShowRequestSiteDetailsModal(false)}>
           <div className="animate-scale-in w-full max-w-[540px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
-              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-[var(--text-primary)]">
                 <Mail size={16} className="text-[#b89047]" /> Request Site Details (Email)
               </h3>
               <button onClick={() => setShowRequestSiteDetailsModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
@@ -1677,7 +1678,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs" onClick={() => setShowUploadSiteDetailsModal(false)}>
           <div className="animate-scale-in w-full max-w-[480px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
-              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-[var(--text-primary)]">
                 <MapPin size={16} className="text-[#b89047]" /> Upload Site Details & Coordinates
               </h3>
               <button onClick={() => setShowUploadSiteDetailsModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
@@ -1719,7 +1720,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs" onClick={() => setShowMeetingInviteModal(false)}>
           <div className="animate-scale-in w-full max-w-[500px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
-              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-[var(--text-primary)]">
                 <Mail size={16} className="text-[#b89047]" /> Send Meeting Invite
               </h3>
               <button onClick={() => setShowMeetingInviteModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
@@ -1799,7 +1800,7 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs" onClick={() => setShowInitialPaymentModal(false)}>
           <div className="animate-scale-in w-full max-w-[480px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
-              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-[var(--text-primary)]">
                 <DollarSign size={16} className="text-[#b89047]" /> Record Initial Payment
               </h3>
               <button onClick={() => setShowInitialPaymentModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
@@ -1813,6 +1814,9 @@ export const ProspectWorkflowDetail: React.FC<Props> = ({ currentUser, prospectI
                   <label className={labelBase}>Amount</label>
                   <input
                     type="number"
+                    min="0"
+                    max="99999999"
+                    step="0.01"
                     value={paymentAmount}
                     onChange={e => setPaymentAmount(e.target.value)}
                     placeholder="e.g. 5"

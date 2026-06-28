@@ -8,7 +8,9 @@ import {
 } from 'lucide-react';
 import { constructionApi } from '../../services/construction.api';
 import { api } from '../../services/api';
+import { uniqueFileName } from '../../utils/fileUtils';
 import { useToast } from '../../context/ToastContext';
+import { ShimmerTable } from '../../components/Shimmer.js';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -208,7 +210,7 @@ function TasksPanel({ projectId, canCreate, canUpdateStatus, assignableUsers, sh
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-stone-400" /></div>
+        <ShimmerTable rows={5} cols={4} />
       ) : tasks.length === 0 ? (
         <div className="text-center py-12 text-stone-400 text-sm">No tasks yet. {canCreate && 'Add the first task.'}</div>
       ) : (
@@ -614,7 +616,7 @@ function ReportsPanel({ projectId, canSubmit, userId, showToast }: any) {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-stone-400" /></div>
+        <ShimmerTable rows={5} cols={4} />
       ) : tasks.length === 0 ? (
         <div className="text-center py-12 text-stone-400 text-sm">No tasks yet. Add tasks first.</div>
       ) : (
@@ -774,7 +776,7 @@ function TaskReportsView({ projectId, task, canSubmit, userId, showToast, onBack
 
       {/* Reports list — day-wise */}
       {loading ? (
-        <div className="flex justify-center py-10"><Loader2 size={20} className="animate-spin text-stone-400" /></div>
+        <ShimmerTable rows={4} cols={3} />
       ) : reports.length === 0 ? (
         <div className="text-center py-10 text-stone-400 text-sm">
           No reports yet for this task.{canSubmit ? ' Submit the first one above.' : ''}
@@ -1133,7 +1135,7 @@ function PaymentsPanel({ projectId, canCreate, canPMReview, canAdminReview, show
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-stone-400" /></div>
+        <ShimmerTable rows={5} cols={4} />
       ) : sprs.length === 0 ? (
         <div className="text-center py-12 text-stone-400 text-sm">No payment requests yet.</div>
       ) : (
@@ -1321,7 +1323,7 @@ function SPRForm({ projectId, onClose, onSaved, showToast }: any) {
     try {
       setUploading(true);
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append('file', file, uniqueFileName(file));
       const res = await api.post('/upload', fd, {
         headers: { 'Content-Type': 'multipart/form-data', 'x-file-type': 'spr' },
       });

@@ -339,7 +339,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                   {paginatedProspects.length === 0 ? (
                     <tr><td colSpan={13} className="text-center py-10 text-[12px] text-stone-400 italic">No prospects found.</td></tr>
                   ) : paginatedProspects.map((p, i) => (
-                    <tr key={p.id}>
+                    <tr key={p.id} className="row-enter" style={{ '--row-index': i } as React.CSSProperties}>
                       <td>{indexStart + i + 1}</td>
                       <td className="font-semibold text-[var(--text-primary)] whitespace-nowrap">{p.clientName}</td>
                       <td className="whitespace-nowrap">{p.mobileNo}</td>
@@ -426,10 +426,10 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
 
       {/* Edit Brief Modal */}
       {showFormModal && editTarget && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => { setShowFormModal(false); setEditTarget(null); }}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => { setShowFormModal(false); setEditTarget(null); }}>
           <div className="animate-scale-in w-full max-w-5xl lg:max-w-6xl bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-[rgba(184,144,71,0.3)] flex flex-col overflow-hidden h-[100dvh] sm:h-auto sm:max-h-[calc(100svh-40px)]" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 sm:p-5 border-b border-stone-100 shrink-0">
-              <h3 className="flex items-center gap-2 text-[14px] sm:text-[16px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[14px] sm:text-[16px] font-bold text-[var(--text-primary)]">
                 <ClipboardList size={17} className="text-[#b89047] shrink-0" /> Modify Client Brief
               </h3>
               <button onClick={() => { setShowFormModal(false); setEditTarget(null); }} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
@@ -456,7 +456,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowBudgetModal(false)}>
           <div className="animate-scale-in w-full max-w-[480px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
-              <h3 className="text-[14px] font-bold text-stone-900">Manage Service Budgets</h3>
+              <h3 className="text-[14px] font-bold text-[var(--text-primary)]">Manage Service Budgets</h3>
               <button onClick={() => setShowBudgetModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 cursor-pointer border-0 bg-transparent">
                 <X size={14} />
               </button>
@@ -493,7 +493,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowAddServiceModal(false)}>
           <div className="animate-scale-in w-full max-w-md bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-[var(--text-primary)]">
                 <UserPlus size={16} className="text-[#b89047]" /> Add New Service
               </h3>
               <button onClick={() => setShowAddServiceModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 cursor-pointer border-0 bg-transparent"><X size={15} /></button>
@@ -506,7 +506,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
                 onChange={e => { setLookupPhone(e.target.value); setLookupResult(null); setLookupError(null); }}
                 onKeyDown={e => e.key === 'Enter' && handleClientLookup()}
                 className="flex-1 px-3 py-2 border border-stone-200 rounded-lg text-[13px] outline-none focus:border-[#b89047]"
-                maxLength={15} />
+                maxLength={10} />
               <button onClick={handleClientLookup} disabled={lookupLoading || !lookupPhone.trim()}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-[#b89047] hover:bg-[#9e7735] disabled:opacity-50 cursor-pointer border-0">
                 {lookupLoading ? <Loader2 size={13} className="animate-spin" /> : <Search size={13} />} Lookup
@@ -521,7 +521,7 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
               <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 mb-2">
                 <div className="flex items-center gap-2 mb-2">
                   <Check size={14} className="text-emerald-600 shrink-0" />
-                  <span className="text-[13px] font-bold text-stone-900">{lookupResult.clientName}</span>
+                  <span className="text-[13px] font-bold text-[var(--text-primary)]">{lookupResult.clientName}</span>
                 </div>
                 <div className="text-[11.5px] text-stone-600 space-y-0.5">
                   <p><span className="font-medium">Phone:</span> {lookupResult.mobileNo}</p>
@@ -546,10 +546,10 @@ export const ProspectRequirementsAdmin: React.FC<Props> = ({ currentUser: _curre
 
       {/* Add Service Form Modal */}
       {showAddServiceFormModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowAddServiceFormModal(false)}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowAddServiceFormModal(false)}>
           <div className="animate-scale-in w-full max-w-5xl lg:max-w-6xl bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-[rgba(184,144,71,0.3)] flex flex-col overflow-hidden h-[100dvh] sm:h-auto sm:max-h-[calc(100svh-40px)]" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 sm:p-5 border-b border-stone-100 shrink-0">
-              <h3 className="flex items-center gap-2 text-[15px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-[var(--text-primary)]">
                 <UserPlus size={16} className="text-[#b89047]" /> Add New Service — {prefillData?.clientName}
               </h3>
               <button onClick={() => { setShowAddServiceFormModal(false); setPrefillData(null); }} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 cursor-pointer border-0 bg-transparent"><X size={16} /></button>

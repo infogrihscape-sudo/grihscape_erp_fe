@@ -8,6 +8,7 @@ import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { api, fileUrl } from '../../services/api.js';
 import { makeUniqueFileName } from '../../utils/validators.js';
+import { uniqueFileName } from '../../utils/fileUtils.js';
 import { SearchableSelect } from '../../components/SearchableSelect.js';
 
 interface Props {
@@ -210,7 +211,7 @@ export const OutflowForm: React.FC<Props> = ({ existing, onClose, onSaved }) => 
     const file = e.target.files?.[0];
     if (!file) return;
     const fd = new FormData();
-    fd.append('file', file);
+    fd.append('file', file, uniqueFileName(file));
     setUploading(true);
     try {
       const res = await api.post<{ url: string; filename: string }>('/upload', fd, {

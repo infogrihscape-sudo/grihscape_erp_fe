@@ -8,6 +8,7 @@ import { canWrite } from '../../config/permissions.js';
 import { fileUrl } from '../../services/api.js';
 import { InflowForm } from './InflowForm.js';
 import { printInflowBill } from '../../utils/printBill.js';
+import { ShimmerDetailCard } from '../../components/Shimmer.js';
 
 interface Props { currentUser: User; challanId: string; }
 
@@ -45,7 +46,7 @@ export const InflowDetail: React.FC<Props> = ({ currentUser, challanId }) => {
     finally { setActing(false); }
   };
 
-  if (loading) return <div className="flex-1 flex items-center justify-center text-[11px] text-[var(--text-muted)]">Loading…</div>;
+  if (loading) return <div className="p-4 max-w-2xl"><ShimmerDetailCard rows={8} /></div>;
   if (!challan) return null;
 
   const isSuperAdmin = currentUser.role === 'Super Admin' || currentUser.role === 'Admin';

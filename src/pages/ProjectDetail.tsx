@@ -110,7 +110,7 @@ export const ProjectDetail: React.FC<Props> = ({ currentUser, projectId }) => {
         {activeTab === 'overview'      && <OverviewTab      project={project} currentUser={currentUser} onRefresh={fetchProject} />}
         {activeTab === 'site'          && <SiteTab          project={project} currentUser={currentUser} onRefresh={fetchProject} />}
         {activeTab === 'cdrf-meetings' && <CdrfMeetingsTab  project={project} currentUser={currentUser} />}
-        {activeTab === 'cdrf-form'     && <CdrfFormTab      project={project} currentUser={currentUser} />}
+        {activeTab === 'cdrf-form'     && <CdrfFormTab      project={project} currentUser={currentUser} onRefresh={fetchProject} />}
         {activeTab === 'design'        && <DesignTab        project={project} currentUser={currentUser} onRefresh={fetchProject} />}
         {activeTab === 'pipeline'      && <PipelineTab      project={project} currentUser={currentUser} onRefresh={fetchProject} />}
         {activeTab === 'transmittals'    && <TransmittalsTab   project={project} currentUser={currentUser} />}

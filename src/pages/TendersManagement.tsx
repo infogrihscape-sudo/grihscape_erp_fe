@@ -2,12 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from '../context/RouterContext.js';
 import { useToast } from '../context/ToastContext.js';
 import { tenderApi, fileUrl } from '../services/api.js';
+import { uniqueFileName } from '../utils/fileUtils.js';
 import {
   Plus, Edit, Trash2, Search, Filter, RefreshCw, Eye, FileText, Upload,
   Download, Check, X, RotateCcw, AlertCircle, Calendar, Landmark, MapPin, Tag,
   Hash, ClipboardList, Info, FileSpreadsheet, ArrowLeft
 } from 'lucide-react';
 import { ShimmerTable } from '../components/Shimmer.js';
+import { EmptyState } from '../components/ui/EmptyState.js';
 
 interface TendersManagementProps {
   currentUser: {
@@ -179,7 +181,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
     setUploadingFile(true);
     setUploadProgress(20);
     const fd = new FormData();
-    fd.append('file', file);
+    fd.append('file', file, uniqueFileName(file));
 
     try {
       setUploadProgress(50);
@@ -502,6 +504,8 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
               <input
                 type="number"
                 step="any"
+                min="0"
+                max="999999999999"
                 value={formData.estimatedBidValue}
                 onChange={(e) => setFormData({ ...formData, estimatedBidValue: e.target.value })}
                 placeholder="5000000"
@@ -515,6 +519,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
               <label className={labelBase}>Beneficiary *</label>
               <input
                 type="text"
+                maxLength={150}
                 value={formData.beneficiary}
                 onChange={(e) => setFormData({ ...formData, beneficiary: e.target.value })}
                 placeholder="Commanding Officer"
@@ -528,6 +533,7 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
               <label className={labelBase}>Address with State *</label>
               <input
                 type="text"
+                maxLength={200}
                 value={formData.addressWithState}
                 onChange={(e) => setFormData({ ...formData, addressWithState: e.target.value })}
                 placeholder="Delhi Cantonment, Delhi - 110010"
@@ -541,6 +547,8 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
               <label className={labelBase}>Quantity *</label>
               <input
                 type="number"
+                min="1"
+                max="999999"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                 placeholder="1"
@@ -555,6 +563,8 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
               <input
                 type="number"
                 step="any"
+                min="0"
+                max="999999999999"
                 value={formData.emdAmount}
                 onChange={(e) => setFormData({ ...formData, emdAmount: e.target.value })}
                 placeholder="100000"
@@ -568,6 +578,8 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
               <label className={labelBase}>Ranking (Optional)</label>
               <input
                 type="number"
+                min="1"
+                max="9999"
                 value={formData.ranking}
                 onChange={(e) => setFormData({ ...formData, ranking: e.target.value })}
                 placeholder="1"
@@ -979,16 +991,12 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
             <ShimmerTable rows={8} cols={6} />
           </div>
         ) : tenders.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-3 max-w-md mx-auto">
-            <div className="w-12 h-12 rounded-full bg-[var(--hover-bg)] flex items-center justify-center text-stone-400">
-              <ClipboardList size={22} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-[var(--text-primary)]">No Tenders Found</h3>
-              <p className="text-[11.5px] text-[var(--text-muted)] mt-1.5 leading-relaxed">
-                There are no tenders matching the current filter set. Verify your criteria or create a new tender.
-              </p>
-            </div>
+          <div className="flex-1 flex items-center justify-center">
+            <EmptyState
+              icon={<ClipboardList size={24} />}
+              title="No Tenders Found"
+              body="There are no tenders matching the current filter set. Verify your criteria or create a new tender."
+            />
           </div>
         ) : (
           <div className="table-container flex-1">
@@ -1005,8 +1013,8 @@ export const TendersManagement: React.FC<TendersManagementProps> = ({ currentUse
                 </tr>
               </thead>
               <tbody >
-                {tenders.map((tender) => (
-                  <tr key={tender.id} >
+                {tenders.map((tender, i) => (
+                  <tr key={tender.id} className="row-enter" style={{ '--row-index': i } as React.CSSProperties}>
                     <td className="font-bold text-[var(--text-primary)]">
                       {tender.bidNumber}
                     </td>

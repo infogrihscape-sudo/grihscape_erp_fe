@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import { delayAnalysisApi, constructionApi } from '../../services/construction.api';
 import { useToast } from '../../context/ToastContext';
+import { ShimmerTable } from '../../components/Shimmer.js';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -1349,10 +1350,7 @@ export function DelayAnalysisPage({ user: _user }: { user: any }) {
 
         <div className="flex-1 overflow-y-auto relative z-10">
           {loading ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-24">
-              <Loader2 size={28} className="animate-spin text-[#b89047]" />
-              <p className="text-sm text-[var(--text-muted)] font-semibold">Computing critical path analysis…</p>
-            </div>
+            <div className="p-4"><ShimmerTable rows={6} cols={5} /></div>
           ) : analysis.length === 0 ? (
             <div className="flex items-center justify-center h-full text-[var(--text-muted)] text-sm">No projects found.</div>
           ) : (
@@ -1430,10 +1428,7 @@ export function DelayAnalysisPage({ user: _user }: { user: any }) {
 
       <div className="flex-1 overflow-y-auto p-4 md:p-5 relative z-10">
         {drillLoading ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-24">
-            <Loader2 size={24} className="animate-spin text-[#b89047]" />
-            <p className="text-sm text-[var(--text-muted)]">Loading project data…</p>
-          </div>
+          <ShimmerTable rows={6} cols={5} />
         ) : drillTab === 'hld' ? (
           <HLDView project={selectedProject} tasks={drillTasks} />
         ) : (

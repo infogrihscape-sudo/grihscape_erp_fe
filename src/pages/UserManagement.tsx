@@ -13,6 +13,7 @@ import {
   Settings, Plus, Edit2, ChevronLeft, ChevronRight, X, MapPin,
   FileText, Trash2
 } from 'lucide-react';
+import { ShimmerTable } from '../components/Shimmer.js';
 
 interface DbRole { id: string; name: string; description: string | null; createdAt: string; updatedAt?: string; }
 interface AuditLog {
@@ -582,144 +583,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
       {/* Loading state */}
       <div className="flex-1 min-h-0 flex flex-col">
         {loading ? (
-        activeSubTab === 'users' ? (
-          <div className="flex flex-col flex-1 min-h-0">
-            {/* Search skeleton */}
-            <div className={`${card} flex items-center px-3.5 py-3.5 mb-4`}>
-              <div className="w-3.5 h-3.5 bg-stone-100 rounded shimmer shrink-0 mr-2.5" />
-              <div className="h-3.5 w-64 bg-stone-100 rounded shimmer" />
-            </div>
-            {/* Table skeleton */}
-            <div className={`${card} flex-1 overflow-hidden`}>
-              <div className="table-container">
-                <table className="erp-table">
-                  <thead>
-                    <tr>
-                      {['S.No.', 'Full Name', 'Email', 'Phone Number', 'Role', 'Status', 'Session', 'Actions'].map((h) => (
-                        <th key={h}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <tr key={i}>
-                        <td>
-                          <div className="w-6 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-24 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-32 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-20 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-16 h-5 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-20 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-36 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="inline-block w-16 h-8 bg-stone-100 rounded-lg shimmer mx-auto" />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        ) : activeSubTab === 'roles' ? (
-          <div className="flex flex-col flex-1 min-h-0">
-            {/* Search skeleton */}
-            <div className={`${card} flex items-center px-3.5 py-3.5 mb-4`}>
-              <div className="w-3.5 h-3.5 bg-stone-100 rounded shimmer shrink-0 mr-2.5" />
-              <div className="h-3.5 w-64 bg-stone-100 rounded shimmer" />
-            </div>
-            {/* Table skeleton */}
-            <div className={`${card} flex-1 overflow-hidden`}>
-              <div className="table-container">
-                <table className="erp-table">
-                  <thead>
-                    <tr>
-                      {['S.No.', 'Role Code', 'Description', 'Actions'].map((h) => (
-                        <th key={h}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <tr key={i}>
-                        <td>
-                          <div className="w-6 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-16 h-5 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-48 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="inline-block w-14 h-8 bg-stone-100 rounded-lg shimmer mx-auto" />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col flex-1 min-h-0">
-            {/* Search skeleton */}
-            <div className={`${card} flex items-center px-3.5 py-3.5 mb-4`}>
-              <div className="w-3.5 h-3.5 bg-stone-100 rounded shimmer shrink-0 mr-2.5" />
-              <div className="h-3.5 w-64 bg-stone-100 rounded shimmer" />
-            </div>
-            {/* Table skeleton */}
-            <div className={`${card} flex-1 overflow-hidden`}>
-              <div className="table-container">
-                <table className="erp-table">
-                  <thead>
-                    <tr>
-                      {['S.No.', 'Timestamp', 'Operator', 'Action', 'Metadata'].map(h => (
-                        <th key={h}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <tr key={i}>
-                        <td>
-                          <div className="w-6 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-32 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-24 h-4 bg-stone-100 rounded shimmer mb-1 mx-auto" />
-                          <div className="w-32 h-3.5 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-40 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                        <td>
-                          <div className="w-36 h-4 bg-stone-100 rounded shimmer mx-auto" />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )
-      ) : activeSubTab === 'users' ? (
+          <ShimmerTable
+            rows={activeSubTab === 'users' ? 8 : activeSubTab === 'roles' ? 5 : 8}
+            cols={activeSubTab === 'users' ? 8 : activeSubTab === 'roles' ? 4 : 5}
+          />
+        ) : activeSubTab === 'users' ? (
         <div className="flex flex-col flex-grow min-h-0">
           {/* Search & Filters */}
           <div className="flex flex-wrap items-center gap-3 mb-4 bg-stone-50/30 p-2.5 rounded-xl border border-[rgba(184,144,71,0.15)]">
@@ -785,7 +653,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                   {paginatedUsers.length === 0 ? (
                     <tr><td colSpan={8} className="text-center py-8 text-[12px] text-stone-400 italic">No users found.</td></tr>
                   ) : paginatedUsers.map((u, index) => (
-                    <tr key={u.id}>
+                    <tr key={u.id} className="row-enter" style={{ '--row-index': index } as React.CSSProperties}>
                       <td className="text-stone-400">
                         {userIndexStart + index + 1}
                       </td>
@@ -867,7 +735,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                 </thead>
                 <tbody>
                   {paginatedRoles.map((role, index) => (
-                    <tr key={role.id}>
+                    <tr key={role.id} className="row-enter" style={{ '--row-index': index } as React.CSSProperties}>
                       <td className="text-stone-400">
                         {roleIndexStart + index + 1}
                       </td>
@@ -942,7 +810,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
                   {paginatedLogs.length === 0
                     ? <tr><td colSpan={5} className="text-center py-8 text-[12px] text-stone-400 italic">No audit logs recorded yet.</td></tr>
                     : paginatedLogs.map((log, index) => (
-                      <tr key={log.id} className="hover:bg-[rgba(184,144,71,0.05)] transition-colors">
+                      <tr key={log.id} className="row-enter hover:bg-[rgba(184,144,71,0.05)] transition-colors" style={{ '--row-index': index } as React.CSSProperties}>
                         <td className="text-stone-400">
                           {logIndexStart + index + 1}
                         </td>
@@ -1006,7 +874,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={closeEditModal}>
           <div className="animate-scale-in w-full max-w-[440px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6 max-h-[calc(100vh-40px)] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="flex items-center gap-2 text-[16px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[16px] font-bold text-[var(--text-primary)]">
                 <Edit2 size={18} className="text-[#b89047]" />Edit Member
               </h3>
               <button onClick={closeEditModal} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
@@ -1026,7 +894,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className={labelBase}>Email Address</label>
-                <input type="email" placeholder="john@company.com" value={editUserEmail}
+                <input type="email" maxLength={150} placeholder="john@company.com" value={editUserEmail}
                   onChange={e => { setEditUserEmail(e.target.value); if (e.target.value.trim()) setEditFormErrors(p => ({...p, email: undefined})); }}
                   className={`${inputBase} ${editFormErrors.email ? inputInvalid : ''}`} />
                 {editFormErrors.email && <span className="text-[11px] font-semibold text-red-500">{editFormErrors.email}</span>}
@@ -1069,7 +937,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(null)}>
           <div className="animate-scale-in w-full max-w-[380px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6 max-h-[calc(100vh-40px)] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="flex items-center gap-2 text-[16px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[16px] font-bold text-[var(--text-primary)]">
                 <Trash2 size={18} className="text-rose-500" />Delete Member
               </h3>
               <button onClick={() => setShowDeleteConfirm(null)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
@@ -1096,7 +964,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={closeUserModal}>
           <div className="animate-scale-in w-full max-w-[440px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6 max-h-[calc(100vh-40px)] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="flex items-center gap-2 text-[16px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[16px] font-bold text-[var(--text-primary)]">
                 <UserPlus size={18} className="text-[#b89047]" />Create Member
               </h3>
               <button onClick={closeUserModal} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
@@ -1118,7 +986,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
               {/* Email */}
               <div className="flex flex-col gap-1.5">
                 <label className={labelBase}>Email Address</label>
-                <input type="email" placeholder="john@company.com" value={newUserEmail}
+                <input type="email" maxLength={150} placeholder="john@company.com" value={newUserEmail}
                   onChange={e => { setNewUserEmail(e.target.value); if (e.target.value.trim()) setFormErrors(p => ({...p, email: undefined})); }}
                   className={`${inputBase} ${formErrors.email ? inputInvalid : ''}`} />
                 {formErrors.email && <span className="text-[11px] font-semibold text-red-500">{formErrors.email}</span>}
@@ -1166,7 +1034,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowRoleModal(false)}>
           <div className="animate-scale-in w-full max-w-[420px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6 max-h-[calc(100vh-40px)] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-[16px] font-bold text-stone-900">{editingRoleId ? 'Edit Role' : 'Create Role'}</h3>
+              <h3 className="text-[16px] font-bold text-[var(--text-primary)]">{editingRoleId ? 'Edit Role' : 'Create Role'}</h3>
               <button onClick={() => setShowRoleModal(false)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">
                 <X size={16} />
               </button>
@@ -1227,7 +1095,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) =
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={() => setMapData(null)}>
           <div className="animate-scale-in w-full max-w-[600px] bg-white rounded-2xl shadow-xl border border-[rgba(184,144,71,0.3)] p-6 max-h-[calc(100vh-40px)] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="flex items-center gap-2 text-[16px] font-bold text-stone-900">
+              <h3 className="flex items-center gap-2 text-[16px] font-bold text-[var(--text-primary)]">
                 <MapPin size={18} className="text-[#b89047]" /> Location for {mapData.name}
               </h3>
               <button onClick={() => setMapData(null)} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer border-0 bg-transparent">

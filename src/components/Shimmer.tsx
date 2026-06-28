@@ -93,3 +93,35 @@ export const ShimmerList: React.FC<{ items?: number }> = ({ items = 6 }) => (
     ))}
   </div>
 );
+
+/** Skeleton for a detail card: title + label-value pairs (InflowDetail, OutflowDetail). */
+export const ShimmerDetailCard: React.FC<{ rows?: number }> = ({ rows = 4 }) => (
+  <div className="g-card p-5 flex flex-col gap-4">
+    <ShimmerBox className="h-4 w-1/3 rounded-full" />
+    <div className="flex flex-col gap-3">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <ShimmerBox className="h-3 w-1/4 rounded-full" style={{ minWidth: 80 }} />
+          <ShimmerBox className="h-3 rounded-full flex-1" style={{ maxWidth: 200 }} />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/** Skeleton for a remarks/comments list (PipelineTab remarks panel). */
+export const ShimmerRemarksList: React.FC<{ items?: number }> = ({ items = 3 }) => (
+  <div className="flex flex-col gap-3 p-1">
+    {Array.from({ length: items }).map((_, i) => (
+      <div key={i} className="flex flex-col gap-2 p-3 rounded-xl border border-[var(--border)] bg-[var(--card-bg)]">
+        <div className="flex items-center gap-2">
+          <ShimmerBox className="h-6 w-6 rounded-full shrink-0" />
+          <ShimmerBox className="h-3 w-1/3 rounded-full" />
+          <ShimmerBox className="h-2.5 w-16 rounded-full ml-auto" />
+        </div>
+        <ShimmerBox className="h-3 w-5/6 rounded-full" />
+        {i === 0 && <ShimmerBox className="h-3 w-3/4 rounded-full" />}
+      </div>
+    ))}
+  </div>
+);

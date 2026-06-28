@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { SearchableSelect } from '../components/SearchableSelect.js';
 import { btnPrimary, btnSecondary, inputBase } from '../components/ui/styles.js';
+import { EmptyState } from '../components/ui/EmptyState.js';
 
 interface Props { currentUser: User; }
 
@@ -981,29 +982,12 @@ export const ProjectsDashboard: React.FC<Props> = ({ currentUser }) => {
           {loading ? (
             <div className="p-4"><ShimmerTable rows={8} cols={4} /></div>
           ) : projects.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-56 gap-4 text-[var(--text-muted)]">
-              <div className="p-4 rounded-2xl bg-[rgba(184,144,71,0.06)] border border-[rgba(184,144,71,0.12)]">
-                <HardHat size={32} className="text-[#b89047]/40" />
-              </div>
-              <div className="text-center">
-                <p className="text-[13px] font-semibold text-[var(--text-secondary)]">
-                  {filterStatus || search ? 'No projects match your filter' : 'No projects yet'}
-                </p>
-                <p className="text-[11px] mt-1">
-                  {filterStatus || search
-                    ? 'Try clearing filters to see all projects'
-                    : 'Projects will appear here once a prospect is marked as Won'}
-                </p>
-              </div>
-              {(filterStatus || search) && (
-                <button
-                  onClick={() => { setSearch(''); setFilterStatus(''); setPage(1); }}
-                  className={btnSecondary}
-                >
-                  <RefreshCw size={12} /> Clear Filters
-                </button>
-              )}
-            </div>
+            <EmptyState
+              icon={<HardHat size={24} />}
+              title={filterStatus || search ? 'No projects match your filter' : 'No projects yet'}
+              body={filterStatus || search ? 'Try clearing filters to see all projects' : 'Projects will appear here once a prospect is marked as Won'}
+              action={(filterStatus || search) ? { label: 'Clear Filters', onClick: () => { setSearch(''); setFilterStatus(''); setPage(1); }, variant: 'secondary' } : undefined}
+            />
           ) : (
             projects.map(p => (
               <ProjectRow

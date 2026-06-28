@@ -8,6 +8,7 @@ import { projectApi, fileUrl } from '../../services/api.js';
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { createPortal } from 'react-dom';
+import { ShimmerTable } from '../../components/Shimmer.js';
 import { card, btnPrimary, btnSecondary, inputBase, label } from './shared.js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -441,11 +442,7 @@ export function TransmittalsTab({ project, currentUser }: { project: any; curren
     }
   }
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-48 gap-2 text-[var(--text-muted)]">
-      <Loader2 size={16} className="animate-spin" /> Loading documents…
-    </div>
-  );
+  if (loading) return <div className="p-4"><ShimmerTable rows={4} cols={3} /></div>;
 
   const totalFiles = allIds.length;
 

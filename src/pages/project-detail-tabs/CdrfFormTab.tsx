@@ -7,7 +7,7 @@ import { ShimmerTable } from '../../components/Shimmer.js';
 import { Loader2, FileText, Send } from 'lucide-react';
 import { card, btnPrimary, btnSecondary } from './shared.js';
 
-export function CdrfFormTab({ project, currentUser }: { project: any; currentUser: User }) {
+export function CdrfFormTab({ project, currentUser, onRefresh }: { project: any; currentUser: User; onRefresh?: () => void }) {
   const { showToast } = useToast();
   const [formMeta, setFormMeta] = useState<{ completionPct: number; status: string } | null>(null);
   const [initialModules, setInitialModules] = useState<any[] | null>(null);
@@ -63,6 +63,7 @@ export function CdrfFormTab({ project, currentUser }: { project: any; currentUse
       await projectApi.submitCdrfForm(project.id, { modules: mods });
       showToast('CDRF form submitted.', 'success');
       fetchForm();
+      onRefresh?.();
     } catch (err: any) { showToast(err.response?.data?.message ?? 'Failed to submit.', 'error'); }
     finally { setSubmitting(false); }
   };

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { projectApi, fileUrl } from '../../services/api.js';
 import { makeUniqueFileName } from '../../utils/validators.js';
+import { uniqueFileName } from '../../utils/fileUtils.js';
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
 import { ShimmerTable } from '../../components/Shimmer.js';
@@ -463,7 +464,7 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
                 if (!file) return;
                 setFeedbackUploading(true);
                 try {
-                  const fd = new FormData(); fd.append('file', file);
+                  const fd = new FormData(); fd.append('file', file, uniqueFileName(file));
                   const res = await projectApi.uploadFile(fd);
                   setClientResponseForm(f => ({ ...f, fileUrl: res.data.url ?? res.data.fileUrl, fileName: file.name }));
                 } catch { showToast('File upload failed.', 'error'); }
@@ -558,7 +559,7 @@ export function DesignTab({ project, currentUser, onRefresh }: { project: any; c
             </div>
             {docViewer.draft && canReview && docViewer.draft.status === 'PENDING_REVIEW' && (
               <div className="w-72 shrink-0 bg-white border-l border-stone-200 flex flex-col overflow-y-auto p-5 space-y-4">
-                <p className="text-[13px] font-bold text-stone-900">Review Design</p>
+                <p className="text-[13px] font-bold text-[var(--text-primary)]">Review Design</p>
                 <div className="flex flex-col gap-2">
                   {(['APPROVED', 'REJECTED'] as const).map(s => (
                     <button key={s} onClick={() => setReviewForm(f => ({ ...f, status: s }))}

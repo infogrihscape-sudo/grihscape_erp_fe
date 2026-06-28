@@ -4,7 +4,7 @@ import { projectApi, fileUrl } from '../../services/api.js';
 import { makeUniqueFileName } from '../../utils/validators.js';
 import type { User } from '../../context/AuthContext.js';
 import { useToast } from '../../context/ToastContext.js';
-import { ShimmerTable } from '../../components/Shimmer.js';
+import { ShimmerTable, ShimmerRemarksList } from '../../components/Shimmer.js';
 import { FileUploadZone } from '../../components/ui/FileUploadZone.js';
 import { StatusBadge } from '../../components/ui/StatusBadge.js';
 import {
@@ -1034,9 +1034,7 @@ export function PipelineTab({ project, currentUser, onRefresh }: { project: any;
         >
           <div className="p-5 space-y-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
             {loadingRemarks ? (
-              <div className="flex items-center justify-center py-8 gap-2 text-[var(--text-muted)]">
-                <Loader2 size={14} className="animate-spin" /> Loading remarks…
-              </div>
+              <ShimmerRemarksList items={3} />
             ) : remarkLogs.length === 0 ? (
               <div className="text-center py-8">
                 <MessageSquare size={28} className="mx-auto text-[var(--text-muted)] opacity-30 mb-2" />

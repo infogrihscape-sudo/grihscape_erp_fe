@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { contractApi, prospectApi, fileUrl as buildFileUrl } from '../services/api.js';
+import { uniqueFileName } from '../utils/fileUtils.js';
 import { useToast } from '../context/ToastContext.js';
 import type { User } from '../context/AuthContext.js';
 import {
@@ -11,6 +12,7 @@ import { useRouter } from '../context/RouterContext.js';
 import { ShimmerList } from '../components/Shimmer.js';
 import { canWrite } from '../config/permissions.js';
 import { btnPrimary } from '../components/ui/styles.js';
+import { EmptyState } from '../components/ui/EmptyState.js';
 
 interface Props { currentUser: User; }
 
@@ -176,7 +178,7 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
     try {
       // Step 1: upload file to server
       const form = new FormData();
-      form.append('file', file);
+      form.append('file', file, uniqueFileName(file));
       const uploadRes = await contractApi.uploadFile(form);
       const relativeUrl: string = uploadRes.data.fileUrl; // e.g. /uploads/prospects/file-123.pdf
 
@@ -252,15 +254,6 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
   };
 
   // ── render ────────────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] gap-3">
-        <Loader2 size={28} className="animate-spin text-amber-600" />
-        <span className="text-[12px] text-[var(--text-muted)] font-medium">Loading contracts…</span>
-      </div>
-    );
-  }
-
   const indexStart = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedContracts = contracts.slice(indexStart, indexStart + ITEMS_PER_PAGE);
   const totalPages = Math.ceil(contracts.length / ITEMS_PER_PAGE) || 1;
@@ -310,10 +303,12 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
           <ShimmerList items={6} />
         </div>
       ) : contracts.length === 0 ? (
-        <div className={`${card} flex flex-col items-center justify-center py-20 gap-3 flex-1`}>
-          <ScrollText size={36} className="text-[var(--text-muted)]" />
-          <p className="text-[13px] font-semibold text-[var(--text-primary)]">No contracts yet</p>
-          <p className="text-[12px] text-[var(--text-muted)]">Click "New Contract" to create a draft for a WON project.</p>
+        <div className={`${card} flex-1 flex items-center justify-center`}>
+          <EmptyState
+            icon={<ScrollText size={24} />}
+            title="No contracts yet"
+            body='Click "New Contract" to create a draft for a WON project.'
+          />
         </div>
       ) : (
         <>
@@ -473,6 +468,7 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
                           <input
                             type="number"
                             min="0"
+                            max="99999999"
                             step="0.01"
                             placeholder={c.prospect.initialPaymentAmount ? String(c.prospect.initialPaymentAmount) : 'Actual amt'}
                             value={verifyAmounts[c.id]?.amount ?? ''}
@@ -576,7 +572,7 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
 
       {/* ── Create Draft Modal ── */}
       {showDraftModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs"
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
           onClick={() => setShowDraftModal(false)}>
           <div className={`${card} w-full sm:max-w-md p-5 animate-scale-in h-screen sm:h-auto`} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
@@ -638,7 +634,7 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
 
       {/* ── Send Email Modal ── */}
       {sendModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs"
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
           onClick={() => setSendModal(null)}>
           <div className={`${card} w-full sm:max-w-md p-5 animate-scale-in h-screen sm:h-auto`} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
@@ -677,6 +673,7 @@ export const ContractsScreen: React.FC<Props> = ({ currentUser }) => {
                 ) : (
                   <input
                     type="email"
+                    maxLength={150}
                     placeholder="client@example.com (no email saved — edit prospect first)"
                     value={sendEmail}
                     onChange={e => setSendEmail(e.target.value)}

@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext.js';
 import { canWrite } from '../../config/permissions.js';
 import { fileUrl } from '../../services/api.js';
 import { InflowForm } from './InflowForm.js';
+import { ShimmerTable } from '../../components/Shimmer.js';
 
 interface Props { currentUser: User; }
 
@@ -89,7 +90,7 @@ export const InflowList: React.FC<Props> = ({ currentUser }) => {
       {/* Table */}
       <div className="table-container flex-1">
         {loading ? (
-          <div className="flex items-center justify-center h-40 text-[11px] text-[var(--text-muted)]">Loading…</div>
+          <ShimmerTable rows={8} cols={13} />
         ) : challans.length === 0 ? (
           <div className="flex items-center justify-center h-40 text-[11px] text-[var(--text-muted)]">No challans found.</div>
         ) : (

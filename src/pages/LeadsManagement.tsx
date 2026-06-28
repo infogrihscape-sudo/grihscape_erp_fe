@@ -1028,7 +1028,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                       const servicesDisplay: string[] = lead.services;
 
                       return (
-                      <tr key={lead.id} className={`transition-colors ${lead.isDuplicate30Days ? 'bg-rose-50/30 hover:bg-rose-50/50' : 'hover:bg-[var(--hover-bg)]/40'}`}>
+                      <tr key={lead.id} className={`row-enter transition-colors ${lead.isDuplicate30Days ? 'bg-rose-50/30 hover:bg-rose-50/50' : 'hover:bg-[var(--hover-bg)]/40'}`} style={{ '--row-index': index } as React.CSSProperties}>
                         <td >{indexStart + index + 1}</td>
                         <td className="font-semibold text-[var(--text-primary)] whitespace-nowrap">
                           <div className="flex flex-col items-center gap-0.5">
@@ -1681,7 +1681,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
       {/* â"€â"€ Convert Lead â†’ Prospect Modal â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       {convertingLead && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-stone-900/40 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm"
           onClick={() => !convertSubmitting && setConvertingLead(null)}
         >
           <div
@@ -1693,7 +1693,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
               <div className="flex items-center gap-2.5 min-w-0">
                 <ClipboardList size={17} className="text-amber-600 shrink-0" />
                 <div className="min-w-0">
-                  <h3 className="text-[14px] sm:text-[15px] font-bold text-stone-900">Capture Client Brief</h3>
+                  <h3 className="text-[14px] sm:text-[15px] font-bold text-[var(--text-primary)]">Capture Client Brief</h3>
                   <p className="text-[11px] text-stone-500 mt-0.5 truncate">
                     Converting: <span className="font-bold text-stone-700">{convertingLead.fullName}</span>
                     <span className="hidden sm:inline">{' · '}{convertingLead.phoneNumber}</span>

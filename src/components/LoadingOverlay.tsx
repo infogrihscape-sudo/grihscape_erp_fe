@@ -49,8 +49,8 @@ export const LoadingOverlay: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         background: 'rgba(12, 10, 9, 0.55)',
-        backdropFilter: 'blur(2px)',
-        WebkitBackdropFilter: 'blur(2px)',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
         opacity: visible ? 1 : 0,
         transition: 'opacity 0.25s ease',
         pointerEvents: visible ? 'all' : 'none',
@@ -60,57 +60,31 @@ export const LoadingOverlay: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '14px',
         transform: visible ? 'scale(1)' : 'scale(0.92)',
         transition: 'transform 0.25s ease',
       }}>
-        {/* Spinner ring */}
-        <div style={{ position: 'relative', width: 48, height: 48 }}>
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '50%',
-            border: '3px solid rgba(197,168,128,0.18)',
-          }} />
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '50%',
-            border: '3px solid transparent',
-            borderTopColor: '#c5a880',
-            borderRightColor: '#b89047',
-            animation: 'gs-spin 0.75s linear infinite',
-          }} />
+        {/* Pulsing logo with gold border */}
+        <div style={{ animation: 'logo-pulse 1.4s ease-in-out infinite' }}>
           <img
             src="/logo.jpeg"
-            alt=""
+            alt="Loading..."
             style={{
-              position: 'absolute',
-              inset: 8,
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
+              width: 56,
+              height: 56,
+              borderRadius: 14,
               objectFit: 'cover',
-              border: '1.5px solid rgba(197,168,128,0.4)',
+              border: '2px solid #c5a880',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              display: 'block',
             }}
           />
         </div>
-
-        <span style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.75)',
-          fontFamily: "'Inter','Segoe UI',sans-serif",
-        }}>
-          Loading…
-        </span>
       </div>
 
       <style>{`
-        @keyframes gs-spin {
-          to { transform: rotate(360deg); }
+        @keyframes logo-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.45; transform: scale(0.9); }
         }
       `}</style>
     </div>
