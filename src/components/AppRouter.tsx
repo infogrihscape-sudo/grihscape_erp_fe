@@ -203,7 +203,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({ user }) => {
           </Suspense>
         ) : isProspects ? (
           <Suspense fallback={<PageLoader text="Preparing Prospects Terminal…" />}>
-            {user.role === 'Sales & Marketing' ? (
+            {(user.role === 'Sales & Marketing' || user.role === 'Super Admin') ? (
               <ProspectRequirementsSales currentUser={user} />
             ) : (
               <ProspectRequirementsAdmin currentUser={user} />

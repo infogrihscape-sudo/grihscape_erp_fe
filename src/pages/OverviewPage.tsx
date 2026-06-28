@@ -1206,7 +1206,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ user }) => {
                 </div>
               </div>
 
-              {user.role === 'Sales & Marketing' && (
+              {(user.role === 'Sales & Marketing' || user.role === 'Super Admin') && (
                 <div className="pt-3 border-t border-[var(--border-subtle)] mt-3">
                   <button
                     onClick={() => {

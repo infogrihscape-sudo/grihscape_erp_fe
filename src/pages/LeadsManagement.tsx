@@ -17,27 +17,6 @@ import {
 } from 'lucide-react';
 import { ShimmerTable } from '../components/Shimmer.js';
 
-const LEAD_RESPONSE_OPTIONS = [
-  { value: 'NOT_ANSWERED',   label: 'Not Answered' },
-  { value: 'NOT_INTERESTED', label: 'Not Interested' },
-  { value: 'INVALID_NUMBER', label: 'Invalid Number' },
-  { value: 'VENDOR',         label: 'Vendor' },
-  { value: 'JOB_CANDIDATE',  label: 'Job Candidate' },
-  { value: 'CONTRACTOR',     label: 'Contractor' },
-];
-
-const leadResponseLabel: Record<string, string> = Object.fromEntries(
-  LEAD_RESPONSE_OPTIONS.map(o => [o.value, o.label])
-);
-
-const leadResponseColor: Record<string, string> = {
-  NOT_ANSWERED:   'text-amber-600',
-  NOT_INTERESTED: 'text-rose-600',
-  INVALID_NUMBER: 'text-red-700',
-  VENDOR:         'text-violet-600',
-  JOB_CANDIDATE:  'text-sky-600',
-  CONTRACTOR:     'text-teal-600',
-};
 
 interface Lead {
   id: string;
@@ -277,6 +256,8 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
 
   // Lead response update
   const [updatingResponseId, setUpdatingResponseId] = useState<string | null>(null);
+  const [editingResponseId, setEditingResponseId] = useState<string | null>(null);
+  const [editingResponseText, setEditingResponseText] = useState('');
 
   const handleUpdateLeadResponse = async (leadId: string, response: string | null) => {
     setUpdatingResponseId(leadId);
@@ -288,6 +269,19 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
     } finally {
       setUpdatingResponseId(null);
     }
+  };
+
+  const handleResponseEditStart = (lead: Lead) => {
+    setEditingResponseId(lead.id);
+    setEditingResponseText(lead.leadResponse || '');
+  };
+
+  const handleResponseEditSave = async (leadId: string) => {
+    const trimmed = editingResponseText.trim();
+    setEditingResponseId(null);
+    const current = leads.find(l => l.id === leadId)?.leadResponse || '';
+    if (trimmed === current) return;
+    await handleUpdateLeadResponse(leadId, trimmed || null);
   };
 
   // Bulk Ingestion states
@@ -1080,28 +1074,45 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                           {lead.adName || <span className="italic opacity-40">-</span>}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
-                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
                             lead.source === 'manual'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'
+                              : 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800'
                           }`}>
                             {lead.source === 'manual' ? 'Manual' : 'Bulk Upload'}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center">
-                          <select
-                            value={lead.leadResponse || ''}
-                            onChange={(e) => handleUpdateLeadResponse(lead.id, e.target.value || null)}
-                            disabled={updatingResponseId === lead.id}
-                            className={`text-[11.5px] font-semibold rounded-lg border px-2 py-1 outline-none cursor-pointer transition-all bg-[var(--input-bg)] border-[rgba(184,144,71,0.3)] focus:border-[#b89047] ${
-                              lead.leadResponse ? leadResponseColor[lead.leadResponse] || 'text-[var(--text-secondary)]' : 'text-[var(--text-muted)] italic'
-                            } ${updatingResponseId === lead.id ? 'opacity-50' : ''}`}
-                          >
-                            <option value="">— Set Response —</option>
-                            {LEAD_RESPONSE_OPTIONS.map(opt => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
+                          {editingResponseId === lead.id ? (
+                            <input
+                              type="text"
+                              maxLength={100}
+                              autoFocus
+                              value={editingResponseText}
+                              onChange={(e) => setEditingResponseText(e.target.value)}
+                              onBlur={() => handleResponseEditSave(lead.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleResponseEditSave(lead.id);
+                                if (e.key === 'Escape') setEditingResponseId(null);
+                              }}
+                              placeholder="Type response..."
+                              className="text-[11.5px] font-medium rounded-lg border px-2 py-1 outline-none w-36 bg-[var(--input-bg)] border-[rgba(184,144,71,0.5)] focus:border-[#b89047] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] placeholder:italic"
+                            />
+                          ) : (
+                            <span
+                              onClick={() => handleResponseEditStart(lead)}
+                              title={lead.leadResponse && lead.leadResponse.length > 10 ? lead.leadResponse : undefined}
+                              className={`cursor-pointer text-[11.5px] font-medium transition-colors hover:text-[var(--text-primary)] ${
+                                updatingResponseId === lead.id ? 'opacity-50 pointer-events-none' : ''
+                              } ${lead.leadResponse ? 'text-[var(--text-secondary)]' : 'text-[var(--text-muted)] italic'}`}
+                            >
+                              {lead.leadResponse
+                                ? lead.leadResponse.length > 10
+                                  ? `${lead.leadResponse.slice(0, 10)}...`
+                                  : lead.leadResponse
+                                : '— Set Response —'}
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3.5 border-b border-[rgba(184,144,71,0.12)] text-center text-[var(--text-muted)] text-[11.5px] whitespace-nowrap">
                           {new Date(lead.createdAt).toLocaleDateString(undefined, {
@@ -1121,7 +1132,7 @@ export const LeadsManagement: React.FC<Props> = ({ currentUser }) => {
                             >
                               <FileText size={11} /> Req Log
                             </button>
-                          ) : currentUser.role === 'Sales & Marketing' ? (
+                          ) : (currentUser.role === 'Sales & Marketing' || currentUser.role === 'Super Admin') ? (
                             <button
                               onClick={() => setConvertingLead(lead)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-white bg-gradient-to-br from-[#b89047] to-[#9e7735] hover:shadow-md hover:-translate-y-px transition-all border-0 cursor-pointer"
