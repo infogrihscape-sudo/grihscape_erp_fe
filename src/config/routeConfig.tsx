@@ -1,48 +1,22 @@
 import React from 'react';
 import {
-  LayoutDashboard, Users, ClipboardList, Database, ScrollText,
-  Sparkles, FileText, Award, HardHat, ArrowDownLeft, ArrowUpRight, Settings,
-  TrendingDown, HardHat as LabourIcon, Users2,
+  Sparkles, Users, ClipboardList, Database, ScrollText,
+  FileText, Award, HardHat, ArrowDownLeft, ArrowUpRight, Settings,
+  TrendingDown, Users2,
 } from 'lucide-react';
 
 export type AppTab = 'overview' | 'users' | 'prospects' | 'leads' | 'contracts' | 'tenders' | 'projects'
   | 'inflow' | 'outflow' | 'constructionPayments' | 'accountsMasters' | 'delayAnalysis' | 'labour';
 
-export interface SidebarItem {
-  id: AppTab;
-  route: string;
-  icon: React.ReactNode;
-  label: string;
-}
+// All top-level routes that AppRouter recognises (used for unknown-path redirect)
+export const VALID_PATHS = [
+  '/overview', '/users', '/roles', '/logs', '/prospects', '/leads',
+  '/contracts', '/tenders', '/projects', '/delay-analysis', '/labour',
+  '/accounts/inflow', '/accounts/outflow', '/accounts/construction-payments', '/accounts/masters',
+] as const;
 
-// Navigation items rendered by Sidebar, filtered by ROLE_ROUTES from permissions.ts
-export const SIDEBAR_ITEMS: SidebarItem[] = [
-  { id: 'overview',  route: '/overview',  icon: <LayoutDashboard size={16} />, label: 'Profile Overview' },
-  { id: 'users',     route: '/users',     icon: <Users size={16} />,           label: 'User Management' },
-  { id: 'leads',     route: '/leads',     icon: <Database size={16} />,        label: 'Leads Management' },
-  { id: 'prospects', route: '/prospects', icon: <ClipboardList size={16} />,   label: 'Prospects Form' },
-  { id: 'contracts', route: '/contracts', icon: <ScrollText size={16} />,      label: 'Contracts' },
-  { id: 'tenders',   route: '/tenders',   icon: <Award size={16} />,           label: 'Tender Management' },
-  { id: 'projects',  route: '/projects',  icon: <HardHat size={16} />,         label: 'Projects' },
-  { id: 'labour',    route: '/labour',    icon: <Users2 size={16} />,          label: 'Labour Management' },
-];
-
-// Tab id → canonical route path for navigation
-export const TAB_TO_ROUTE: Record<AppTab, string> = {
-  overview:        '/overview',
-  users:           '/users',
-  prospects:       '/prospects',
-  leads:           '/leads',
-  contracts:       '/contracts',
-  tenders:         '/tenders',
-  projects:        '/projects',
-  labour:          '/labour',
-  inflow:               '/accounts/inflow',
-  outflow:              '/accounts/outflow',
-  constructionPayments: '/accounts/construction-payments',
-  accountsMasters:      '/accounts/masters',
-  delayAnalysis:        '/delay-analysis',
-};
+// Accounts sub-routes covered by the __accounts_payments__ group key in ROLE_ROUTES
+export const ACCOUNTS_PAYMENT_ROUTES = new Set(['/accounts/inflow', '/accounts/outflow', '/accounts/construction-payments']);
 
 // Route path → active sidebar tab (/roles and /logs are under the users tab)
 export const ROUTE_TO_TAB: Record<string, AppTab> = {

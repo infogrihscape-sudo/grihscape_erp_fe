@@ -2,7 +2,7 @@ import React, { useEffect, Suspense } from 'react';
 import { useRouter } from '../context/RouterContext.js';
 import { ROLE_ROUTES } from '../config/permissions.js';
 import {
-  PAGE_INFO, ROUTE_TO_TAB,
+  PAGE_INFO, ROUTE_TO_TAB, VALID_PATHS, ACCOUNTS_PAYMENT_ROUTES,
   getProspectDetailId, getTenderDetailId, getProjectDetailId,
   getInflowDetailId, getOutflowDetailId,
 } from '../config/routeConfig.js';
@@ -14,16 +14,16 @@ const UserManagement = React.lazy(() =>
   import('../pages/UserManagement.js').then((m) => ({ default: m.UserManagement }))
 );
 const ProspectRequirementsSales = React.lazy(() =>
-  import('../pages/ProspectRequirementsSales.js').then((m) => ({ default: m.ProspectRequirementsSales }))
+  import('../pages/prospects/ProspectRequirementsSales.js').then((m) => ({ default: m.ProspectRequirementsSales }))
 );
 const ProspectRequirementsAdmin = React.lazy(() =>
-  import('../pages/ProspectRequirementsAdmin.js').then((m) => ({ default: m.ProspectRequirementsAdmin }))
+  import('../pages/prospects/ProspectRequirementsAdmin.js').then((m) => ({ default: m.ProspectRequirementsAdmin }))
 );
 const ProspectWorkflowDetail = React.lazy(() =>
-  import('../pages/ProspectWorkflowDetail.js').then((m) => ({ default: m.ProspectWorkflowDetail }))
+  import('../pages/prospects/ProspectWorkflowDetail.js').then((m) => ({ default: m.ProspectWorkflowDetail }))
 );
 const LeadsManagement = React.lazy(() =>
-  import('../pages/LeadsManagement.js').then((m) => ({ default: m.LeadsManagement }))
+  import('../pages/leads/LeadsManagement.js').then((m) => ({ default: m.LeadsManagement }))
 );
 const ContractsScreen = React.lazy(() =>
   import('../pages/ContractsScreen.js').then((m) => ({ default: m.ContractsScreen }))
@@ -38,7 +38,7 @@ const ProjectDetail = React.lazy(() =>
   import('../pages/ProjectDetail.js').then((m) => ({ default: m.ProjectDetail }))
 );
 const OverviewPage = React.lazy(() =>
-  import('../pages/OverviewPage.js').then((m) => ({ default: m.OverviewPage }))
+  import('../pages/overview/OverviewPage.js').then((m) => ({ default: m.OverviewPage }))
 );
 const InflowList = React.lazy(() =>
   import('../pages/accounts/InflowList.js').then((m) => ({ default: m.InflowList }))
@@ -62,21 +62,12 @@ const DelayAnalysisPage = React.lazy(() =>
   import('../pages/construction/DelayAnalysisPage.js').then((m) => ({ default: m.DelayAnalysisPage }))
 );
 const LabourManagement = React.lazy(() =>
-  import('../pages/LabourManagement.js')
+  import('../pages/labour/LabourManagement.js')
 );
 
 interface AppRouterProps {
   user: User;
 }
-
-const VALID_PATHS = [
-  '/overview', '/users', '/roles', '/logs', '/prospects', '/leads',
-  '/contracts', '/tenders', '/projects', '/delay-analysis', '/labour',
-  '/accounts/inflow', '/accounts/outflow', '/accounts/construction-payments', '/accounts/masters',
-];
-
-// Accounts sub-routes covered by the __accounts_payments__ group key in ROLE_ROUTES
-const ACCOUNTS_PAYMENT_ROUTES = new Set(['/accounts/inflow', '/accounts/outflow', '/accounts/construction-payments']);
 
 const roleLabel = (r: string) => r;
 

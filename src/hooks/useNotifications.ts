@@ -1,18 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { notificationApi } from '../services/api';
+import type { Notification } from '../types/notification.js';
 
-export interface Notification {
-  id: string;
-  type: string;
-  title: string;
-  body: string;
-  entityId?: string;
-  entityType?: string;
-  entityRoute?: string;
-  isRead: boolean;
-  createdAt: string;
-  createdBy?: { id: string; name: string };
-}
+export type { Notification };
 
 const POLL_INTERVAL = 30_000;
 

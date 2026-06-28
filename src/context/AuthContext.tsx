@@ -1,20 +1,9 @@
 import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
 import { authApi, setAccessToken } from '../services/api.js';
 import { GEO_CONFIG, getDistanceMeters } from '../config/geo.js';
+import type { User } from '../types/user.js';
 
-export interface User {
-  id: string;
-  phone: string;
-  email: string;
-  name: string;
-  role: string;
-  isBlocked: boolean;
-  isOnline?: boolean;
-  lastLoginAt?: string | null;
-  lastLogoutAt?: string | null;
-  lastLoginLatitude?: number | null;
-  lastLoginLongitude?: number | null;
-}
+export type { User };
 
 interface AuthContextType {
   user: User | null;
