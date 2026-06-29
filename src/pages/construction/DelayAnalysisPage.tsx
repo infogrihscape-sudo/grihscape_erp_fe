@@ -3,7 +3,7 @@ import {
   RefreshCw, Loader2, AlertCircle, TrendingDown, TrendingUp,
   Shield, CheckCircle2, Activity, ChevronLeft, ChevronRight, ChevronDown,
   AlertTriangle, BarChart2, Search, Filter, X, Zap, Award, Target,
-  Layers, User, CalendarDays,
+  Layers, User, CalendarDays, Sparkles,
 } from 'lucide-react';
 import {
   AreaChart, Area,
@@ -19,6 +19,7 @@ import {
 import { delayAnalysisApi, constructionApi } from '../../services/construction.api';
 import { useToast } from '../../context/ToastContext';
 import { ShimmerTable } from '../../components/Shimmer.js';
+import { AIAssistModal } from '../../components/ui/AIAssistModal';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -1266,6 +1267,7 @@ export function DelayAnalysisPage({ user: _user }: { user: any }) {
   const [drillTab,         setDrillTab] = useState<'hld' | 'lld'>('hld');
   const [drillTasks,       setDrillTasks] = useState<Task[]>([]);
   const [drillLoading,     setDrillLoading] = useState(false);
+  const [aiOpen,           setAiOpen] = useState(false);
 
   const loadPortfolio = useCallback(async () => {
     try {
@@ -1406,8 +1408,16 @@ export function DelayAnalysisPage({ user: _user }: { user: any }) {
               +{selectedProject.projectDelayDays}d delay
             </span>
           )}
+          <button
+            disabled
+            title="AI Assistant — coming soon"
+            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold bg-gradient-to-br from-[#b89047] to-[#9e7735] text-white opacity-40 cursor-not-allowed"
+          >
+            <Sparkles size={12} />
+            Assist with AI
+          </button>
           <button onClick={loadPortfolio} disabled={loading}
-            className="ml-auto p-1.5 rounded-lg hover:bg-[var(--border)] text-[var(--text-muted)] disabled:opacity-50 cursor-pointer">
+            className="p-1.5 rounded-lg hover:bg-[var(--border)] text-[var(--text-muted)] disabled:opacity-50 cursor-pointer">
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
           </button>
         </div>
@@ -1435,6 +1445,14 @@ export function DelayAnalysisPage({ user: _user }: { user: any }) {
           <LLDView tasks={drillTasks} />
         )}
       </div>
+
+      {aiOpen && (
+        <AIAssistModal
+          project={selectedProject}
+          tasks={drillTasks}
+          onClose={() => setAiOpen(false)}
+        />
+      )}
     </div>
   );
 }
